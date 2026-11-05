@@ -37,7 +37,7 @@ service cloud.firestore {
     // Plantões: profissional vê e evolui só os próprios
     match /plantoes/{id} {
       allow read: if isAdmin() || (isProf() && resource.data.profId == me().profId);
-      allow update: if isAdmin() || (isProf() && resource.data.profId == me().profId && only(['status','evolucao','chegada','saida','atualizado']));
+      allow update: if isAdmin() || (isProf() && resource.data.profId == me().profId && only(['status','evolucao','chegada','saida','tentativas','atualizado']));
       allow create, delete: if isAdmin();
     }
 

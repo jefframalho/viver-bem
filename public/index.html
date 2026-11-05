@@ -309,16 +309,43 @@ function distM(a,b){ const R=6371000, r=x=>x*Math.PI/180; const h=Math.sin(r(b[0
 const fmtDist = d => d<1000 ? Math.round(d)+" m" : (d/1000).toFixed(1).replace(".",",")+" km";
 const hhmm = iso => new Date(iso).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
 function regInfo(r, pac){ if(!r) return null; const g=geoOf(pac); const d=(r.lat!=null&&g)?distM([r.lat,r.lng],g):null;
-  return {hora:hhmm(r.em), d, longe:d!=null&&d>300, semGeo:r.lat==null, map:r.lat!=null?`https://www.google.com/maps?q=${r.lat},${r.lng}`:null}; }
+  return {hora:hhmm(r.em), d, longe:d!=null&&d>raioDe(pac), semGeo:r.lat==null, map:r.lat!=null?`https://www.google.com/maps?q=${r.lat},${r.lng}`:null}; }
 const atrasoMin = p => p.chegada ? Math.round((new Date(p.chegada.em).getTime()-tStart(p))/6e4) : null;
 const rotaURL = pac => "https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(geoOf(pac)?geoOf(pac).join(","):`${pac.endereco}, ${loc(pac)}`);
 function getPos(){ return new Promise(ok=>{ if(!navigator.geolocation) return ok(null); try{ navigator.geolocation.getCurrentPosition(x=>ok({lat:+x.coords.latitude.toFixed(6),lng:+x.coords.longitude.toFixed(6),acc:Math.round(x.coords.accuracy)}),()=>ok(null),{enableHighAccuracy:true,timeout:12000,maximumAge:0}); }catch(e){ ok(null); } }); }
+const raioDe = pac => +(pac?.raio) || +(Store.cfg().raio) || 300;
+const exigeLocal = (pac, pro) => (pac?.exigeLocal||"sim")!=="nao" && (pro?.exigeLocal||"sim")!=="nao";
+function validaLocal(p, pos){
+  const pac=Store.get("pacientes",p.pacId), pro=Store.get("profissionais",p.profId);
+  if(!exigeLocal(pac,pro)) return {ok:true};
+  const g=geoOf(pac);
+  if(!g) return {ok:false,msg:"A localização da casa deste paciente ainda não foi cadastrada. Avise a administração para liberar o registro."};
+  if(!pos) return {ok:false,msg:"Ative a localização do celular e permita o acesso ao navegador. Neste atendimento o registro só é aceito no endereço do paciente."};
+  if(pos.acc>1000) return {ok:false,msg:`O sinal de GPS está fraco (precisão de ${pos.acc} m). Vá para perto de uma janela ou área aberta e tente de novo.`};
+  const d=distM([pos.lat,pos.lng],g), r=raioDe(pac);
+  if(d>r) return {ok:false,d,msg:`Você está a ${fmtDist(d)} do endereço do paciente. O registro só é permitido a até ${r} m da casa.`};
+  return {ok:true,d};
+}
+/* pagamento: valor cheio, ou proporcional às horas registradas quando o profissional está em "computar por hora" */
+function calcPag(p){
+  const base=+p.valorPago||0, pro=Store.get("profissionais",p.profId), r={base,valor:base,horas:null,obs:""};
+  if(p.chegada&&p.saida){ const tol=(+(Store.cfg().tolerancia??15)||0)*6e4, a=new Date(p.chegada.em).getTime(), b=new Date(p.saida.em).getTime();
+    const ini = a<=tStart(p)+tol ? tStart(p) : a, fimR = b>=tEnd(p)-tol ? tEnd(p) : b;
+    r.horas=Math.max(0,Math.min(p.horas,(fimR-ini)/36e5)); }
+  if(p.status!=="realizado") { r.valor = p.status==="falta"?0:base; if(p.status==="falta") r.obs="Falta"; return r; }
+  if(p.valorAjustado!=null&&p.valorAjustado!==""){ r.valor=+p.valorAjustado; r.obs="Ajustado: "+(p.ajusteMotivo||"pela administração"); return r; }
+  if(pro?.porHora==="sim"){
+    if(r.horas==null){ r.obs="Sem registro de saída, valor cheio até ajuste"; return r; }
+    r.valor=Math.round(base*r.horas/p.horas*100)/100; if(r.valor<base) r.obs=`Por hora: ${r.horas.toFixed(1).replace(".",",")} h de ${p.horas} h`; }
+  return r;
+}
+const valorProf = p => calcPag(p).valor;
 const podeChegar = p => !p.chegada && p.status==="agendado" && Date.now()>=tStart(p)-2*36e5 && Date.now()<=tEnd(p);
 const PAC_ST = {avaliacao:["Em avaliação","p-warn"],ativo:["Ativo","p-ok"],alta:["Alta","p-mute"]};
 
 /* =================== DADOS =================== */
 const COLS = ["config","curriculos","documentos","pacientes","profissionais","candidatos","plantoes","solicitacoes","operadoras","contratos","usuarios"];
-const LS_KEY = "viverbem-sistema-v3";
+const LS_KEY = "viverbem-sistema-v4";
 const Store = {
   mode: FIREBASE_CONFIG ? "firebase" : "demo",
   data: {}, fs: null, auth: null,
@@ -387,11 +414,11 @@ function seed(){
   ];
   pac.forEach(p=>{ const [c,u]=p.cidade.split("/"); p.cidade=c; p.uf=u; const [r,n,b]=p.endereco.split(", "); p.rua=r; p.numero=n||"S/N"; p.bairro=b||"Zona rural"; p.endereco=montaEnd(p); });
   Object.assign(pac[0],{geo:"-7.389200, -38.774500",cep:"63210-000",complexidade:"Alta",consciencia:"Confuso / desorientado",mobilidade:"Acamado",alimentacao:"Oral (dieta pastosa)",dispositivos:["Curativo / lesão"],riscos:["Lesão por pressão","Broncoaspiração","Queda"],medicamentos:"Losartana 50 mg às 8h e 20h\nAAS 100 mg após o almoço\nSinvastatina 20 mg à noite",medico:"Dr. Paulo Mendes (CRM-CE 00000)",medicoTel:"(88) 99999-9000"});
-  Object.assign(pac[1],{geo:"-7.213100, -39.315100",cep:"63010-000",complexidade:"Média",consciencia:"Lúcido e orientado",mobilidade:"Deambula com ajuda",alimentacao:"Oral",dispositivos:[],riscos:["Queda"],medicamentos:"Levodopa + benserazida 100/25 mg 3x ao dia\nPramipexol 0,25 mg 2x ao dia",medico:"Dra. Helena Cruz (neurologista)",medicoTel:""});
+  Object.assign(pac[1],{exigeLocal:"nao",geo:"-7.213100, -39.315100",cep:"63010-000",complexidade:"Média",consciencia:"Lúcido e orientado",mobilidade:"Deambula com ajuda",alimentacao:"Oral",dispositivos:[],riscos:["Queda"],medicamentos:"Levodopa + benserazida 100/25 mg 3x ao dia\nPramipexol 0,25 mg 2x ao dia",medico:"Dra. Helena Cruz (neurologista)",medicoTel:""});
   Object.assign(pac[2],{geo:"-7.493100, -38.985300",cep:"63260-000",complexidade:"Média",consciencia:"Lúcido e orientado",mobilidade:"Cadeira de rodas",alimentacao:"Oral",dispositivos:["Acesso venoso","Curativo / lesão"],riscos:["Queda","Infecção"],medicamentos:"Ceftriaxona 1 g EV 1x ao dia (até 14 dias)\nEnoxaparina 40 mg SC 1x ao dia\nParacetamol 750 mg se dor",medico:"Dr. Marcos Feitosa (ortopedista)",medicoTel:""});
   Object.assign(pac[3],{complexidade:"",consciencia:"",mobilidade:"",alimentacao:"",dispositivos:[],riscos:[]});
   const pro = [
-    {id:"pro1",exemplo:true,nome:"Maria Aparecida Souza",cpf:"",funcao:"Técnico(a) de enfermagem",registro:"COREN-CE 000001",tel:"(88) 99999-0001",email:"",cidade:"Mauriti/CE",areas:"Mauriti, Brejo Santo",disp:["Plantão 12h","Noturno"],status:"ativo",acesso:"maria@exemplo.com",senhaDemo:"123456",criado:ts(-60)},
+    {id:"pro1",exemplo:true,nome:"Maria Aparecida Souza",cpf:"",funcao:"Técnico(a) de enfermagem",registro:"COREN-CE 000001",tel:"(88) 99999-0001",email:"",cidade:"Mauriti/CE",areas:"Mauriti, Brejo Santo",disp:["Plantão 12h","Noturno"],status:"ativo",acesso:"maria@exemplo.com",senhaDemo:"123456",porHora:"sim",exigeLocal:"sim",criado:ts(-60)},
     {id:"pro2",exemplo:true,nome:"Josefa Bezerra",cpf:"",funcao:"Técnico(a) de enfermagem",registro:"COREN-CE 000002",tel:"(88) 99999-0002",email:"",cidade:"Mauriti/CE",areas:"Mauriti",disp:["Plantão 12h","Plantão 24h"],status:"ativo",criado:ts(-50)},
     {id:"pro3",exemplo:true,nome:"Carlos Eduardo Rocha",cpf:"",funcao:"Fisioterapeuta",registro:"CREFITO-6 000003-F",tel:"(88) 99999-0003",email:"",cidade:"Juazeiro do Norte/CE",areas:"Juazeiro, Crato, Barbalha",disp:["Atendimento por hora"],status:"ativo",criado:ts(-40)},
     {id:"pro4",exemplo:true,nome:"Ana Paula Leite",cpf:"",funcao:"Enfermeiro(a)",registro:"COREN-CE 000004",tel:"(88) 99999-0004",email:"",cidade:"Brejo Santo/CE",areas:"Brejo Santo, Mauriti, Milagres",disp:["Plantão 6h","Atendimento por hora"],status:"ativo",criado:ts(-45)}
@@ -419,6 +446,7 @@ function seed(){
     p.chegada={em:new Date(st+late*6e4).toISOString(),lat:c[0],lng:c[1],acc:12};
     if(en<agora){ p.status="realizado"; if(k%11!==0) p.saida={em:new Date(en+Math.round(Math.random()*12)*6e4).toISOString(),lat:c[0],lng:c[1],acc:12}; }
     else { p.status="andamento"; p.evolucao=null; } });
+  { const x=pl.find(p=>p.profId==="pro1"&&p.status==="realizado"&&p.chegada&&p.saida); if(x) x.chegada.em=new Date(tStart(x)+62*6e4).toISOString(); }
   const cand=[
     {id:"VB-EX01A",exemplo:true,nome:"Rosângela Cruz",cpf:"11144477735",nasc:"1990-05-14",tel:"(88) 99999-2001",email:"rosangela@exemplo.com",cidade:"Mauriti/CE",funcao:"Técnico(a) de enfermagem",registro:"COREN-CE 000010",anos:"6",exp:["Idosos","Sondas","Curativos"],disp:["Plantão 12h","Fins de semana"],areas:"Mauriti, Milagres",resumo:"Trabalhou 4 anos em hospital regional.",cv:{nome:"curriculo-rosangela.pdf",kb:180},status:"recebido",hist:[{s:"recebido",em:ts(-1)}],notas:"",criado:ts(-1)},
     {id:"VB-EX02B",exemplo:true,nome:"José Ribamar Lima",cpf:"52998224725",nasc:"1979-09-30",tel:"(88) 99999-2002",email:"jose@exemplo.com",cidade:"Brejo Santo/CE",funcao:"Auxiliar de enfermagem",registro:"COREN-CE 000011",anos:"5",exp:["Idosos","Alzheimer / Parkinson"],disp:["Plantão 24h"],areas:"Brejo Santo",resumo:"Curso de cuidador de idosos (160h).",cv:{nome:"cv-jose.docx",kb:64},status:"entrevista",hist:[{s:"recebido",em:ts(-6)},{s:"analise",em:ts(-4)},{s:"entrevista",em:ts(-2)}],notas:"Entrevista marcada.",criado:ts(-6)},
@@ -427,7 +455,7 @@ function seed(){
   cand.forEach(c=>{ c.docs=Object.fromEntries(DOCS.map(([k])=>[k,{nome:k+".jpg",kb:120,em:c.criado}])); delete c.cv; });
   cand[2].docsOk=Object.fromEntries(DOCS.map(([k])=>[k,true]));
   cand[1].docsOk={selfie:true,identidade:true,conselho:true,curriculo:true}; cand[1].reenvio=["endereco"];
-  const cfg={id:"empresa",nome:"Viver Bem Atendimento Domiciliar",cnpj:"",endereco:"",cidade:"",whatsapp:"",email:"",tabela:tab,diaPagamento:"10",exemploValores:true};
+  const cfg={id:"empresa",nome:"Viver Bem Atendimento Domiciliar",cnpj:"",endereco:"",cidade:"",whatsapp:"",email:"",tabela:tab,diaPagamento:"10",raio:300,tolerancia:15,exemploValores:true};
   const ct=[];
   ct.push(makeContrato("autonomo",{refId:"VB-EX03C",exemplo:true,nome:cand[2].nome,cpf:cand[2].cpf,funcao:cand[2].funcao,registro:cand[2].registro,cidade:cand[2].cidade},cfg,"ct-ex1"));
   const cp=makeContrato("paciente",{refId:"pac1",exemplo:true,respNome:"Antônio Alves de Lima",respCpf:"52998224725",respEnd:"Rua São Pedro, 120, Centro, Mauriti/CE",pacNome:pac[0].nome,servicos:"Plantão noturno de 12h (19h às 7h), todos os dias, com técnico(a) de enfermagem, e supervisão de enfermagem semanal.",valor:"R$ 320,00 por plantão, faturado mensalmente",venc:"5"},cfg,"ct-ex2");
@@ -555,6 +583,8 @@ const ICON = {
   financeiro:I('<path d="M3 7h18v12H3z"/><circle cx="12" cy="13" r="2.5"/><path d="M3 10h2M19 16h2"/>'),
   config:I('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-2.7-1.1l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3.6 15H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.1-2.7l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 9.7 4.4V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1.3z"/>'),
   ponto:I('<circle cx="12" cy="10" r="3"/><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/>'),
+  folha:I('<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>'),
+  pagamentos:I('<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/>'),
   menu:I('<path d="M4 6h16M4 12h16M4 18h16"/>'),
   plus:I('<path d="M12 5v14M5 12h14"/>'),
   wa:I('<path d="M4 20l1.3-3.9A8 8 0 1 1 8 19z"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5l1-1.5-2-1-1 1c-1-.5-2-1.5-2.5-2.5l1-1-1-2z"/>'),
@@ -589,12 +619,12 @@ function counts(){
 const ADMIN_NAV = [
   ["painel","Painel"],["pacientes","Pacientes"],["escala","Escala de plantões"],["ponto","Chegadas e saídas"],["profissionais","Profissionais"],
   ["sep","Captação"],["recrutamento","Recrutamento"],["solicitacoes","Solicitações"],["operadoras","Operadoras"],
-  ["sep","Gestão"],["contratos","Contratos"],["financeiro","Financeiro"],["config","Configurações"]
+  ["sep","Gestão"],["contratos","Contratos"],["folha","Folha de pagamento"],["financeiro","Financeiro"],["config","Configurações"]
 ];
 function route(){ const h=decodeURIComponent(location.hash.slice(1)); const m=h.match(/^([a-z]+)(?:-(.+))?$/); return m?{r:m[1],id:m[2]||null}:{r:"",id:null}; }
 const PUBLIC = {links:pgLinks, trabalhe:pgTrabalhe, acompanhar:pgAcompanhar, assinar:pgAssinar, solicitar:pgSolicitar};
-const ADMIN = {ponto:pgPonto,painel:pgPainel,pacientes:pgPacientes,paciente:pgPaciente,escala:pgEscala,profissionais:pgProfissionais,profissional:pgProfissional,recrutamento:pgRecrutamento,candidato:pgCandidato,contratos:pgContratos,solicitacoes:pgSolicitacoes,operadoras:pgOperadoras,financeiro:pgFinanceiro,config:pgConfig};
-const PROF = {meus:pgMeus};
+const ADMIN = {folha:pgFolha,ponto:pgPonto,painel:pgPainel,pacientes:pgPacientes,paciente:pgPaciente,escala:pgEscala,profissionais:pgProfissionais,profissional:pgProfissional,recrutamento:pgRecrutamento,candidato:pgCandidato,contratos:pgContratos,solicitacoes:pgSolicitacoes,operadoras:pgOperadoras,financeiro:pgFinanceiro,config:pgConfig};
+const PROF = {meus:pgMeus, pagamentos:pgPagamentos};
 
 async function render(){
   const {r,id} = route();
@@ -613,7 +643,7 @@ window.addEventListener("hashchange", render);
 function appShell(cur, body){
   const c = counts();
   const badge = {escala:c.semPro, recrutamento:c.cand, solicitacoes:c.sol, contratos:c.ctPend};
-  const navItems = S.role==="admin" ? ADMIN_NAV : [["meus","Meus plantões"]];
+  const navItems = S.role==="admin" ? ADMIN_NAV : [["meus","Meus plantões"],["pagamentos","Meus pagamentos"]];
   const activeKey = {paciente:"pacientes",profissional:"profissionais",candidato:"recrutamento"}[cur] || cur;
   const nav = navItems.map(([k,l]) => k==="sep" ? `<div class="nav-sep">${l}</div>` :
     `<a href="#${k}" ${activeKey===k?'aria-current="page"':""}>${ICON[k]||ICON.escala}<span>${l}</span>${badge[k]?`<span class="badge">${badge[k]}</span>`:""}</a>`).join("");
@@ -716,7 +746,9 @@ function shiftRow(p){
 const PAC_SECTIONS = () => [
   ["Identificação",[{k:"nome",l:"Nome do paciente",req:1,full:1},{k:"nasc",l:"Data de nascimento",t:"date"},{k:"sexo",l:"Sexo",t:"select",o:[["",""],["F","Feminino"],["M","Masculino"]]},{k:"cpf",l:"CPF ou CNPJ",im:"numeric",ph:"CPF ou CNPJ"},{k:"status",l:"Situação",t:"select",o:[["avaliacao","Em avaliação"],["ativo","Ativo"],["alta","Alta"]]}]],
   ["Endereço do atendimento",[...ADDR("",true),
-    {k:"geo",l:"Localização da casa",full:1,h:"Latitude e longitude. Serve para conferir a chegada dos profissionais. Pode ser preenchida pela primeira chegada.",ph:"-7.389200, -38.774500"}]],
+    {k:"exigeLocal",l:"Check-in e check-out",t:"select",o:[["sim","Só no endereço do paciente"],["nao","Liberado fora do endereço (casa sem internet)"]]},
+    {k:"raio",l:"Distância permitida (metros)",t:"number",ph:"300",h:"Em branco usa o padrão das Configurações"},
+    {k:"geo",l:"Localização da casa",full:1,h:"Latitude e longitude usadas para conferir o check-in. Use os botões abaixo ou cole do Google Maps.",ph:"-7.389200, -38.774500"}]],
   ["Responsável e convênio",[{k:"responsavel",l:"Responsável / familiar",req:1},{k:"telResp",l:"WhatsApp do responsável",req:1,im:"tel"},{k:"cpfResp",l:"CPF ou CNPJ do responsável",im:"numeric",ph:"CPF ou CNPJ"},
     {k:"tipo",l:"Atendimento",t:"select",o:[["particular","Particular"],["operadora","Operadora de saúde"]]},{k:"operadoraId",l:"Operadora",t:"select",o:[["","Não se aplica"],...Store.all("operadoras").map(o=>[o.id,o.nome])]},{k:"carteirinha",l:"Nº da carteirinha"}]],
   ["Estado clínico",[{k:"diagnostico",l:"Diagnóstico / condição principal",full:1},
@@ -766,6 +798,7 @@ function pgPaciente(id){
   <div class="grid2">
     <section class="card"><h2>Dados</h2><dl class="kv">
       <dt>Endereço</dt><dd>${esc(p.endereco)}, ${esc(loc(p))}${p.cep?" · CEP "+esc(p.cep):""}</dd>
+      <dt>Check-in</dt><dd>${(p.exigeLocal||"sim")==="nao"?'<span class="pill p-warn">Liberado fora do endereço</span>':`<span class="pill p-ok">Só no endereço · até ${raioDe(p)} m</span>`}</dd>
       <dt>Localização</dt><dd>${geoOf(p)?`<a href="${rotaURL(p)}" target="_blank" rel="noopener">Ver no mapa</a>`:'<span class="muted">Não definida. É preenchida na primeira chegada do profissional.</span>'}</dd>
       <dt>Responsável</dt><dd>${esc(p.responsavel)} · ${esc(p.telResp)}</dd>
       <dt>Atendimento</dt><dd>${p.tipo==="operadora"?esc(op?.nome||"Operadora")+(p.carteirinha?" · carteirinha "+esc(p.carteirinha):""):"Particular"}</dd>
@@ -785,8 +818,10 @@ function evoBlock(x){
 function formPaciente(id){
   const p=id?{...Store.get("pacientes",id)}:{tipo:"particular",status:"avaliacao"};
   if(!p.rua&&p.endereco) p.rua=p.endereco;
-  modal(id?"Editar paciente":"Novo paciente", PAC_SECTIONS().map(([t,sp])=>`<h3 style="margin-top:6px;color:var(--copper)">${t}</h3>${fields(sp,p)}`).join("")
+  const bd=modal(id?"Editar paciente":"Novo paciente", PAC_SECTIONS().map(([t,sp])=>`<h3 style="margin-top:6px;color:var(--copper)">${t}</h3>${fields(sp,p)}`).join("")
     +`<div class="actions"><button class="btn btn-primary" data-act="savePaciente" data-id="${id||""}">Salvar</button>${id?`<button class="btn btn-danger" data-act="delPaciente" data-id="${id}">Excluir</button>`:""}</div>`,{wide:1});
+  $("#f_geo",bd).closest("label").insertAdjacentHTML("afterend",`<div class="actions" style="grid-column:1/-1"><button type="button" class="btn btn-sm btn-line" data-act="geoEndereco">${ICON.ponto}Localizar pelo endereço</button><button type="button" class="btn btn-sm btn-line" data-act="geoAqui">Estou na casa do paciente</button><a id="geoMapa" class="btn btn-sm btn-line" target="_blank" rel="noopener" hidden>Ver no mapa</a></div>`);
+  geoLink(bd);
 }
 /* =================== ESCALA =================== */
 let esc_ini=null, escPac="", escPro="";
@@ -834,11 +869,13 @@ function plantaoView(id){
   const p=Store.get("plantoes",id); if(!p) return;
   const pac=Store.get("pacientes",p.pacId)||{}, c=conflito(p), admin=S.role==="admin", e=p.evolucao||{};
   const ch=regInfo(p.chegada,pac), sa=regInfo(p.saida,pac), at=atrasoMin(p);
-  const regLine=(r,raw)=> r ? `<b>${r.hora}</b>${raw.acc?` <span class="small muted">(precisão ${raw.acc} m)</span>`:""} · ${r.semGeo?'<span class="pill p-mute">Sem localização</span>':r.d==null?'<span class="small muted">casa sem localização cadastrada</span>':r.longe?`<span class="pill p-bad">A ${fmtDist(r.d)} do endereço</span>`:`<span class="pill p-ok">No endereço (${fmtDist(r.d)})</span>`}${r.map?` · <a href="${r.map}" target="_blank" rel="noopener">mapa</a>`:""}` : "-";
+  const regLine=(r,raw)=> r ? `${raw.manual?`<span class="pill p-warn">Lançado pela administração</span> <span class="small muted">${esc(raw.motivo||"")}</span> · `:""}<b>${r.hora}</b>${raw.acc?` <span class="small muted">(precisão ${raw.acc} m)</span>`:""} · ${r.semGeo?'<span class="pill p-mute">Sem localização</span>':r.d==null?'<span class="small muted">casa sem localização cadastrada</span>':r.longe?`<span class="pill p-bad">A ${fmtDist(r.d)} do endereço</span>`:`<span class="pill p-ok">No endereço (${fmtDist(r.d)})</span>`}${r.map?` · <a href="${r.map}" target="_blank" rel="noopener">mapa</a>`:""}` : "-";
   const presenca = `<div class="card" style="background:var(--surface-2)"><h3 style="margin-bottom:8px">Chegada e saída</h3><dl class="kv">
       <dt>Chegada</dt><dd>${p.chegada?regLine(ch,p.chegada)+(at>15?` · <span class="pill p-warn">Atraso de ${at} min</span>`:at<-15?` · <span class="small muted">${-at} min antes</span>`:""):(p.status==="agendado"&&tStart(p)<Date.now()-30*6e4?'<span class="pill p-bad">Não registrada</span>':"Ainda não registrada")}</dd>
       <dt>Saída</dt><dd>${p.saida?regLine(sa,p.saida):"-"}</dd>
       ${p.chegada&&p.saida?`<dt>Tempo na casa</dt><dd class="num">${((new Date(p.saida.em)-new Date(p.chegada.em))/36e5).toFixed(1).replace(".",",")} h de ${p.horas} h previstas</dd>`:""}</dl>
+      ${admin&&(!p.chegada||!p.saida)&&!["cancelado","falta"].includes(p.status)?`<div class="actions" style="margin-top:10px">${!p.chegada?`<button class="btn btn-sm btn-line" data-act="regManual" data-id="${p.id}" data-v="chegada">Lançar chegada manual</button>`:`<button class="btn btn-sm btn-line" data-act="regManual" data-id="${p.id}" data-v="saída">Lançar saída manual</button>`}</div>`:""}
+      ${admin&&(p.tentativas||[]).length?`<div class="small" style="margin-top:10px"><b>Tentativas bloqueadas:</b> ${p.tentativas.map(t=>`${t.tipo} às ${hhmm(t.em)}${t.d!=null?" a "+fmtDist(t.d):" sem localização"}`).join(" · ")}</div>`:""}
       ${admin&&p.chegada?.lat!=null&&!geoOf(pac)&&pac.id?`<div class="actions" style="margin-top:10px"><button class="btn btn-sm btn-line" data-act="salvarLocal" data-id="${p.id}">Usar a chegada como localização da casa</button></div>`:""}</div>`;
   const evoForm = `<div class="fgrid">
     <label class="f">PA<input id="ev_pa" value="${esc(e.pa||"")}" placeholder="120/80"></label><label class="f">FC (bpm)<input id="ev_fc" inputmode="numeric" value="${esc(e.fc||"")}"></label>
@@ -847,7 +884,7 @@ function plantaoView(id){
     <label class="f full">Evolução do plantão <i class="req">*</i><small>Como o paciente passou, procedimentos feitos, intercorrências</small><textarea id="ev_txt" rows="5">${esc(e.texto||"")}</textarea></label></div>`;
   let acoes="", mostraEvo = p.status!=="cancelado" && p.status!=="falta";
   if(!admin){
-    if(podeChegar(p)){ mostraEvo=false; acoes=`<button class="btn btn-copper btn-block" data-act="checkin" data-id="${p.id}">${ICON.ponto}Registrar chegada</button><p class="small muted">Registre ao entrar na casa do paciente. O horário e a sua localização são gravados.</p>`; }
+    if(podeChegar(p)){ mostraEvo=false; acoes=`<button class="btn btn-copper btn-block" data-act="checkin" data-id="${p.id}">${ICON.ponto}Registrar chegada</button><p class="small muted">${exigeLocal(pac,Store.get("profissionais",p.profId))?`O registro só é aceito a até ${raioDe(pac)} m da casa do paciente. `:""}Registre ao entrar na casa do paciente. O horário e a sua localização são gravados.</p>`; }
     else if(p.status==="agendado"){ mostraEvo=false; acoes=`<p class="note">A chegada fica disponível 2 horas antes do início do plantão.</p>`; }
     else if(p.status==="andamento"){ acoes=`<button class="btn btn-line" data-act="saveEvo" data-id="${p.id}">Salvar evolução</button><button class="btn btn-copper" data-act="checkout" data-id="${p.id}">${ICON.ponto}Registrar saída</button>`; }
     else if(p.status==="realizado"){ acoes=`<button class="btn btn-primary" data-act="saveEvo" data-id="${p.id}">Atualizar evolução</button>${p.chegada&&!p.saida?`<button class="btn btn-copper" data-act="checkout" data-id="${p.id}">Registrar saída</button>`:""}`; }
@@ -864,7 +901,7 @@ function plantaoView(id){
     <dt>Profissional</dt><dd>${esc(proName(p.profId))}</dd>
     <dt>Endereço</dt><dd>${esc(pac.endereco||"-")}, ${esc(loc(pac))} · <a href="${rotaURL(pac)}" target="_blank" rel="noopener">Como chegar</a></dd>
     <dt>Responsável</dt><dd>${esc(pac.responsavel||"-")} · ${esc(pac.telResp||"")}</dd>
-    ${admin?`<dt>Valores</dt><dd class="num">Cobrado ${brl(p.valorCobrado)} · Profissional ${brl(p.valorPago)}</dd>`:`<dt>Seu valor</dt><dd class="num">${brl(p.valorPago)}</dd>`}
+    ${(()=>{ const c=calcPag(p); return admin?`<dt>Valores</dt><dd class="num">Cobrado ${brl(p.valorCobrado)} · Profissional ${brl(c.valor)}${c.obs?` <span class="small muted">(${esc(c.obs)})</span>`:""}${p.status==="realizado"?` · <a href="#" data-act="ajustarValor" data-id="${p.id}">ajustar</a>`:""}</dd>`:`<dt>Seu valor</dt><dd class="num">${brl(c.valor)}${c.obs?` <span class="small muted">(${esc(c.obs)})</span>`:""}</dd>`; })()}
     <dt>Situação</dt><dd><span class="pill ${PL_ST[p.status][1]}">${PL_ST[p.status][0]}</span></dd></dl>
     ${pac.alergias?`<p class="note warn"><b>Alergias:</b> ${esc(pac.alergias)}</p>`:""}
     ${c&&admin?`<p class="note warn">Conflito: ${esc(proName(p.profId))} também está em ${esc(pacName(c.pacId))} das ${c.inicio} às ${fim(c)} em ${fmtDay(c.data)}.</p>`:""}
@@ -875,6 +912,10 @@ function plantaoView(id){
     <div class="actions">${acoes}</div>`;
   modal("Plantão", body, {wide:1, nofocus:1});
 }
+async function registraTentativa(p,tipo,pos,v){
+  try{ p.tentativas=[...(p.tentativas||[]).slice(-9),{em:new Date().toISOString(),tipo,lat:pos?.lat??null,lng:pos?.lng??null,d:v.d!=null?Math.round(v.d):null}]; await Store.put("plantoes",p); }catch(e){} }
+function avisoLocal(msg){ const bd=$(".modal-b"); if(bd) showErr(bd,msg); else modal("Registro não permitido",`<p class="note warn">${esc(msg)}</p><div class="actions"><button class="btn btn-primary" data-act="close">Entendi</button></div>`,{nofocus:1}); }
+function geoLink(bd){ const g=geoOf({geo:$("#f_geo",bd).value}); const a=$("#geoMapa",bd); if(a){ a.hidden=!g; if(g) a.href=`https://www.google.com/maps?q=${g[0]},${g[1]}`; } }
 function readEvo(){ const txt=$("#ev_txt")?.value.trim()||""; if(txt.length<10) return null;
   return {texto:txt,pa:$("#ev_pa").value.trim(),fc:$("#ev_fc").value.trim(),temp:$("#ev_temp").value.trim(),sat:$("#ev_sat").value.trim(),glic:$("#ev_glic").value.trim(),em:new Date().toISOString()}; }
 /* =================== PROFISSIONAIS =================== */
@@ -882,7 +923,9 @@ const PRO_SPEC = () => [
   {k:"nome",l:"Nome completo ou razão social",req:1,full:1},{k:"cpf",l:"CPF ou CNPJ",im:"numeric",ph:"CPF ou CNPJ",h:"CNPJ se atua como pessoa jurídica (MEI, clínica)"},{k:"funcao",l:"Função",req:1,t:"select",o:[["","Selecione"],...Object.keys(FUNCOES)]},
   {k:"registro",l:"Registro no conselho",ph:"COREN-UF 000000"},{k:"tel",l:"WhatsApp",req:1,im:"tel"},{k:"email",l:"E-mail",t:"email"},
   ...ADDR("",false),{k:"areas",l:"Cidades que atende",full:1},{k:"status",l:"Situação",t:"select",o:[["ativo","Ativo"],["inativo","Inativo"]]},
-  {k:"pix",l:"Chave Pix para pagamento"},{k:"disp",l:"Disponibilidade",t:"checks",o:DISPON,full:1}
+  {k:"pix",l:"Chave Pix para pagamento"},
+  {k:"exigeLocal",l:"Check-in e check-out",t:"select",o:[["sim","Só no endereço do paciente"],["nao","Liberado fora do endereço"]]},
+  {k:"porHora",l:"Cálculo do pagamento",t:"select",o:[["nao","Valor cheio do plantão"],["sim","Computar por hora registrada"]],h:"Por hora: atraso e saída antecipada são descontados"},{k:"disp",l:"Disponibilidade",t:"checks",o:DISPON,full:1}
 ];
 let proBusca="";
 function pgProfissionais(){
@@ -901,14 +944,14 @@ function pgProfissional(id){
   const pls=Store.all("plantoes").filter(x=>x.profId===id);
   const prox=pls.filter(x=>x.data>=t&&x.status==="agendado").sort((a,b)=>tStart(a)-tStart(b)).slice(0,8);
   const mesPl=pls.filter(x=>x.data.startsWith(mes)&&x.status==="realizado");
-  const aPagar=pls.filter(x=>x.status==="realizado"&&!x.pago).reduce((s,x)=>s+(+x.valorPago||0),0);
+  const aPagar=pls.filter(x=>x.status==="realizado"&&!x.pago).reduce((s,x)=>s+valorProf(x),0);
   const faltas=pls.filter(x=>x.status==="falta").length;
   const ct=Store.all("contratos").find(c=>c.tipo==="autonomo"&&(c.refId===p.candId||c.dados?.profId===id));
   return `<div class="pagehead"><div><p class="small"><a href="#profissionais">Profissionais</a></p><h1>${esc(p.nome)}${ex(p)}</h1><p class="sub">${esc(p.funcao)} ${p.registro?"· "+esc(p.registro):""}</p></div>
     <div class="actions"><button class="btn btn-line" data-act="editProf" data-id="${id}">Editar</button><button class="btn btn-line" data-act="acessoProf" data-id="${id}">${p.acesso?"Acesso ao app":"Criar acesso ao app"}</button><a class="btn btn-line" target="_blank" rel="noopener" href="${wa(p.tel)}">${ICON.wa}WhatsApp</a></div></div>
   <div class="kpis"><div class="kpi"><b>${mesPl.length}</b><span>Plantões realizados no mês</span></div><div class="kpi"><b>${brl(aPagar)}</b><span>A pagar</span></div><div class="kpi"><b>${faltas}</b><span>Faltas registradas</span></div></div>
   <div class="grid2">
-    <section class="card"><h2>Dados</h2><dl class="kv"><dt>WhatsApp</dt><dd>${esc(p.tel)}</dd><dt>E-mail</dt><dd>${esc(p.email||"-")}</dd><dt>CPF/CNPJ</dt><dd>${esc(fmtCPF(p.cpf)||"-")}</dd><dt>Endereço</dt><dd>${esc(endCompleto(p)||"-")}</dd><dt>Atende em</dt><dd>${esc(p.areas||p.cidade||"-")}</dd><dt>Disponibilidade</dt><dd>${esc((p.disp||[]).join(", ")||"-")}</dd><dt>Pix</dt><dd>${esc(p.pix||"-")}</dd><dt>Documentos</dt><dd>${p.candId&&Store.get("candidatos",p.candId)?`<button class="btn btn-sm btn-line" data-act="verDocs" data-id="${p.candId}">Ver documentos</button>`:"Cadastrado sem candidatura"}</dd><dt>Acesso ao app</dt><dd>${p.acesso?esc(p.acesso):"Ainda não criado"}</dd><dt>Contrato</dt><dd>${ct?`<span class="pill ${ct.status==="assinado"?"p-ok":"p-warn"}">${ct.status==="assinado"?"Assinado":"Pendente"}</span>`:'<button class="btn btn-sm btn-line" data-act="ctProf" data-id="'+id+'">Gerar contrato de autônomo</button>'}</dd></dl></section>
+    <section class="card"><h2>Dados</h2><dl class="kv"><dt>WhatsApp</dt><dd>${esc(p.tel)}</dd><dt>E-mail</dt><dd>${esc(p.email||"-")}</dd><dt>CPF/CNPJ</dt><dd>${esc(fmtCPF(p.cpf)||"-")}</dd><dt>Endereço</dt><dd>${esc(endCompleto(p)||"-")}</dd><dt>Atende em</dt><dd>${esc(p.areas||p.cidade||"-")}</dd><dt>Disponibilidade</dt><dd>${esc((p.disp||[]).join(", ")||"-")}</dd><dt>Pix</dt><dd>${esc(p.pix||"-")}</dd><dt>Documentos</dt><dd>${p.candId&&Store.get("candidatos",p.candId)?`<button class="btn btn-sm btn-line" data-act="verDocs" data-id="${p.candId}">Ver documentos</button>`:"Cadastrado sem candidatura"}</dd><dt>Check-in</dt><dd>${(p.exigeLocal||"sim")==="nao"?'<span class="pill p-warn">Liberado fora do endereço</span>':'<span class="pill p-ok">Só no endereço</span>'}</dd><dt>Pagamento</dt><dd>${p.porHora==="sim"?'<span class="pill p-cop">Computado por hora</span>':"Valor cheio do plantão"}</dd><dt>Acesso ao app</dt><dd>${p.acesso?esc(p.acesso):"Ainda não criado"}</dd><dt>Contrato</dt><dd>${ct?`<span class="pill ${ct.status==="assinado"?"p-ok":"p-warn"}">${ct.status==="assinado"?"Assinado":"Pendente"}</span>`:'<button class="btn btn-sm btn-line" data-act="ctProf" data-id="'+id+'">Gerar contrato de autônomo</button>'}</dd></dl></section>
     <section class="card"><h2>Próximos plantões</h2>${prox.length?`<div class="day">${prox.map(x=>shiftRow(x).replace('<span class="t">',`<span class="t"><small>${fmtDay(x.data).slice(0,5)}</small>`)).join("")}</div>`:`<p class="empty">Nenhum plantão agendado.</p>`}</section>
   </div>`;
 }
@@ -1023,12 +1066,12 @@ function pgFinanceiro(){
   const label=new Date(y,m-1,15).toLocaleDateString("pt-BR",{month:"long",year:"numeric"});
   const pls=Store.all("plantoes").filter(p=>p.data.startsWith(finMes)&&p.status==="realizado");
   const fat=pls.reduce((s,p)=>s+(+p.valorCobrado||0),0), rec=pls.filter(p=>p.recebido).reduce((s,p)=>s+(+p.valorCobrado||0),0);
-  const cus=pls.reduce((s,p)=>s+(+p.valorPago||0),0), pag=pls.filter(p=>p.pago).reduce((s,p)=>s+(+p.valorPago||0),0);
+  const cus=pls.reduce((s,p)=>s+valorProf(p),0), pag=pls.filter(p=>p.pago).reduce((s,p)=>s+valorProf(p),0);
   const byPag={}; pls.forEach(p=>{ const pac=Store.get("pacientes",p.pacId); const key=pac?.tipo==="operadora"&&pac.operadoraId?"op:"+pac.operadoraId:"pac:"+p.pacId; (byPag[key]=byPag[key]||[]).push(p); });
   const byPro={}; pls.forEach(p=>{ if(p.profId)(byPro[p.profId]=byPro[p.profId]||[]).push(p); });
   const rowsR=Object.entries(byPag).map(([k,l])=>{ const [t,id]=k.split(":"); const nome=t==="op"?Store.get("operadoras",id)?.nome+" (operadora)":pacName(id); const tot=l.reduce((s,p)=>s+(+p.valorCobrado||0),0), pend=l.filter(p=>!p.recebido).reduce((s,p)=>s+(+p.valorCobrado||0),0);
     return `<tr><td><b>${esc(nome)}</b><div class="small muted">${l.length} plantões</div></td><td class="r">${brl(tot)}</td><td class="r">${pend?`<b>${brl(pend)}</b>`:"-"}</td><td class="r">${pend?`<button class="btn btn-sm btn-line" data-act="finRec" data-id="${k}">Marcar recebido</button>`:'<span class="pill p-ok">Recebido</span>'}</td></tr>`; }).join("");
-  const rowsP=Object.entries(byPro).map(([id,l])=>{ const pro=Store.get("profissionais",id); const tot=l.reduce((s,p)=>s+(+p.valorPago||0),0), pend=l.filter(p=>!p.pago).reduce((s,p)=>s+(+p.valorPago||0),0);
+  const rowsP=Object.entries(byPro).map(([id,l])=>{ const pro=Store.get("profissionais",id); const tot=l.reduce((s,p)=>s+valorProf(p),0), pend=l.filter(p=>!p.pago).reduce((s,p)=>s+valorProf(p),0);
     return `<tr><td><b>${esc(pro?.nome||"-")}</b><div class="small muted">${l.length} plantões${pro?.pix?" · Pix "+esc(pro.pix):""}</div></td><td class="r">${brl(tot)}</td><td class="r">${pend?`<b>${brl(pend)}</b>`:"-"}</td><td class="r">${pend?`<button class="btn btn-sm btn-line" data-act="finPag" data-id="${id}">Marcar pago</button>`:'<span class="pill p-ok">Pago</span>'}</td></tr>`; }).join("");
   return `<div class="pagehead"><div><h1>Financeiro</h1><p class="sub" style="text-transform:capitalize">${label} · com base nos plantões realizados</p></div>
     <div class="actions"><button class="btn btn-line btn-sm" data-act="finMes" data-id="-1">‹ Mês anterior</button><button class="btn btn-line btn-sm" data-act="finMes" data-id="1">Próximo mês ›</button></div></div>
@@ -1037,11 +1080,50 @@ function pgFinanceiro(){
   <section class="card"><h2>A pagar aos profissionais</h2><div class="tablewrap"><table><thead><tr><th>Profissional</th><th class="r">Total do mês</th><th class="r">Em aberto</th><th></th></tr></thead><tbody>${rowsP||`<tr><td colspan="4" class="empty">Nenhum plantão realizado neste mês.</td></tr>`}</tbody></table></div></section>`;
 }
 
+/* =================== FOLHA DE PAGAMENTO =================== */
+let folhaMes=null;
+const mesLabel = m => { const [y,mm]=m.split("-").map(Number); return new Date(y,mm-1,15).toLocaleDateString("pt-BR",{month:"long",year:"numeric"}); };
+const folhaPlantoes = (profId, mes) => Store.all("plantoes").filter(p=>p.profId===profId&&p.data.startsWith(mes)&&["realizado","falta"].includes(p.status)).sort((a,b)=>tStart(a)-tStart(b));
+function folhaResumo(profId, mes){ const l=folhaPlantoes(profId,mes), r=l.filter(p=>p.status==="realizado");
+  const cs=r.map(calcPag); return {l, n:r.length, faltas:l.length-r.length, bruto:cs.reduce((s,c)=>s+c.base,0), liquido:cs.reduce((s,c)=>s+c.valor,0), pago:r.filter(p=>p.pago).reduce((s,p)=>s+valorProf(p),0),
+    hPrev:r.reduce((s,p)=>s+p.horas,0), hReg:cs.reduce((s,c)=>s+(c.horas??0),0), pend:r.filter(p=>!p.pago).length}; }
+function folhaTabela(profId, mes, admin){
+  const R=folhaResumo(profId,mes), pro=Store.get("profissionais",profId);
+  if(!R.l.length) return `<p class="empty">Nenhum plantão realizado em ${mesLabel(mes)}.</p>`;
+  const rows=R.l.map(p=>{ const c=calcPag(p), ch=p.chegada?hhmm(p.chegada.em):"-", sa=p.saida?hhmm(p.saida.em):"-";
+    return `<tr><td class="num">${fmtDay(p.data).slice(0,5)}</td><td>${esc(pacName(p.pacId))}<div class="small muted">${MOD_NAME[p.mod]}</div></td><td class="num">${p.inicio}–${fim(p)}</td><td class="num">${ch} → ${sa}</td><td class="r">${c.horas!=null?c.horas.toFixed(1).replace(".",","):"-"}</td><td class="r">${brl(c.base)}</td><td class="r"><b>${brl(c.valor)}</b>${c.obs?`<div class="small muted">${esc(c.obs)}</div>`:""}</td><td>${p.status==="falta"?'<span class="pill p-bad">Falta</span>':p.pago?'<span class="pill p-ok">Pago</span>':'<span class="pill p-warn">A receber</span>'}${admin&&p.status==="realizado"?` <a href="#" class="small" data-act="ajustarValor" data-id="${p.id}">ajustar</a>`:""}</td></tr>`; }).join("");
+  return `${pro?.porHora==="sim"?`<p class="note small">Pagamento computado por hora: atrasos e saídas antes do fim do plantão são descontados (tolerância de ${+(Store.cfg().tolerancia??15)} min).</p>`:""}
+  <div class="tablewrap" style="margin-top:10px"><table><thead><tr><th>Data</th><th>Paciente</th><th>Previsto</th><th>Chegada → saída</th><th class="r">Horas</th><th class="r">Plantão</th><th class="r">A receber</th><th>Situação</th></tr></thead><tbody>${rows}</tbody>
+  <tfoot><tr><td colspan="4"><b>Total do mês</b> · ${R.n} plantões${R.faltas?` · ${R.faltas} falta(s)`:""}</td><td class="r"><b>${R.hReg.toFixed(1).replace(".",",")}</b></td><td class="r">${brl(R.bruto)}</td><td class="r"><b>${brl(R.liquido)}</b></td><td></td></tr></tfoot></table></div>`;
+}
+function pgFolha(){
+  if(!folhaMes) folhaMes=today().slice(0,7);
+  const pros=Store.all("profissionais").map(p=>({p,R:folhaResumo(p.id,folhaMes)})).filter(x=>x.R.l.length).sort((a,b)=>a.p.nome.localeCompare(b.p.nome));
+  const tot=pros.reduce((s,x)=>s+x.R.liquido,0), pago=pros.reduce((s,x)=>s+x.R.pago,0), desc=pros.reduce((s,x)=>s+(x.R.bruto-x.R.liquido),0);
+  return `<div class="pagehead"><div><h1>Folha de pagamento</h1><p class="sub" style="text-transform:capitalize">${mesLabel(folhaMes)} · pagamento até o dia ${esc(Store.cfg().diaPagamento||"10")} do mês seguinte</p></div>
+    <div class="actions"><button class="btn btn-line btn-sm" data-act="folhaMes" data-id="-1">‹ Mês anterior</button><button class="btn btn-line btn-sm" data-act="folhaMes" data-id="1">Próximo mês ›</button></div></div>
+  <div class="kpis"><div class="kpi"><b>${brl(tot)}</b><span>Total da folha</span></div><div class="kpi"><b>${brl(tot-pago)}</b><span>A pagar</span></div><div class="kpi"><b>${brl(desc)}</b><span>Descontos por hora</span></div><div class="kpi"><b>${pros.length}</b><span>Profissionais com plantão</span></div></div>
+  <div class="tablewrap"><table><thead><tr><th>Profissional</th><th class="r">Plantões</th><th class="r">Horas previstas</th><th class="r">Horas registradas</th><th class="r">Bruto</th><th class="r">A receber</th><th></th></tr></thead><tbody>
+  ${pros.map(({p,R})=>`<tr><td><b>${esc(p.nome)}</b>${p.porHora==="sim"?' <span class="pill p-cop">Por hora</span>':""}<div class="small muted">${esc(p.funcao)}${p.pix?" · Pix "+esc(p.pix):""}</div></td><td class="r">${R.n}${R.faltas?`<div class="small" style="color:var(--bad)">${R.faltas} falta(s)</div>`:""}</td><td class="r">${R.hPrev}</td><td class="r">${R.hReg.toFixed(1).replace(".",",")}</td><td class="r">${brl(R.bruto)}</td><td class="r"><b>${brl(R.liquido)}</b></td><td class="r"><div class="actions" style="justify-content:flex-end"><button class="btn btn-sm btn-line" data-act="verFolha" data-id="${p.id}">Ver folha</button>${R.pend?`<button class="btn btn-sm btn-primary" data-act="folhaPag" data-id="${p.id}">Marcar pago</button>`:'<span class="pill p-ok">Pago</span>'}</div></td></tr>`).join("")||`<tr><td colspan="7" class="empty">Nenhum plantão realizado neste mês.</td></tr>`}
+  </tbody></table></div>
+  <p class="small muted">Para computar por hora, abra o cadastro do profissional e escolha "Computar por hora registrada". Valores podem ser ajustados plantão a plantão, com motivo.</p>`;
+}
+function pgPagamentos(){
+  if(!folhaMes) folhaMes=today().slice(0,7);
+  const R=folhaResumo(S.profId,folhaMes);
+  return `<div class="pagehead"><div><h1>Meus pagamentos</h1><p class="sub" style="text-transform:capitalize">${mesLabel(folhaMes)} · pagamento até o dia ${esc(Store.cfg().diaPagamento||"10")} do mês seguinte</p></div>
+    <div class="actions"><button class="btn btn-line btn-sm" data-act="folhaMes" data-id="-1">‹ Anterior</button><button class="btn btn-line btn-sm" data-act="folhaMes" data-id="1">Próximo ›</button></div></div>
+  <div class="kpis"><div class="kpi"><b>${R.n}</b><span>Plantões realizados</span></div><div class="kpi"><b>${R.hReg.toFixed(1).replace(".",",")} h</b><span>Horas registradas</span></div><div class="kpi"><b>${brl(R.liquido)}</b><span>Total do mês</span></div><div class="kpi"><b>${brl(R.liquido-R.pago)}</b><span>A receber</span></div></div>
+  <section class="card">${folhaTabela(S.profId,folhaMes,false)}</section>
+  <p class="small muted">Registre sempre a chegada e a saída no endereço do paciente. Dúvidas sobre valores, fale com a administração.</p>`;
+}
+
 /* =================== CONFIGURAÇÕES =================== */
 function pgConfig(){
   const c=Store.cfg(), tb=c.tabela||{};
   return `<div class="pagehead"><div><h1>Configurações</h1><p class="sub">Dados da empresa usados nos contratos, nos links públicos e na escala</p></div></div>
   <section class="card"><h2>Dados da empresa</h2>${fields([{k:"nome",l:"Razão social / nome",full:1},{k:"cnpj",l:"CNPJ"},...ADDR("e_",false).filter(f=>f.k!=="e_referencia"),{k:"dpo",l:"Encarregado de dados (LGPD)",full:1,ph:"Nome e e-mail",h:"Pessoa que responde pedidos sobre dados pessoais. Aparece nos contratos."},{k:"whatsapp",l:"WhatsApp da empresa",im:"tel"},{k:"email",l:"E-mail",t:"email"},{k:"instagram",l:"Instagram",ph:"@viverbem"},{k:"diaPagamento",l:"Dia de pagamento dos profissionais",t:"number"}],c)}</section>
+  <section class="card"><h2>Check-in, check-out e pagamento</h2>${fields([{k:"raio",l:"Distância padrão para check-in (metros)",t:"number",h:"Ex.: 300. Pode ser mudada em cada paciente."},{k:"tolerancia",l:"Tolerância no cálculo por hora (minutos)",t:"number",h:"Atrasos até esse limite não descontam"}],{raio:c.raio??300,tolerancia:c.tolerancia??15})}</section>
   <section class="card"><h2>Modelos de contrato</h2><p class="small muted" style="margin:-4px 0 12px">Cole aqui o contrato da Viver Bem. Em branco, o sistema usa o modelo padrão. Use as marcações abaixo para o sistema preencher sozinho. Linhas que começam com "CLÁUSULA" viram títulos.</p>
     <label class="f">Contrato do profissional autônomo<small>{{empresa}} {{cnpj}} {{endereco_empresa}} {{cidade_empresa}} {{nome}} {{cpf}} {{funcao}} {{registro}} {{cidade}} {{data}} {{dia_pagamento}}</small><textarea id="f_modeloAutonomo" rows="10">${esc(c.modeloAutonomo||"")}</textarea></label>
     <label class="f" style="margin-top:12px">Contrato do paciente<small>{{empresa}} {{cnpj}} {{endereco_empresa}} {{cidade_empresa}} {{responsavel}} {{cpf_responsavel}} {{endereco_responsavel}} {{paciente}} {{servicos}} {{valor}} {{vencimento}} {{materiais}} {{data}}</small><textarea id="f_modeloPaciente" rows="10">${esc(c.modeloPaciente||"")}</textarea></label>
@@ -1072,7 +1154,7 @@ function pgMeus(){
         <button class="btn btn-line" data-act="plantao" data-id="${atual.id}">Ver plano de cuidados</button></div></section>`; }
   return `<div class="pagehead"><div><h1>Olá, ${esc(first(S.nome))}</h1><p class="sub">${fmtDayW(t)}</p></div></div>
   ${card}
-  <div class="kpis"><div class="kpi"><b>${feitos.length}</b><span>Plantões no mês</span></div><div class="kpi"><b>${brl(feitos.reduce((s,p)=>s+(+p.valorPago||0),0))}</b><span>A receber no mês</span></div><div class="kpi"><b>${mine.filter(p=>p.data.startsWith(mes)&&atrasoMin(p)>15).length}</b><span>Atrasos no mês</span></div></div>
+  <div class="kpis"><div class="kpi"><b>${feitos.length}</b><span>Plantões no mês</span></div><div class="kpi"><b>${brl(feitos.reduce((s,p)=>s+valorProf(p),0))}</b><span>A receber no mês</span></div><div class="kpi"><b>${mine.filter(p=>p.data.startsWith(mes)&&atrasoMin(p)>15).length}</b><span>Atrasos no mês</span></div></div>
   ${pend.length?`<section class="card"><h2>Pendências</h2><p class="small muted" style="margin:-6px 0 10px">Plantões sem evolução ou sem registro de saída</p><div class="day">${pend.map(x=>shiftRow(x).replace('<span class="t">',`<span class="t"><small>${fmtDay(x.data).slice(0,5)}</small>`)).join("")}</div></section>`:""}
   <section class="card"><h2>Próximos plantões</h2>${prox.length?`<div class="day">${prox.map(x=>shiftRow(x).replace('<span class="t">',`<span class="t"><small>${fmtDay(x.data).slice(0,5)}</small>`)).join("")}</div>`:`<p class="empty">Nenhum plantão agendado.</p>`}</section>`;
 }
@@ -1108,7 +1190,7 @@ function pgPonto(){
   <div class="tablewrap"><table><thead><tr><th>Plantão previsto</th><th>Paciente</th><th>Profissional</th><th>Chegada</th><th>Saída</th><th class="r">Horas</th><th>Ocorrências</th></tr></thead><tbody>
   ${list.map(r=>`<tr class="click" data-act="plantao" data-id="${r.p.id}"><td class="num">${fmtDay(r.p.data).slice(0,5)} · ${r.p.inicio}–${fim(r.p)}</td><td><b>${esc(r.pac?.nome||"-")}</b></td><td>${esc(proName(r.p.profId))}</td><td>${cell(r.ch,r.p.chegada)}</td><td>${cell(r.sa,r.p.saida)}</td><td class="r">${r.h!=null?r.h.toFixed(1).replace(".",","):"-"}</td><td><div class="chips">${r.oc.map(([l,c])=>`<span class="pill ${c}">${l}</span>`).join("")||'<span class="pill p-ok">OK</span>'}</div></td></tr>`).join("")||`<tr><td colspan="7" class="empty">Nenhum registro neste período.</td></tr>`}
   </tbody></table></div>
-  <p class="small muted">A localização é comparada com a localização cadastrada na ficha do paciente. Acima de 300 metros aparece como fora do endereço.</p>`;
+  <p class="small muted">A localização é comparada com a localização cadastrada na ficha do paciente. Acima da distância permitida aparece como fora do endereço. Pacientes com check-in "só no endereço" bloqueiam o registro fora dessa distância.</p>`;
 }
 /* =================== PÚBLICO: TRABALHE CONOSCO =================== */
 let wz={step:1,d:{exp:[],disp:[]}};
@@ -1303,15 +1385,50 @@ const ACT = {
     p.evolucao={...ev,por:S.role==="prof"?S.profId:(p.profId||"")}; if(S.role==="admin"&&p.status!=="andamento") p.status="realizado";
     await Store.put("plantoes",p); closeModal(); toast("Evolução salva"); render(); },
   async checkin(id,b){ const p=Store.get("plantoes",id); if(!podeChegar(p)) return toast("Chegada indisponível para este plantão");
-    b.disabled=true; b.textContent="Obtendo sua localização...";
-    const pos=await getPos(); p.chegada={em:new Date().toISOString(),...(pos||{})}; p.status="andamento"; await Store.put("plantoes",p);
+    const txt=b.innerHTML; b.disabled=true; b.textContent="Obtendo sua localização...";
+    const pos=await getPos(); const v=validaLocal(p,pos);
+    if(!v.ok){ b.disabled=false; b.innerHTML=txt; await registraTentativa(p,"chegada",pos,v); return avisoLocal(v.msg); }
+    p.chegada={em:new Date().toISOString(),...(pos||{})}; p.status="andamento"; await Store.put("plantoes",p);
     const r=regInfo(p.chegada,Store.get("pacientes",p.pacId)); closeModal(); render();
     toast(!pos?"Chegada registrada (localização não autorizada)":r.longe?`Chegada registrada a ${fmtDist(r.d)} do endereço`:"Chegada registrada"); },
   async checkout(id,b){ const bd=$(".modal-b"), p=Store.get("plantoes",id); const ev=readEvo();
     if(!ev && !p.evolucao) return showErr(bd,"Escreva a evolução do plantão antes de registrar a saída.");
-    b.disabled=true; b.textContent="Obtendo sua localização...";
-    const pos=await getPos(); if(ev) p.evolucao={...ev,por:S.profId||p.profId}; p.saida={em:new Date().toISOString(),...(pos||{})}; p.status="realizado";
+    const txt=b.innerHTML; b.disabled=true; b.textContent="Obtendo sua localização...";
+    const pos=await getPos(); const v=validaLocal(p,pos);
+    if(!v.ok){ b.disabled=false; b.innerHTML=txt; if(ev){ p.evolucao={...ev,por:S.profId||p.profId}; } await registraTentativa(p,"saída",pos,v); return avisoLocal(v.msg+(ev?" Sua evolução foi salva.":"")); }
+    if(ev) p.evolucao={...ev,por:S.profId||p.profId}; p.saida={em:new Date().toISOString(),...(pos||{})}; p.status="realizado";
     await Store.put("plantoes",p); closeModal(); render(); toast(pos?"Saída registrada. Bom descanso!":"Saída registrada (localização não autorizada)"); },
+  regManual(id,b){ const tipo=b.dataset.v, p=Store.get("plantoes",id); const now=new Date(); const def=`${p.data}T${tipo==="chegada"?p.inicio:fim(p).slice(0,5)}`;
+    modal(`Lançar ${tipo} manualmente`, `<p class="muted">Use quando o profissional não conseguiu registrar pelo celular (casa sem internet, celular sem bateria). Fica marcado como lançado pela administração.</p>
+      <div class="fgrid"><label class="f">Data e hora<input id="mn_em" type="datetime-local" value="${def}"></label><label class="f full">Motivo <i class="req">*</i><input id="mn_mot" placeholder="Ex.: sem sinal na casa, confirmado com a família"></label></div>
+      <div class="actions"><button class="btn btn-primary" data-act="saveManual" data-id="${id}" data-v="${tipo}">Lançar ${tipo}</button></div>`); },
+  async saveManual(id,b){ const bd=$(".modal-b"), p=Store.get("plantoes",id), tipo=b.dataset.v, em=$("#mn_em").value, mot=$("#mn_mot").value.trim();
+    if(!em) return showErr(bd,"Informe a data e a hora."); if(mot.length<5) return showErr(bd,"Escreva o motivo do lançamento manual.");
+    const reg={em:new Date(em).toISOString(),manual:true,motivo:mot,por:"admin"};
+    if(tipo==="chegada"){ p.chegada=reg; if(p.status==="agendado") p.status = tEnd(p)<Date.now()?"realizado":"andamento"; }
+    else { if(!p.chegada) return showErr(bd,"Lance a chegada antes da saída."); p.saida=reg; p.status="realizado"; }
+    await Store.put("plantoes",p); closeModal(); toast(`${tipo[0].toUpperCase()+tipo.slice(1)} lançada`); render(); },
+  ajustarValor(id){ const p=Store.get("plantoes",id), c=calcPag(p);
+    modal("Ajustar valor do plantão", `<p class="muted">${esc(pacName(p.pacId))} · ${fmtDay(p.data)} · ${p.inicio}–${fim(p)}<br>Valor do plantão ${brl(c.base)} · calculado ${brl(c.valor)}</p>
+      <div class="fgrid"><label class="f">Valor a pagar (R$)<input id="aj_v" type="number" step="0.01" value="${p.valorAjustado??c.valor}"></label><label class="f full">Motivo <i class="req">*</i><input id="aj_m" value="${esc(p.ajusteMotivo||"")}" placeholder="Ex.: saída confirmada às 19h pela família"></label></div>
+      <div class="actions"><button class="btn btn-primary" data-act="saveAjuste" data-id="${id}">Salvar ajuste</button>${p.valorAjustado!=null?`<button class="btn btn-line" data-act="limpaAjuste" data-id="${id}">Voltar ao cálculo automático</button>`:""}</div>`); },
+  async saveAjuste(id){ const bd=$(".modal-b"), p=Store.get("plantoes",id), v=$("#aj_v").value, m=$("#aj_m").value.trim(); if(v==="") return showErr(bd,"Informe o valor."); if(m.length<5) return showErr(bd,"Escreva o motivo do ajuste.");
+    p.valorAjustado=+v; p.ajusteMotivo=m; await Store.put("plantoes",p); closeModal(); toast("Valor ajustado"); render(); },
+  async limpaAjuste(id){ const p=Store.get("plantoes",id); delete p.valorAjustado; delete p.ajusteMotivo; await Store.put("plantoes",p); closeModal(); toast("Cálculo automático restaurado"); render(); },
+  folhaMes(id){ const [y,m]=folhaMes.split("-").map(Number); const d=new Date(y,m-1+(+id),1); folhaMes=`${d.getFullYear()}-${pad(d.getMonth()+1)}`; render(); },
+  verFolha(id){ const pro=Store.get("profissionais",id); modal("Folha · "+(pro?.nome||""), folhaTabela(id,folhaMes,true),{wide:1,nofocus:1}); },
+  async folhaPag(id){ for(const p of folhaPlantoes(id,folhaMes).filter(p=>p.status==="realizado"&&!p.pago)){ p.pago=true; await Store.put("plantoes",p); } toast("Marcado como pago"); render(); },
+  async geoEndereco(){ const bd=$(".modal-b"), g=k=>($("#f_"+k,bd)?.value||"").trim();
+    const q=[[g("rua"),g("numero")].filter(Boolean).join(", "),g("bairro"),g("cidade"),g("uf"),"Brasil"].filter(Boolean).join(", ");
+    if(!g("cidade")) return showErr(bd,"Preencha o endereço (rua, cidade e estado) antes de localizar.");
+    try{ let r=await (await fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=br&q="+encodeURIComponent(q))).json();
+      if(!r.length&&g("cep")) r=await (await fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=br&postalcode="+digits(g("cep")))).json();
+      if(!r.length) return showErr(bd,"Não encontrei esse endereço no mapa. Use \"Estou na casa do paciente\" ou cole a localização do Google Maps.");
+      $("#f_geo",bd).value=`${(+r[0].lat).toFixed(6)}, ${(+r[0].lon).toFixed(6)}`; geoLink(bd); toast("Localização encontrada. Confira no mapa."); }
+    catch(e){ showErr(bd,"Não foi possível consultar o mapa agora. Tente de novo ou use \"Estou na casa do paciente\"."); } },
+  async geoAqui(_,b){ const bd=$(".modal-b"); b.disabled=true; const pos=await getPos(); b.disabled=false;
+    if(!pos) return showErr(bd,"Não foi possível obter a localização. Permita o acesso à localização no navegador.");
+    $("#f_geo",bd).value=`${pos.lat}, ${pos.lng}`; geoLink(bd); toast(`Localização salva (precisão de ${pos.acc} m)`); },
   async salvarLocal(id){ const p=Store.get("plantoes",id), pac=Store.get("pacientes",p.pacId); pac.geo=`${p.chegada.lat}, ${p.chegada.lng}`; await Store.put("pacientes",pac); closeModal(); toast("Localização da casa salva"); render(); },
   novoCtEscolher(){ const l=Store.all("pacientes").filter(p=>p.status!=="alta");
     modal("Novo contrato de paciente", `<label class="f">Paciente<select id="ctPac">${l.map(p=>`<option value="${p.id}">${esc(p.nome)}</option>`).join("")}</select></label><div class="actions"><button class="btn btn-primary" data-act="ctPacGo">Continuar</button></div>`); },
@@ -1382,7 +1499,8 @@ const ACT = {
   async delOp(id,b){ if(b.dataset.ok!=="1"){ b.dataset.ok="1"; b.textContent="Confirmar exclusão"; return; } if(Store.all("pacientes").some(p=>p.operadoraId===id)) return showErr($(".modal-b"),"Há pacientes ligados a esta operadora. Marque como Inativa."); await Store.del("operadoras",id); closeModal(); render(); },
   async finRec(k){ const [t,id]=k.split(":"); for(const p of Store.all("plantoes").filter(p=>p.data.startsWith(finMes)&&p.status==="realizado"&&!p.recebido)){ const pac=Store.get("pacientes",p.pacId); const key=pac?.tipo==="operadora"&&pac.operadoraId?"op:"+pac.operadoraId:"pac:"+p.pacId; if(key===k){ p.recebido=true; await Store.put("plantoes",p); } } toast("Marcado como recebido"); render(); },
   async finPag(id){ for(const p of Store.all("plantoes").filter(p=>p.data.startsWith(finMes)&&p.status==="realizado"&&!p.pago&&p.profId===id)){ p.pago=true; await Store.put("plantoes",p); } toast("Marcado como pago"); render(); },
-  async saveCfg(){ const c=Store.cfg(); const v=readFields([{k:"nome"},{k:"cnpj"},{k:"cidade"},{k:"endereco"},{k:"whatsapp"},{k:"email"},{k:"instagram"},{k:"diaPagamento"},{k:"modeloAutonomo"},{k:"modeloPaciente"},{k:"dpo"},...ADDR("e_",false)]);
+  async saveCfg(){ const c=Store.cfg(); const v=readFields([{k:"nome"},{k:"cnpj"},{k:"cidade"},{k:"endereco"},{k:"whatsapp"},{k:"email"},{k:"instagram"},{k:"diaPagamento"},{k:"modeloAutonomo"},{k:"modeloPaciente"},{k:"dpo"},{k:"raio"},{k:"tolerancia"},...ADDR("e_",false)]);
+    v.raio=+v.raio||300; v.tolerancia=v.tolerancia===""?15:+v.tolerancia;
     if(v.cnpj&&!validCNPJ(v.cnpj)) return toast("CNPJ da empresa inválido"); if(v.cnpj) v.cnpj=fmtCPF(v.cnpj);
     if(v.e_rua||v.e_cidade){ v.endereco=[montaEnd(v,"e_"),v.e_cep&&"CEP "+v.e_cep].filter(Boolean).join(" - "); v.cidade=[v.e_cidade,v.e_uf].filter(Boolean).join("/"); } v.modeloAutonomo=$("#f_modeloAutonomo").value; v.modeloPaciente=$("#f_modeloPaciente").value;
     const tabela={}; MODS.forEach(([k])=>{ tabela[k]={cobra:+$("#tb_c_"+k).value||0,paga:+$("#tb_p_"+k).value||0}; });
@@ -1395,7 +1513,7 @@ const ACT = {
 document.addEventListener("click", e=>{
   const b=e.target.closest("[data-act]"); if(!b) return;
   const fn=ACT[b.dataset.act]; if(!fn) return;
-  if(b.tagName==="BUTTON"||b.tagName==="TR") e.preventDefault();
+  if(b.tagName==="BUTTON"||b.tagName==="TR"||b.getAttribute("href")==="#") e.preventDefault();
   if(b.dataset.act==="close" && b.tagName==="A") { closeModal(); return; }
   Promise.resolve(fn(b.dataset.id,b,e)).catch(err=>{ console.error(err); toast("Algo deu errado: "+(err.message||err)); });
 });
