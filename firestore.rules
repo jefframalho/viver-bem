@@ -37,14 +37,20 @@ service cloud.firestore {
 
     // Plantões: profissional vê e evolui os próprios; a família vê os do seu paciente
     match /plantoes/{id} {
-      allow read: if isAdmin() || meuProf() || (isPac() && resource.data.pacId == me().pacId);
-      allow update: if isAdmin() || (meuProf() && only(['status','evolucao','chegada','saida','tentativas','atualizado']));
+      allow read: if isAdmin() || meuProf() || (isProf() && resource.data.profId == '') || (isPac() && resource.data.pacId == me().pacId);
+      allow update: if isAdmin()
+        || (meuProf() && only(['status','evolucao','chegada','saida','tentativas','tarefas','materiais','atualizado']))
+        || (isProf() && resource.data.profId == '' && request.resource.data.profId == '' && only(['interesses','atualizado']));
       allow create, delete: if isAdmin();
     }
 
     // Pacientes: a família lê só o seu
     match /pacientes/{id}     { allow get: if isAdmin() || isProf() || (isPac() && me().pacId == id); allow list: if isAdmin() || isProf(); allow write: if isAdmin(); }
-    match /profissionais/{id} { allow read: if isAdmin() || (isProf() && me().profId == id); allow write: if isAdmin(); }
+    match /profissionais/{id} {
+      allow read: if isAdmin() || (isProf() && me().profId == id);
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || (isProf() && me().profId == id && only(['tel','email','pix','areas','disp','docs','cep','rua','numero','complemento','bairro','cidade','uf','referencia','endereco','atualizado']));
+    }
     match /operadoras/{id}    { allow read, write: if isAdmin(); }
 
     // Teleconsultas
@@ -67,8 +73,8 @@ service cloud.firestore {
     match /intercorrencias/{id} { allow read, create: if isAdmin() || isProf(); allow update, delete: if isAdmin(); }
 
     // Estoque e faturamento de convênios
-    match /produtos/{id}      { allow read, write: if isAdmin(); }
-    match /movEstoque/{id}    { allow read, write: if isAdmin(); }
+    match /produtos/{id}      { allow read: if isAdmin() || isProf(); allow write: if isAdmin(); }
+    match /movEstoque/{id}    { allow read: if isAdmin(); allow create: if isAdmin() || (isProf() && request.resource.data.tipo == 'saida'); allow update, delete: if isAdmin(); }
     match /lotes/{id}         { allow read, write: if isAdmin(); }
     match /inventarios/{id}   { allow read, write: if isAdmin(); }
     match /tuss/{id}          { allow read: if isAdmin() || isProf(); allow write: if isAdmin(); }
@@ -79,6 +85,8 @@ service cloud.firestore {
     match /coordenadores/{id} { allow read: if isAdmin() || isProf(); allow write: if isAdmin(); }
     match /organizacoes/{id}  { allow read: if isAdmin() || isProf(); allow write: if isAdmin(); }
     match /rotas/{id}         { allow read: if isAdmin() || isProf(); allow write: if isAdmin(); }
+    // Avisos da administração para a equipe de campo
+    match /avisos/{id}        { allow read: if signed(); allow write: if isAdmin(); }
 
     // Chat: cada profissional só vê e escreve na própria conversa
     match /mensagens/{id} {
