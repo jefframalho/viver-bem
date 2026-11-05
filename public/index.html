@@ -1718,13 +1718,68 @@ function pgFamInicio(){
   <section class="card"><h2>Central de atendimento Viver Bem</h2><p class="muted" style="margin:6px 0 10px">Dúvidas, mudanças na agenda ou piora do quadro: fale com a central.</p>
     <div class="actions">${cfg.whatsapp?`<a class="btn btn-primary" target="_blank" rel="noopener" href="${wa(cfg.whatsapp,`Olá, Viver Bem! Sou da família de ${p.nome}.`)}">${ICON.wa}WhatsApp da central</a>`:'<span class="small muted">O WhatsApp da central será informado pela Viver Bem.</span>'}</div>${SAMU_NOTE}</section>`;
 }
-const SERVICOS_MOD = [
-  ["domicilio","Atendimento domiciliar","Profissionais e cuidados na casa do paciente, conforme avaliação.",["Enfermagem","Técnicos de enfermagem","Fisioterapia","Fonoaudiologia","Nutrição","Psicologia","Atendimento médico","Curativos e tratamentos","Acompanhamento do paciente crônico"]],
-  ["ilpi","Clínicas de repouso e ILPI","Assistência multidisciplinar para quem mora em clínica de repouso ou instituição de longa permanência.",["Enfermagem","Fisioterapia","Fonoaudiologia","Nutrição","Avaliação médica","Monitoramento assistencial"]],
-  ["hospital","Acompanhamento hospitalar","Profissional para acompanhar e cuidar do paciente durante a internação.",["Acompanhante técnico de enfermagem","Cuidados individualizados","Plantões de 12h ou 24h"]]];
+const SERV_ENFERMAGEM = ["Enfermagem domiciliar (enfermeiro, técnico e auxiliar)","Curativos e manejo de feridas","Administração de medicamentos","Antibiótico endovenoso em casa","Acompanhamento pós-operatório","Assistência ao paciente acamado","Monitoramento de sinais vitais","Inserção, troca e manejo de sonda (SNE)","Sonda vesical, traqueostomia e oxigênio","Gerenciamento de paciente crônico","Suporte na reabilitação"];
+const SERV_EXAMES = ["Coleta de exames de sangue","Eletrocardiograma","Ecocardiograma","Holter 24h","MAPA (pressão 24h)","Ultrassonografia e doppler","Radiografia domiciliar (AP, perfil, OBL e especialidades)"];
+const SERV_EQUIPE = ["Fisioterapia motora e respiratória","Fonoaudiologia","Nutrição","Psicologia","Terapia ocupacional","Atendimento médico"];
+const SERV_PADRAO = `Atendimento domiciliar | domicilio
+Enfermagem, equipe multidisciplinar e cuidados na casa do paciente, conforme a avaliação.
+${SERV_ENFERMAGEM.map(x=>"- "+x).join("\n")}
+${SERV_EQUIPE.map(x=>"- "+x).join("\n")}
+
+Exames em casa
+Exames de imagem e laboratoriais sem o paciente sair de casa, com laudo. Exame precisa de pedido médico; a central confirma valor, preparo e horário antes de agendar.
+${SERV_EXAMES.map(x=>"- "+x).join("\n")}
+
+Gerenciamento de paciente crônico
+Acompanhamento contínuo de quem tem hipertensão, diabetes, doença do coração ou respiratória, com medições registradas e alerta para a equipe.
+- Plano de cuidados individual
+- Medições acompanhadas pela equipe
+- Alerta quando sair do normal
+- Relatório para o médico
+- Visitas e teleconsultas de acompanhamento
+
+Internação domiciliar | domicilio
+Equipe técnica, materiais e acompanhamento para quem precisa sair do hospital com segurança.
+- Plantões de 6h, 8h, 12h ou 24h
+- Enfermagem 24 horas
+- Materiais e medicamentos conforme o pacote
+- Visita de enfermeiro responsável
+- Relatório para o médico assistente
+
+Clínicas de repouso e ILPI | ilpi
+Assistência multidisciplinar para quem mora em clínica de repouso ou instituição de longa permanência.
+- Enfermagem
+- Fisioterapia
+- Fonoaudiologia
+- Nutrição
+- Avaliação médica
+- Monitoramento assistencial
+
+Acompanhamento hospitalar | hospital
+Profissional para acompanhar e cuidar do paciente durante a internação.
+- Acompanhante técnico de enfermagem
+- Cuidados individualizados
+- Plantões de 12h ou 24h`;
+// Cada bloco: título (com "| domicilio", "| ilpi" ou "| hospital" quando for modalidade),
+// a descrição nas linhas seguintes e os itens começando com "-".
+function parseServicos(txt){
+  return String(txt||"").split(/\n\s*\n/).map(bloco=>{
+    const L=bloco.split("\n").map(x=>x.trim()).filter(Boolean); if(!L.length) return null;
+    const [t,k]=L[0].split("|").map(x=>x.trim());
+    if(!t) return null;
+    return {k:k||"", t, d:L.slice(1).filter(x=>!x.startsWith("-")).join(" "),
+      itens:L.slice(1).filter(x=>x.startsWith("-")).map(x=>x.replace(/^-\s*/,"").trim()).filter(Boolean)};
+  }).filter(Boolean);
+}
+const servicos = () => { const l=parseServicos(Store.cfg().servicosTxt||SERV_PADRAO); return l.length?l:parseServicos(SERV_PADRAO); };
+const servicoBloco = t => servicos().find(x=>x.t===t);
+const SERVICOS_MOD = []; // substituído pelo catálogo editável acima
 function pgFamServicos(){
+  const l=servicos();
   return `<div class="pagehead"><div><h1>Serviços Viver Bem</h1><p class="sub">Escolha o tipo de atendimento. A central entra em contato para avaliar e combinar os detalhes.</p></div></div>
-  <div class="grid2">${SERVICOS_MOD.map(([k,t,d,l])=>`<section class="card"><h2>${t}</h2><p class="muted" style="margin:6px 0 10px">${d}</p><div class="chips">${l.map(x=>`<span class="pill p-blue">${x}</span>`).join("")}</div><div class="actions" style="margin-top:12px"><button class="btn btn-primary" data-act="famSolicita" data-id="${k}">Solicitar</button></div></section>`).join("")}
+  <div class="grid2">${l.map(b=>`<section class="card"><h2>${esc(b.t)}</h2>${b.d?`<p class="muted" style="margin:6px 0 10px">${esc(b.d)}</p>`:""}
+    ${b.itens.length?`<div class="chips">${b.itens.map(x=>`<span class="pill ${b.k?"p-blue":"p-cop"}">${esc(x)}</span>`).join("")}</div>`:""}
+    <div class="actions" style="margin-top:12px">${/cr[oô]nico/i.test(b.t)?`<a class="btn btn-line" href="#medicoes">Minhas medições</a>`:""}<button class="btn btn-primary" data-act="famServ" data-v="${esc(b.t)}">Solicitar</button></div></section>`).join("")}
     <section class="card"><h2>Teleconsulta e teleatendimento</h2><p class="muted" style="margin:6px 0 10px">Consulta por vídeo pelo app, com agendamento e pagamento online.</p><div class="chips">${TELE.map(([,n])=>`<span class="pill p-cop">${n}</span>`).join("")}</div><div class="actions" style="margin-top:12px"><a class="btn btn-copper" href="#teleconsulta">Agendar teleconsulta</a></div></section></div>`;
 }
 let famTele={esp:"",prof:""};
@@ -1768,6 +1823,10 @@ function pgConfigBase(){
     <div class="fgrid" style="margin-top:12px"><label class="f full">Endereço base da sala de vídeo<small>Padrão: Jitsi Meet (gratuito). Ao contratar uma plataforma de vídeo, troque aqui.</small><input id="tv_video" value="${esc(c.videoBase||"https://meet.jit.si/")}"></label>
     <label class="f">Chave Pix para teleconsultas<input id="tv_pix" value="${esc(c.pixChave||"")}"></label><label class="f">Link de pagamento (Asaas ou outro)<input id="tv_link" value="${esc(c.linkPagamento||"")}" placeholder="https://"></label></div>
     <div class="actions" style="margin-top:12px"><button class="btn btn-line" data-act="saveTeleCfg">Salvar teleconsulta</button></div></section>
+  <section class="card"><h2>Serviços oferecidos</h2><p class="small muted" style="margin:-4px 0 12px">Lista que aparece na área da família e no formulário público de solicitação. Cada serviço começa com o título numa linha, a descrição na linha seguinte e os itens com um traço na frente. Deixe uma linha em branco entre um serviço e outro.</p>
+    <label class="f"><textarea id="f_servicosTxt" rows="14" spellcheck="false" style="font-family:ui-monospace,monospace;font-size:.86rem">${esc(c.servicosTxt||SERV_PADRAO)}</textarea></label>
+    <div class="actions" style="margin-top:10px"><button class="btn btn-line btn-sm" data-act="verServicos">Ver como fica</button><button class="btn btn-line btn-sm" data-act="resetServicos">Voltar ao padrão</button></div>
+    <p class="small muted" style="margin-top:8px">Para o serviço virar uma modalidade do sistema, escreva <b>| domicilio</b>, <b>| ilpi</b> ou <b>| hospital</b> no fim do título. Sem isso, o pedido chega como solicitação normal.</p></section>
   <section class="card"><h2>Modelos de contrato</h2><p class="small muted" style="margin:-4px 0 12px">Cole aqui o contrato da Viver Bem. Em branco, o sistema usa o modelo padrão. Use as marcações abaixo para o sistema preencher sozinho. Linhas que começam com "CLÁUSULA" viram títulos.</p>
     <label class="f">Contrato do profissional autônomo<small>{{empresa}} {{cnpj}} {{endereco_empresa}} {{cidade_empresa}} {{nome}} {{cpf}} {{funcao}} {{registro}} {{cidade}} {{data}} {{dia_pagamento}}</small><textarea id="f_modeloAutonomo" rows="10">${esc(c.modeloAutonomo||"")}</textarea></label>
     <label class="f" style="margin-top:12px">Contrato do paciente<small>{{empresa}} {{cnpj}} {{endereco_empresa}} {{cidade_empresa}} {{responsavel}} {{cpf_responsavel}} {{endereco_responsavel}} {{paciente}} {{servicos}} {{valor}} {{vencimento}} {{materiais}} {{data}}</small><textarea id="f_modeloPaciente" rows="10">${esc(c.modeloPaciente||"")}</textarea></label>
@@ -1894,7 +1953,7 @@ async function pgAssinar(id){
 
 /* =================== PÚBLICO: SOLICITAR =================== */
 let solPub="familia";
-const SF=[{k:"nome",l:"Seu nome",req:1,ac:"name"},{k:"tel",l:"WhatsApp",req:1,im:"tel"},{k:"cidade",l:"Cidade/UF",req:1},{k:"servico",l:"Tipo de atendimento",t:"select",o:["Ainda não sei","Atendimento por hora","Plantão 6h","Plantão 8h","Plantão 12h","Atendimento 24h","Internação domiciliar","Fisioterapia / terapias","Exame em casa"]},{k:"paciente",l:"Sobre o paciente",full:1,ph:"Ex.: meu pai, 78 anos, pós-cirúrgico"},{k:"msg",l:"Mensagem",t:"textarea",full:1}];
+const SF=()=>[{k:"nome",l:"Seu nome",req:1,ac:"name"},{k:"tel",l:"WhatsApp",req:1,im:"tel"},{k:"cidade",l:"Cidade/UF",req:1},{k:"servico",l:"Tipo de atendimento",t:"select",o:["Ainda não sei",...servicos().flatMap(b=>b.itens.length?[b.t,...b.itens.map(x=>"   · "+x)]:[b.t])]},{k:"paciente",l:"Sobre o paciente",full:1,ph:"Ex.: meu pai, 78 anos, pós-cirúrgico"},{k:"msg",l:"Mensagem",t:"textarea",full:1}];
 const SO=[{k:"empresa",l:"Operadora / empresa",req:1},{k:"cnpj",l:"CNPJ"},{k:"nome",l:"Responsável",req:1},{k:"cargo",l:"Cargo"},{k:"tel",l:"Telefone",req:1,im:"tel"},{k:"email",l:"E-mail",req:1,t:"email"},{k:"regiao",l:"Região de interesse",full:1},{k:"msg",l:"Como podemos ajudar?",t:"textarea",full:1}];
 function pgLinks(){
   const c=Store.cfg(), ig=(c.instagram||"").replace(/^@/,"");
@@ -1917,7 +1976,7 @@ function pgLinks(){
 function pgSolicitar(id){ if(id==="operadora") solPub="operadora";
   return `<div><h1>Solicitar atendimento</h1><p class="muted" style="margin-top:6px">Atendimento domiciliar com equipe de saúde completa. Conte o que você precisa e retornamos para uma avaliação.</p></div>
   <div class="chips"><button class="chipbtn" data-act="solPub" data-id="familia" aria-pressed="${solPub==="familia"}">Sou paciente ou familiar</button><button class="chipbtn" data-act="solPub" data-id="operadora" aria-pressed="${solPub==="operadora"}">Sou operadora de saúde</button></div>
-  <form id="fSol" class="card" style="display:flex;flex-direction:column;gap:12px" novalidate>${fields(solPub==="familia"?SF:SO)}
+  <form id="fSol" class="card" style="display:flex;flex-direction:column;gap:12px" novalidate>${fields(solPub==="familia"?SF():SO)}
   <label class="consent"><input type="checkbox" id="solOk"><span>Autorizo a Viver Bem a usar estes dados para entrar em contato.</span></label><p class="err" hidden></p><button class="btn btn-primary">Enviar</button></form>`;
 }
 
@@ -1952,7 +2011,7 @@ function bindPublic(r){
     const em=new Date().toISOString();
     c.status="assinado"; c.assinatura={nome,cpf,em,hash:await sha(c.id+cpf+em+c.html.length),disp:navigator.userAgent.slice(0,140)};
     try{ await Store.put("contratos",c); toast("Contrato assinado"); render(); }catch(err){ showErr(f,"Não foi possível assinar agora. Tente de novo."); } }; }
-  if(r==="solicitar"){ const f=$("#fSol"); if(f) f.onsubmit=async e=>{ e.preventDefault(); const spec=solPub==="familia"?SF:SO; const v=readFields(spec,f); const m=missing(spec,v); if(m) return showErr(f,m);
+  if(r==="solicitar"){ const f=$("#fSol"); if(f) f.onsubmit=async e=>{ e.preventDefault(); const spec=solPub==="familia"?SF():SO; const v=readFields(spec,f); const m=missing(spec,v); if(m) return showErr(f,m);
     if(digits(v.tel).length<10) return showErr(f,"Informe o telefone com DDD."); if(!$("#solOk").checked) return showErr(f,"Marque a autorização de contato.");
     await Store.put("solicitacoes",{id:uid("s"),tipo:solPub,status:"novo",...v});
     const cfg=Store.cfg();
@@ -2110,10 +2169,18 @@ const ACT = {
       <label class="f full">O que aconteceu <i class="req">*</i><textarea id="ic_desc" rows="3"></textarea></label><label class="f full">Conduta tomada<textarea id="ic_cond" rows="2"></textarea></label></div>${SAMU_NOTE}<div class="actions"><button class="btn btn-primary" data-act="saveInter" data-id="${id}">Registrar</button></div>`); },
   async saveInter(id){ const bd=$(".modal-b"), d=$("#ic_desc").value.trim(); if(d.length<5) return showErr(bd,"Descreva o que aconteceu.");
     await Store.put("intercorrencias",{id:uid("ic"),pacId:id,em:new Date().toISOString(),tipo:$("#ic_tipo").value,gravidade:$("#ic_grav").value,descricao:d,conduta:$("#ic_cond").value.trim(),por:S.nome}); closeModal(); toast("Intercorrência registrada. A coordenação foi avisada no painel."); render(); },
-  famSolicita(k){ const p=meuPac(), sm=SERVICOS_MOD.find(x=>x[0]===k);
-    modal("Solicitar · "+sm[1],`<div class="fgrid"><label class="f full">Serviço<select id="fs_serv">${sm[3].map(x=>`<option>${x}</option>`).join("")}</select></label>${k!=="domicilio"?`<label class="f full">Nome da clínica ou hospital<input id="fs_inst" value="${esc(p.instituicao||"")}"></label>`:""}<label class="f full">Detalhes<textarea id="fs_msg" rows="3" placeholder="Dias, horários, o que o paciente precisa"></textarea></label></div><div class="actions"><button class="btn btn-primary" data-act="saveFamSol" data-id="${k}">Enviar pedido</button></div>`); },
-  async saveFamSol(k){ const p=meuPac(), sm=SERVICOS_MOD.find(x=>x[0]===k);
-    await Store.put("solicitacoes",{id:uid("s"),tipo:"familia",status:"novo",pacId:p.id,modalidade:k,nome:(p.responsavel||"").replace(/\s*\(.*\)/,"")||S.nome,tel:p.telResp||"",cidade:loc(p),paciente:p.nome,servico:`${sm[1]}: ${$("#fs_serv").value}`,msg:[$("#fs_inst")?.value?.trim()&&"Local: "+$("#fs_inst").value.trim(),$("#fs_msg").value.trim()].filter(Boolean).join(" · ")});
+  famServ(_,b){ const t=b.dataset.v, bl=servicoBloco(t), p=meuPac(); if(!bl) return;
+    modal("Solicitar · "+t, `<div class="fgrid">
+      ${bl.itens.length?`<label class="f full">O que o paciente precisa<select id="fs_serv">${bl.itens.map(x=>`<option>${esc(x)}</option>`).join("")}<option>Outro / não sei dizer</option></select></label>`:`<input id="fs_serv" type="hidden" value="${esc(t)}">`}
+      ${["ilpi","hospital"].includes(bl.k)?`<label class="f full">Nome da clínica ou hospital<input id="fs_inst" value="${esc(p.instituicao||"")}"></label>`:""}
+      <label class="f full">Detalhes<textarea id="fs_msg" rows="3" placeholder="Dias, horários, o que o paciente precisa"></textarea></label></div>
+      ${/exame/i.test(t)?`<p class="note small">Exames precisam de pedido médico. A central confirma o valor, o preparo e o horário antes de agendar.</p>`:""}
+      <div class="actions"><button class="btn btn-primary" data-act="saveFamServ" data-v="${esc(t)}">Enviar pedido</button></div>`); },
+  async saveFamServ(_,b){ const t=b.dataset.v, bl=servicoBloco(t), p=meuPac();
+    await Store.put("solicitacoes",{id:uid("s"),tipo:"familia",status:"novo",pacId:p.id,modalidade:bl.k||p.modalidade||"domicilio",
+      nome:(p.responsavel||"").replace(/\s*\(.*\)/,"")||S.nome,tel:p.telResp||"",cidade:loc(p),paciente:p.nome,
+      servico:`${t}: ${$("#fs_serv").value}`,
+      msg:[$("#fs_inst")?.value?.trim()&&"Local: "+$("#fs_inst").value.trim(),$("#fs_msg").value.trim()].filter(Boolean).join(" · ")});
     closeModal(); toast("Pedido enviado. A central vai entrar em contato."); },
   acessoFam(id){ const p=Store.get("pacientes",id);
     modal("Acesso da família", `<p>Com o acesso, a família de ${esc(p.nome)} vê a agenda, a equipe, o plano de cuidados e os relatórios, agenda teleconsultas e registra as medições.</p>
@@ -2213,11 +2280,17 @@ const ACT = {
   async finRec(k){ const [t,id]=k.split(":"); for(const p of Store.all("plantoes").filter(p=>p.data.startsWith(finMes)&&p.status==="realizado"&&!p.recebido)){ const pac=Store.get("pacientes",p.pacId); const key=pac?.tipo==="operadora"&&pac.operadoraId?"op:"+pac.operadoraId:"pac:"+p.pacId; if(key===k){ p.recebido=true; await Store.put("plantoes",p); } } toast("Marcado como recebido"); render(); },
   async finPag(id){ for(const p of Store.all("plantoes").filter(p=>p.data.startsWith(finMes)&&p.status==="realizado"&&!p.pago&&p.profId===id)){ p.pago=true; await Store.put("plantoes",p); } toast("Marcado como pago"); render(); },
   async saveCfg(){ const c=Store.cfg(); const v=readFields([{k:"nome"},{k:"cnpj"},{k:"cidade"},{k:"endereco"},{k:"whatsapp"},{k:"email"},{k:"instagram"},{k:"diaPagamento"},{k:"modeloAutonomo"},{k:"modeloPaciente"},{k:"dpo"},{k:"raio"},{k:"tolerancia"},...ADDR("e_",false)]);
+    v.servicosTxt=$("#f_servicosTxt").value.trim();
     v.raio=+v.raio||300; v.tolerancia=v.tolerancia===""?15:+v.tolerancia;
     if(v.cnpj&&!validCNPJ(v.cnpj)) return toast("CNPJ da empresa inválido"); if(v.cnpj) v.cnpj=fmtCPF(v.cnpj);
     if(v.e_rua||v.e_cidade){ v.endereco=[montaEnd(v,"e_"),v.e_cep&&"CEP "+v.e_cep].filter(Boolean).join(" - "); v.cidade=[v.e_cidade,v.e_uf].filter(Boolean).join("/"); } v.modeloAutonomo=$("#f_modeloAutonomo").value; v.modeloPaciente=$("#f_modeloPaciente").value;
     const tabela={}; MODS.forEach(([k])=>{ tabela[k]={cobra:+$("#tb_c_"+k).value||0,paga:+$("#tb_p_"+k).value||0}; });
     await Store.put("config",{...c,...v,id:"empresa",tabela,exemploValores:false}); toast("Configurações salvas"); render(); },
+  verServicos(){ const txt=$("#f_servicosTxt").value, l=parseServicos(txt);
+    if(!l.length) return toast("Não consegui ler nenhum serviço desse texto");
+    modal("Como fica para a família", `<div class="grid2">${l.map(b=>`<section class="card"><h2>${esc(b.t)}</h2>${b.d?`<p class="muted" style="margin:6px 0 10px">${esc(b.d)}</p>`:""}${b.itens.length?`<div class="chips">${b.itens.map(x=>`<span class="pill ${b.k?"p-blue":"p-cop"}">${esc(x)}</span>`).join("")}</div>`:""}${b.k?`<p class="small muted" style="margin-top:8px">Modalidade: ${esc(b.k)}</p>`:""}</section>`).join("")}</div>
+      <p class="small muted">${l.length} serviço(s) · ${l.reduce((a,b)=>a+b.itens.length,0)} item(ns). Salve as configurações para valer.</p>`,{wide:1,nofocus:1}); },
+  resetServicos(_,b){ if(b.dataset.ok!=="1"){ b.dataset.ok="1"; b.textContent="Confirmar: apagar o que escrevi"; return; } $("#f_servicosTxt").value=SERV_PADRAO; b.textContent="Voltar ao padrão"; b.dataset.ok=""; toast("Lista padrão restaurada. Salve para valer."); },
   verModelo(tipo){ const c={...Store.cfg(),modeloAutonomo:$("#f_modeloAutonomo").value,modeloPaciente:$("#f_modeloPaciente").value};
     const d=tipo==="autonomo"?{nome:"Maria Exemplo da Silva",cpf:"52998224725",funcao:"Técnico(a) de enfermagem",registro:"COREN-CE 000000",cidade:"Mauriti/CE"}:{respNome:"José Exemplo",respCpf:"52998224725",respEnd:"Rua Exemplo, 10, Mauriti/CE",pacNome:"Ana Exemplo",servicos:"Plantão de 12h noturno",valor:"R$ 320,00 por plantão",venc:"5",materiais:"não inclusos"};
     modal("Prévia do contrato", `<div class="contract">${makeContrato(tipo,d,c).html}</div>`,{wide:1,nofocus:1}); },

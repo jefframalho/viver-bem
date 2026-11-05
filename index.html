@@ -139,11 +139,11 @@ section.s{padding-block:100px}
 .t-a li::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--sand)}
 .t-a .big{position:absolute;right:-30px;top:-30px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(169,212,245,.25),transparent 70%)}
 .t-b{grid-column:span 3} .t-c{grid-column:span 3}
-.t-d{grid-column:span 2} .t-e{grid-column:span 2} .t-f{grid-column:span 2;background:linear-gradient(150deg,#F7E3D4,#F2C6A4);border:0;color:#2A1408} .t-f p{color:#5A3A26} .t-f .ico{background:rgba(255,255,255,.5);color:#8A4A22}
+.t-d{grid-column:span 3} .t-e{grid-column:span 3} .t-g{grid-column:span 3} .t-f{grid-column:span 3;background:linear-gradient(150deg,#F7E3D4,#F2C6A4);border:0;color:#2A1408} .t-f p{color:#5A3A26} .t-f .ico{background:rgba(255,255,255,.5);color:#8A4A22}
 .minis{display:flex;flex-wrap:wrap;gap:8px;margin-top:auto}
 .minis span{font-size:.85rem;font-weight:600;padding:6px 12px;border-radius:999px;background:var(--tint)}
 .clock{font-family:var(--f-d);font-size:3.4rem;font-weight:600;line-height:1;letter-spacing:-.03em;margin-top:auto}
-@media (max-width:900px){.bento{grid-template-columns:1fr 1fr}.t-a,.t-b,.t-c{grid-column:span 2}.t-a{grid-row:auto}.t-d,.t-e,.t-f{grid-column:span 1}}
+@media (max-width:900px){.bento{grid-template-columns:1fr 1fr}.t-a,.t-b,.t-c{grid-column:span 2}.t-a{grid-row:auto}.t-d,.t-e,.t-f,.t-g{grid-column:span 1}}
 @media (max-width:560px){.bento{grid-template-columns:1fr}.tile{grid-column:auto!important}}
 
 /* para quem */
@@ -282,11 +282,12 @@ footer .links{display:flex;gap:18px;flex-wrap:wrap}
   <div class="bento">
     <article class="tile t-a"><span class="big"></span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 2l4 4M7.5 20.5 3 21l.5-4.5L15 5l4 4z"/><path d="m13 7 4 4"/></svg></span>
       <h3 style="font-size:1.7rem">Enfermagem domiciliar</h3><p>Enfermeiros, técnicos e auxiliares em plantões ou visitas, com supervisão de enfermagem e registro de cada atendimento.</p>
-      <ul><li>Medicação e antibiótico endovenoso</li><li>Curativos e prevenção de lesões</li><li>Sondas, traqueostomia e oxigênio</li><li>Controle de sinais vitais e glicemia</li></ul></article>
-    <article class="tile t-b"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="5" r="2.5"/><path d="M12 8v6l-3 7M12 14l3 7M7 11h10"/></svg></span><h3>Terapias e reabilitação</h3><p>Fisioterapia motora e respiratória, fonoaudiologia, nutrição, psicologia e terapia ocupacional.</p></article>
+      <ul><li>Medicação e antibiótico endovenoso</li><li>Curativos e manejo de feridas</li><li>Sonda nasoenteral, vesical, traqueostomia e oxigênio</li><li>Controle de sinais vitais e glicemia</li><li>Acompanhamento pós-operatório</li><li>Assistência ao paciente acamado</li></ul></article>
+    <article class="tile t-b"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="5" r="2.5"/><path d="M12 8v6l-3 7M12 14l3 7M7 11h10"/></svg></span><h3>Terapias e reabilitação</h3><p>Fisioterapia motora e respiratória, fonoaudiologia, nutrição, psicologia e terapia ocupacional.</p><ul><li>Suporte na reabilitação</li><li>Avaliação médica domiciliar</li></ul></article>
     <article class="tile t-c"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z"/></svg></span><h3>Cuidado no dia a dia</h3><p>Banho no leito, higiene, mudança de decúbito, alimentação e apoio emocional ao paciente e à família.</p></article>
-    <article class="tile t-d"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l2-5 3 10 2-5h7"/></svg></span><h3>Exames em casa</h3><div class="minis"><span>Raio-X</span><span>Coleta de sangue</span><span>Eletrocardiograma</span></div></article>
+    <article class="tile t-d"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l2-5 3 10 2-5h7"/></svg></span><h3>Exames em casa</h3><div class="minis"><span>Raio-X</span><span>Eletrocardiograma</span><span>Ecocardiograma</span><span>Holter 24h</span><span>MAPA</span><span>Ultrassonografia</span><span>Doppler</span><span>Coleta de sangue</span></div><p>Imagem e laboratório na casa do paciente, com laudo. Mediante pedido médico.</p></article>
     <article class="tile t-e"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><h3>Plantões flexíveis</h3><div class="clock">6h · 12h · 24h</div><p>Por hora, por plantão ou com revezamento.</p></article>
+    <article class="tile t-g"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 12h4l2-5 3 10 2-5h7"/></svg></span><h3>Gerenciamento de crônicos</h3><p>Hipertensão, diabetes, coração e pulmão acompanhados de perto: medições registradas pelo aplicativo, alerta para a equipe quando sai do normal e relatório para o médico.</p></article>
     <article class="tile t-f"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21V10l9-6 9 6v11"/><rect x="9" y="13" width="6" height="8"/></svg></span><h3>Internação domiciliar</h3><p>Equipe técnica fixa, materiais e medicamentos conforme o pacote, para quem precisa sair do hospital com segurança.</p></article>
   </div>
 </div></section>
