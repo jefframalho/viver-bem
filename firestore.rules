@@ -1,0 +1,40 @@
+rules_version = '2';
+// Regras do banco do Sistema Viver Bem
+service cloud.firestore {
+  match /databases/{db}/documents {
+    function signed()  { return request.auth != null; }
+    function me()      { return get(/databases/$(db)/documents/usuarios/$(request.auth.uid)).data; }
+    function isAdmin() { return signed() && exists(/databases/$(db)/documents/usuarios/$(request.auth.uid)) && me().role == 'admin'; }
+    function isProf()  { return signed() && exists(/databases/$(db)/documents/usuarios/$(request.auth.uid)) && me().role == 'prof'; }
+    function only(keys){ return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys); }
+
+    // Dados da empresa: leitura pública (aparecem nos contratos e links), escrita só da administração
+    match /config/{id}       { allow get: if true; allow list, write: if isAdmin(); }
+    // Quem pode entrar e com qual perfil
+    match /usuarios/{uid}    { allow get: if signed() && (request.auth.uid == uid || isAdmin()); allow list, write: if isAdmin(); }
+
+    // Candidatos: qualquer pessoa se cadastra; consulta do andamento só pelo protocolo
+    match /candidatos/{id}   { allow create: if request.resource.data.status == 'recebido'; allow get: if true; allow list, update, delete: if isAdmin(); }
+    match /curriculos/{id}   { allow create: if request.resource.data.data.size() < 1000000; allow read, update, delete: if isAdmin(); }
+    // Solicitações de atendimento vindas do link público
+    match /solicitacoes/{id} { allow create: if request.resource.data.status == 'novo'; allow read, update, delete: if isAdmin(); }
+
+    // Contratos: abertos pelo link; quem assina só altera a assinatura de um contrato pendente
+    match /contratos/{id} {
+      allow get: if true;
+      allow list, create, delete: if isAdmin();
+      allow update: if isAdmin() || (resource.data.status == 'pendente' && request.resource.data.status == 'assinado' && only(['status','assinatura','atualizado']));
+    }
+
+    // Plantões: profissional vê e evolui só os próprios
+    match /plantoes/{id} {
+      allow read: if isAdmin() || (isProf() && resource.data.profId == me().profId);
+      allow update: if isAdmin() || (isProf() && resource.data.profId == me().profId && only(['status','evolucao','chegada','saida','atualizado']));
+      allow create, delete: if isAdmin();
+    }
+
+    match /pacientes/{id}     { allow read: if isAdmin() || isProf(); allow write: if isAdmin(); }
+    match /profissionais/{id} { allow read: if isAdmin() || (isProf() && me().profId == id); allow write: if isAdmin(); }
+    match /operadoras/{id}    { allow read, write: if isAdmin(); }
+  }
+}

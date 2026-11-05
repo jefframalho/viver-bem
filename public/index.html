@@ -1,0 +1,1270 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Sistema Viver Bem</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="theme-color" content="#0F3550">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+/* Layout: sistema de gestão com barra lateral fixa (desktop) que vira gaveta no celular; telas públicas centralizadas sem barra */
+:root{
+  --blue:#1F648D; --blue-deep:#0F3550; --copper:#B46E43; --copper-soft:#F5E4D8;
+  --bg:#F1F5F8; --surface:#FFFFFF; --surface-2:#F7FAFC; --ink:#13293A; --muted:#5A7287; --line:#D8E3EB;
+  --ok:#2C7A52; --ok-bg:#E0F2E7; --warn:#93650E; --warn-bg:#FBF0D3; --bad:#A63D3D; --bad-bg:#F8E1E1; --info-bg:#E1EDF5;
+  --on-blue:#FFFFFF; --side:#0F3550; --side-ink:#C9DCE8; --side-active:rgba(255,255,255,.12);
+  --f-display:"Lexend","Segoe UI",system-ui,sans-serif;
+  --f-body:"Source Sans 3","Segoe UI",system-ui,sans-serif;
+  --r:12px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --blue:#62A8D8; --blue-deep:#0A2230; --copper:#E3A57C; --copper-soft:#3B2A1F;
+  --bg:#0B161D; --surface:#12212B; --surface-2:#0F1C25; --ink:#E3EDF3; --muted:#93AABB; --line:#23384A;
+  --ok:#7DCC9F; --ok-bg:#153226; --warn:#E5C06B; --warn-bg:#382D13; --bad:#EF9B9B; --bad-bg:#3C1C1C; --info-bg:#163246;
+  --on-blue:#0B161D; --side:#081A25; --side-ink:#A9C2D3; --side-active:rgba(255,255,255,.08); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --blue:#62A8D8; --blue-deep:#0A2230; --copper:#E3A57C; --copper-soft:#3B2A1F;
+  --bg:#0B161D; --surface:#12212B; --surface-2:#0F1C25; --ink:#E3EDF3; --muted:#93AABB; --line:#23384A;
+  --ok:#7DCC9F; --ok-bg:#153226; --warn:#E5C06B; --warn-bg:#382D13; --bad:#EF9B9B; --bad-bg:#3C1C1C; --info-bg:#163246;
+  --on-blue:#0B161D; --side:#081A25; --side-ink:#A9C2D3; --side-active:rgba(255,255,255,.08); color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15.5px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:60;background:var(--side)}
+h1,h2,h3,h4{font-family:var(--f-display);font-weight:500;line-height:1.2;margin:0;text-wrap:balance}
+h1{font-size:1.45rem} h2{font-size:1.15rem} h3{font-size:1rem}
+p{margin:0}
+a{color:var(--blue)}
+.muted{color:var(--muted)} .small{font-size:.88rem}
+.num{font-variant-numeric:tabular-nums}
+
+/* casca */
+.shell{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:100vh}
+.side{background:var(--side);color:var(--side-ink);position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column;padding:14px 10px calc(14px + env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px))}
+.brand{display:flex;align-items:center;gap:10px;padding:6px 8px 16px;color:#fff;text-decoration:none}
+.brand img{width:40px;height:40px;border-radius:10px;object-fit:cover}
+.brand b{display:block;font-family:var(--f-display);font-weight:400;font-size:1.08rem;line-height:1.1}
+.brand small{font-size:.72rem;color:#E9B48F}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav a{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;color:var(--side-ink);text-decoration:none;font-weight:600;font-size:.95rem}
+.nav a svg{width:19px;height:19px;flex:none;opacity:.85}
+.nav a:hover{background:var(--side-active);color:#fff}
+.nav a[aria-current="page"]{background:var(--side-active);color:#fff;box-shadow:inset 3px 0 0 #E9B48F}
+.nav .badge{margin-left:auto;background:#E9B48F;color:#3A2210;font-size:.72rem;font-weight:700;border-radius:999px;padding:1px 7px}
+.nav-sep{font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:#7FA0B6;padding:14px 10px 4px}
+.side-foot{margin-top:auto;padding:12px 8px 0;border-top:1px solid rgba(255,255,255,.1);font-size:.85rem}
+.side-foot button{margin-top:8px}
+.main{min-width:0;padding-block:20px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.main-in{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.topbar{display:none}
+.pagehead{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.pagehead .sub{color:var(--muted);font-size:.92rem;margin-top:2px}
+@media (max-width:899px){
+  .shell{display:block}
+  .side{position:fixed;inset:0 auto 0 0;width:270px;z-index:50;transform:translateX(-102%);transition:transform .2s;padding-top:calc(14px + env(safe-area-inset-top,0px))}
+  .shell.open .side{transform:none}
+  .scrim{position:fixed;inset:0;background:rgba(5,15,22,.5);z-index:45}
+  .topbar{display:flex;position:sticky;top:env(safe-area-inset-top,0px);z-index:40;background:var(--side);color:#fff;align-items:center;gap:10px;padding:8px max(12px,env(safe-area-inset-right,0px)) 8px max(12px,env(safe-area-inset-left,0px))}
+  .topbar b{font-family:var(--f-display);font-weight:400}
+  .topbar button{background:transparent;border:0;color:#fff;padding:8px;border-radius:8px;cursor:pointer}
+}
+
+/* componentes */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;font:600 .95rem var(--f-body);padding:9px 15px;border-radius:10px;border:1.5px solid transparent;cursor:pointer;text-decoration:none;min-height:40px;white-space:nowrap;color:var(--ink)}
+.btn svg{width:17px;height:17px}
+.btn-primary{background:var(--blue);color:var(--on-blue)}
+.btn-copper{background:var(--copper);color:#fff}
+.btn-line{background:var(--surface);border-color:var(--line)}
+.btn-line:hover{border-color:var(--blue)}
+.btn-danger{background:var(--surface);border-color:var(--bad);color:var(--bad)}
+.btn-ghost-light{background:transparent;border-color:rgba(255,255,255,.3);color:#fff}
+.btn-sm{padding:5px 10px;min-height:32px;font-size:.86rem;border-radius:8px}
+.btn-block{width:100%}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+:focus-visible{outline:3px solid var(--copper);outline-offset:2px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
+.card > h2,.card-h{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.grid2{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
+.kpis{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;text-decoration:none;color:inherit;display:block}
+a.kpi:hover{border-color:var(--blue)}
+.kpi b{display:block;font-family:var(--f-display);font-weight:400;font-size:1.55rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.kpi span{font-size:.84rem;color:var(--muted)}
+.kpi.alert{border-color:var(--copper);background:var(--copper-soft)}
+
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.76rem;font-weight:700;white-space:nowrap}
+.p-blue{background:var(--info-bg);color:var(--blue)} .p-ok{background:var(--ok-bg);color:var(--ok)}
+.p-warn{background:var(--warn-bg);color:var(--warn)} .p-bad{background:var(--bad-bg);color:var(--bad)}
+.p-cop{background:var(--copper-soft);color:var(--copper)} .p-mute{background:var(--surface-2);color:var(--muted);border:1px solid var(--line)}
+.ex{font-size:.66rem;font-weight:700;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:0 5px;margin-left:6px;vertical-align:middle;letter-spacing:.04em}
+
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+table{width:100%;border-collapse:collapse;font-size:.93rem}
+th{text-align:left;font-weight:600;color:var(--muted);font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--surface-2)}
+td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+tr.click{cursor:pointer} tr.click:hover td{background:var(--surface-2)}
+td.r,th.r{text-align:right;font-variant-numeric:tabular-nums}
+td b{font-weight:600}
+
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.toolbar input,.toolbar select{width:auto;min-width:0;flex:1 1 180px;max-width:320px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chipbtn{font:600 .86rem var(--f-body);border:1px solid var(--line);background:var(--surface);color:var(--muted);padding:6px 12px;border-radius:999px;cursor:pointer}
+.chipbtn[aria-pressed="true"]{background:var(--blue);border-color:var(--blue);color:var(--on-blue)}
+.empty{padding:26px 16px;text-align:center;color:var(--muted)}
+
+/* formulários */
+.fgrid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))}
+.f{display:flex;flex-direction:column;gap:5px;font-weight:600;font-size:.9rem;min-width:0}
+.f.full{grid-column:1/-1}
+.f small{font-weight:400;color:var(--muted)}
+.req{color:var(--copper);font-style:normal}
+input,select,textarea{font:inherit;font-weight:400;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:9px;padding:9px 11px;width:100%;min-height:42px}
+textarea{resize:vertical}
+input:focus,select:focus,textarea:focus{border-color:var(--blue);outline:none}
+.checks{display:grid;gap:6px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));font-weight:400}
+.checks label,.consent{display:flex;gap:9px;align-items:flex-start;font-weight:400;cursor:pointer}
+.checks input,.consent input{width:18px;height:18px;min-height:0;flex:none;margin-top:3px;accent-color:var(--blue)}
+.consent{padding:11px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.err{color:var(--bad);font-weight:600;font-size:.9rem}
+.note{background:var(--info-bg);border-radius:10px;padding:10px 12px;font-size:.9rem}
+.note.warn{background:var(--warn-bg)}
+
+dl.kv{display:grid;grid-template-columns:minmax(110px,max-content) 1fr;gap:6px 14px;margin:0}
+dl.kv dt{color:var(--muted);font-size:.88rem} dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
+
+/* escala */
+.week{display:grid;gap:10px}
+.day{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.day.today{border-color:var(--blue)}
+.day-h{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--surface-2);border-bottom:1px solid var(--line);font-weight:600}
+.day.today .day-h{background:var(--info-bg)}
+.shift{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px 12px;border-bottom:1px solid var(--line);cursor:pointer;width:100%;background:none;border-left:4px solid transparent;font:inherit;color:inherit;text-align:left}
+.shift:last-child{border-bottom:0}
+.shift:hover{background:var(--surface-2)}
+.shift.s-agendado{border-left-color:var(--blue)} .shift.s-realizado{border-left-color:var(--ok)}
+.shift.s-falta{border-left-color:var(--bad)} .shift.s-cancelado{border-left-color:var(--line);opacity:.6}
+.shift.nopro{border-left-color:var(--copper);background:var(--copper-soft)}
+.shift .t{font-variant-numeric:tabular-nums;font-weight:600;font-size:.9rem}
+.shift .t small{display:block;font-weight:400;color:var(--muted)}
+.shift .w{min-width:0}
+.shift .w b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.shift .w span{font-size:.86rem;color:var(--muted)}
+
+.timeline{list-style:none;margin:0;padding:0}
+.timeline li{display:flex;gap:12px;padding:8px 0;position:relative}
+.timeline li::before{content:"";flex:none;width:14px;height:14px;border-radius:50%;border:2px solid var(--line);background:var(--surface);margin-top:4px;z-index:1}
+.timeline li.done::before{background:var(--blue);border-color:var(--blue)}
+.timeline li.now::before{background:var(--copper);border-color:var(--copper)}
+.timeline li:not(:last-child)::after{content:"";position:absolute;left:6px;top:22px;bottom:-6px;width:2px;background:var(--line)}
+.timeline b{display:block;font-weight:600}
+
+.evo{border-left:3px solid var(--blue);padding:6px 0 6px 12px}
+.evo + .evo{margin-top:12px}
+.vitals{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0}
+.vitals span{font-size:.8rem;background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-variant-numeric:tabular-nums}
+
+.contract{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;font-size:.95rem;line-height:1.6;max-height:460px;overflow:auto}
+.contract h4{font-size:.98rem;margin:14px 0 4px}
+.contract p + p{margin-top:6px}
+
+/* modal */
+.overlay{position:fixed;inset:0;z-index:70;background:rgba(5,15,22,.55);display:flex;align-items:flex-start;justify-content:center;padding:calc(24px + env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) 24px max(12px,env(safe-area-inset-left,0px));overflow-y:auto}
+.modal{background:var(--surface);border-radius:14px;width:100%;max-width:640px;border:1px solid var(--line);box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.modal.wide{max-width:860px}
+.modal-h{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.modal-b{padding:16px;display:flex;flex-direction:column;gap:14px}
+.x{background:none;border:0;font-size:1.5rem;line-height:1;color:var(--muted);cursor:pointer;padding:4px 8px;border-radius:8px}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(24px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;z-index:90;font-weight:600;max-width:90vw}
+
+/* telas públicas e login */
+.pub{min-height:100vh;display:flex;flex-direction:column}
+.pub-top{background:var(--side);color:#fff}
+.pub-top .in{max-width:760px;margin:0 auto;padding:12px max(16px,env(safe-area-inset-right,0px)) 12px max(16px,env(safe-area-inset-left,0px))}
+.pub-main{max-width:760px;width:100%;margin:0 auto;padding:22px max(16px,env(safe-area-inset-right,0px)) 50px max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:16px}
+.login{min-height:100vh;display:grid;grid-template-columns:1.1fr 1fr}
+.login-art{background:var(--side);color:#fff;padding:40px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
+.login-art h1{font-weight:300;font-size:clamp(1.8rem,3.4vw,2.6rem);max-width:16ch;color:#fff}
+.login-art p{color:#BFD3E1;max-width:40ch;margin-top:12px}
+.login-art svg{position:absolute;right:-30px;bottom:-20px;width:420px;opacity:.25}
+.login-form{display:flex;align-items:center;justify-content:center;padding:30px max(16px,env(safe-area-inset-right,0px)) 30px max(16px,env(safe-area-inset-left,0px))}
+.login-form form{width:100%;max-width:360px;display:flex;flex-direction:column;gap:14px}
+@media (max-width:760px){.login{grid-template-columns:1fr}.login-art{padding:28px 20px}.login-art svg{width:260px}}
+.wbar{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.wbar i{height:5px;border-radius:3px;background:var(--line)} .wbar i.on{background:var(--blue)}
+.okbox{background:var(--ok-bg);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:10px}
+.okbox h2{color:var(--ok)}
+.code{font-family:var(--f-display);font-size:1.5rem;letter-spacing:.06em}
+.demo-strip{font-size:.82rem;background:var(--copper-soft);color:var(--ink);padding:6px 12px;border-radius:9px}
+@media (prefers-reduced-motion:reduce){.side{transition:none}}
+</style>
+
+<style>:root{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+/* =================== CONFIGURAÇÃO DE IMPLANTAÇÃO ===================
+   Para usar de verdade, crie um projeto no Firebase e cole a configuração abaixo.
+   Enquanto estiver null, o sistema roda em MODO DEMONSTRAÇÃO (dados só neste aparelho). */
+const FIREBASE_CONFIG = null;
+/* Ex.: { apiKey:"...", authDomain:"viverbem-xxxx.firebaseapp.com", projectId:"viverbem-xxxx", storageBucket:"...", messagingSenderId:"...", appId:"..." } */
+/* ================================================================== */
+
+const LOGO = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBAUEBAYFBQUGBgYHCQ4JCQgICRINDQoOFRIWFhUSFBQXGiEcFxgfGRQUHScdHyIjJSUlFhwpLCgkKyEkJST/2wBDAQYGBgkICREJCREkGBQYJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCT/wAARCAD3AQADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDhKKKK+rPjAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigYUUUUCCi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";
+const $ = (s, el=document) => el.querySelector(s);
+const $$ = (s, el=document) => [...el.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid = (p="") => p + Date.now().toString(36).slice(-4) + Math.random().toString(36).slice(2,6);
+const digits = s => String(s||"").replace(/\D/g,"");
+const pad = n => String(n).padStart(2,"0");
+const isoDay = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const today = () => isoDay(new Date());
+const addDays = (s,n) => { const d=new Date(s+"T12:00"); d.setDate(d.getDate()+n); return isoDay(d); };
+const fmtDay = s => s ? new Date(s+"T12:00").toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit",year:"numeric"}) : "-";
+const fmtDayW = s => new Date(s+"T12:00").toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"long"});
+const fmtDT = iso => iso ? new Date(iso).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}) : "-";
+const brl = v => (+v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+const age = nasc => { if(!nasc) return ""; const d=new Date(nasc+"T12:00"), n=new Date(); let a=n.getFullYear()-d.getFullYear(); if(n<new Date(n.getFullYear(),d.getMonth(),d.getDate())) a--; return a; };
+const fmtCPF = c => { c=digits(c); return c.length===11 ? c.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,"$1.$2.$3-$4") : c; };
+const first = n => String(n||"").split(" ")[0];
+const norm = s => String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/\s+/g," ").trim();
+function validCPF(c){ c=digits(c); if(!/^\d{11}$/.test(c)||/^(\d)\1+$/.test(c)) return false;
+  for(const t of [9,10]){ let s=0; for(let i=0;i<t;i++) s+=+c[i]*(t+1-i); if(((s*10)%11)%10!==+c[t]) return false; } return true; }
+function toast(t){ $(".toast")?.remove(); const d=document.createElement("div"); d.className="toast"; d.setAttribute("role","status"); d.textContent=t; document.body.appendChild(d); setTimeout(()=>d.remove(),2800); }
+async function copy(t){ try{ await navigator.clipboard.writeText(t); toast("Link copiado"); }catch(e){ const i=document.createElement("textarea"); i.value=t; document.body.appendChild(i); i.select(); try{document.execCommand("copy"); toast("Link copiado");}catch(_){toast("Selecione e copie o link");} i.remove(); } }
+async function sha(t){ try{ const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t)); return [...new Uint8Array(b)].slice(0,8).map(x=>x.toString(16).padStart(2,"0")).join("").toUpperCase(); }catch(e){ return uid().toUpperCase(); } }
+const wa = (tel, msg="") => { let d=digits(tel); if(d.length && !d.startsWith("55")) d="55"+d; return `https://wa.me/${d}${msg?"?text="+encodeURIComponent(msg):""}`; };
+const baseURL = () => location.href.split("#")[0];
+
+const FUNCOES = { "Enfermeiro(a)":"COREN","Técnico(a) de enfermagem":"COREN","Cuidador(a)":"","Fisioterapeuta":"CREFITO","Fonoaudiólogo(a)":"CRFa","Psicólogo(a)":"CRP","Nutricionista":"CRN","Terapeuta ocupacional":"CREFITO","Médico(a)":"CRM" };
+const EXPERIENCIAS = ["Idosos","Pós-operatório","Alzheimer / Parkinson","AVC","Traqueostomia","Sondas","Curativos","Cuidados paliativos","Medicação EV","Oxigenoterapia"];
+const DISPON = ["Plantão 6h","Plantão 8h","Plantão 12h","Plantão 24h","Atendimento por hora","Noturno","Fins de semana"];
+const MODS = [["6","Plantão 6h"],["8","Plantão 8h"],["12","Plantão 12h"],["24","Plantão 24h"],["hora","Por hora"]];
+const MOD_NAME = Object.fromEntries(MODS);
+const CAND_ST = [["recebido","Currículo recebido"],["analise","Em análise"],["entrevista","Entrevista"],["aprovado","Aprovado"],["contrato","Contrato assinado"]];
+const CAND_NAME = {...Object.fromEntries(CAND_ST), reprovado:"Não selecionado"};
+const CAND_PILL = {recebido:"p-blue",analise:"p-warn",entrevista:"p-warn",aprovado:"p-cop",contrato:"p-ok",reprovado:"p-bad"};
+const PL_ST = {agendado:["Agendado","p-blue"],andamento:["Em andamento","p-cop"],realizado:["Realizado","p-ok"],falta:["Falta","p-bad"],cancelado:["Cancelado","p-mute"]};
+const UFS = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
+const DISPOSITIVOS = ["Sonda nasoenteral","Gastrostomia","Sonda vesical","Traqueostomia","Oxigênio","Acesso venoso","Ostomia","Curativo / lesão","Ventilação mecânica"];
+const RISCOS = ["Queda","Lesão por pressão","Broncoaspiração","Agitação / fuga","Infecção"];
+const loc = p => [p?.cidade, p?.uf].filter(Boolean).join("/");
+const geoOf = p => { const m=String(p?.geo||"").match(/(-?\d+(?:\.\d+)?)\s*[,; ]\s*(-?\d+(?:\.\d+)?)/); return m?[+m[1],+m[2]]:null; };
+function distM(a,b){ const R=6371000, r=x=>x*Math.PI/180; const h=Math.sin(r(b[0]-a[0])/2)**2+Math.cos(r(a[0]))*Math.cos(r(b[0]))*Math.sin(r(b[1]-a[1])/2)**2; return 2*R*Math.asin(Math.sqrt(h)); }
+const fmtDist = d => d<1000 ? Math.round(d)+" m" : (d/1000).toFixed(1).replace(".",",")+" km";
+const hhmm = iso => new Date(iso).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+function regInfo(r, pac){ if(!r) return null; const g=geoOf(pac); const d=(r.lat!=null&&g)?distM([r.lat,r.lng],g):null;
+  return {hora:hhmm(r.em), d, longe:d!=null&&d>300, semGeo:r.lat==null, map:r.lat!=null?`https://www.google.com/maps?q=${r.lat},${r.lng}`:null}; }
+const atrasoMin = p => p.chegada ? Math.round((new Date(p.chegada.em).getTime()-tStart(p))/6e4) : null;
+const rotaURL = pac => "https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(geoOf(pac)?geoOf(pac).join(","):`${pac.endereco}, ${loc(pac)}`);
+function getPos(){ return new Promise(ok=>{ if(!navigator.geolocation) return ok(null); try{ navigator.geolocation.getCurrentPosition(x=>ok({lat:+x.coords.latitude.toFixed(6),lng:+x.coords.longitude.toFixed(6),acc:Math.round(x.coords.accuracy)}),()=>ok(null),{enableHighAccuracy:true,timeout:12000,maximumAge:0}); }catch(e){ ok(null); } }); }
+const podeChegar = p => !p.chegada && p.status==="agendado" && Date.now()>=tStart(p)-2*36e5 && Date.now()<=tEnd(p);
+const PAC_ST = {avaliacao:["Em avaliação","p-warn"],ativo:["Ativo","p-ok"],alta:["Alta","p-mute"]};
+
+/* =================== DADOS =================== */
+const COLS = ["config","curriculos","pacientes","profissionais","candidatos","plantoes","solicitacoes","operadoras","contratos","usuarios"];
+const LS_KEY = "viverbem-sistema-v2";
+const Store = {
+  mode: FIREBASE_CONFIG ? "firebase" : "demo",
+  data: {}, fs: null, auth: null,
+  all(c){ return this.data[c] || []; },
+  get(c,id){ return this.all(c).find(x=>x.id===id); },
+  cfg(){ return this.get("config","empresa") || {id:"empresa"}; },
+  _local(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(this.data)); }catch(e){} },
+  async put(c,obj){
+    obj.atualizado = new Date().toISOString(); if(!obj.criado) obj.criado = obj.atualizado;
+    const arr = this.data[c] || (this.data[c]=[]); const i = arr.findIndex(x=>x.id===obj.id);
+    if(i>=0) arr[i]=obj; else arr.unshift(obj);
+    if(this.mode==="firebase") await this.fs.collection(c).doc(obj.id).set(JSON.parse(JSON.stringify(obj)));
+    else this._local();
+    return obj;
+  },
+  async del(c,id){
+    this.data[c] = this.all(c).filter(x=>x.id!==id);
+    if(this.mode==="firebase") await this.fs.collection(c).doc(id).delete(); else this._local();
+  },
+  async fetchOne(c,id){
+    if(this.mode==="demo") return this.get(c,id);
+    const s = await this.fs.collection(c).doc(id).get(); return s.exists ? s.data() : null;
+  },
+  async init(){
+    if(this.mode==="demo"){
+      try{ this.data = JSON.parse(localStorage.getItem(LS_KEY)) || null; }catch(e){ this.data=null; }
+      if(!this.data){ this.data = seed(); this._local(); }
+      return;
+    }
+    const v="10.12.2";
+    for(const f of ["app","auth","firestore"]) await new Promise((ok,ko)=>{ const s=document.createElement("script"); s.src=`https://cdn.jsdelivr.net/npm/firebase@${v}/firebase-${f}-compat.js`; s.onload=ok; s.onerror=()=>ko(new Error("Não foi possível carregar o Firebase.")); document.head.appendChild(s); });
+    firebase.initializeApp(FIREBASE_CONFIG);
+    this.fs = firebase.firestore(); this.auth = firebase.auth();
+    const c = await this.fetchOne("config","empresa"); this.data.config = c ? [c] : [];
+  },
+  async loadFor(session){
+    if(this.mode==="demo") return;
+    const get = async (c,q) => { const s = await (q||this.fs.collection(c)).get(); this.data[c] = s.docs.map(d=>d.data()); };
+    if(session.role==="admin") await Promise.all(COLS.filter(c=>c!=="curriculos").map(c=>get(c)));
+    else { await get("pacientes"); await get("plantoes", this.fs.collection("plantoes").where("profId","==",session.profId)); this.data.profissionais=[await this.fetchOne("profissionais",session.profId)].filter(Boolean); }
+  }
+};
+
+/* =================== SESSÃO =================== */
+let S = null; // {role:"admin"|"prof", profId, nome}
+const SS_KEY="viverbem-sessao";
+function saveSession(){ try{ S ? sessionStorage.setItem(SS_KEY,JSON.stringify(S)) : sessionStorage.removeItem(SS_KEY); }catch(e){} }
+async function login(email, senha){
+  const cred = await Store.auth.signInWithEmailAndPassword(email, senha);
+  const u = await Store.fetchOne("usuarios", cred.user.uid);
+  if(!u){ await Store.auth.signOut(); throw new Error("Este usuário ainda não tem acesso liberado. Peça à administração."); }
+  S = {role:u.role, profId:u.profId||null, nome:u.nome||email};
+  await Store.loadFor(S);
+}
+async function logout(){ if(Store.mode==="firebase") await Store.auth.signOut(); S=null; saveSession(); location.hash=""; render(); }
+
+/* =================== DADOS DE EXEMPLO =================== */
+function seed(){
+  const t=today(), D=n=>addDays(t,n), ts=n=>new Date(Date.now()+n*864e5).toISOString();
+  const pac = [
+    {id:"pac1",exemplo:true,nome:"Francisca Alves de Lima",nasc:"1942-03-18",cpf:"",sexo:"F",endereco:"Rua São Pedro, 120, Centro",cidade:"Mauriti/CE",responsavel:"Antônio Alves de Lima (filho)",telResp:"(88) 99999-1101",cpfResp:"",tipo:"particular",operadoraId:"",carteirinha:"",diagnostico:"Sequela de AVC isquêmico, hipertensão",alergias:"Dipirona",plano:"Plantão noturno de 12h com técnica de enfermagem. Mudança de decúbito a cada 2h, controle de PA às 20h e 6h, dieta pastosa.",status:"ativo",criado:ts(-30)},
+    {id:"pac2",exemplo:true,nome:"João Batista Ferreira",nasc:"1954-07-02",cpf:"",sexo:"M",endereco:"Av. Padre Cícero, 455",cidade:"Juazeiro do Norte/CE",responsavel:"Maria Ferreira (esposa)",telResp:"(88) 99999-1202",cpfResp:"",tipo:"particular",operadoraId:"",carteirinha:"",diagnostico:"Doença de Parkinson",alergias:"",plano:"Fisioterapia motora 1h às segundas, quartas e sextas.",status:"ativo",criado:ts(-20)},
+    {id:"pac3",exemplo:true,nome:"Raimunda Soares Pinheiro",nasc:"1959-11-25",cpf:"",sexo:"F",endereco:"Rua do Cruzeiro, 33",cidade:"Brejo Santo/CE",responsavel:"Cícera Soares (filha)",telResp:"(88) 99999-1303",cpfResp:"",tipo:"operadora",operadoraId:"op1",carteirinha:"000123456",diagnostico:"Pós-operatório de artroplastia de quadril",alergias:"",plano:"Plantão diurno de 6h: curativo diário, antibiótico EV às 8h, apoio na higiene.",status:"ativo",criado:ts(-8)},
+    {id:"pac4",exemplo:true,nome:"Severino Gomes",nasc:"1938-01-09",cpf:"",sexo:"M",endereco:"Sítio Baixio",cidade:"Mauriti/CE",responsavel:"Luzia Gomes (neta)",telResp:"(88) 99999-1404",cpfResp:"",tipo:"particular",operadoraId:"",carteirinha:"",diagnostico:"Alzheimer",alergias:"",plano:"Aguardando avaliação domiciliar.",status:"avaliacao",criado:ts(-1)}
+  ];
+  pac.forEach(p=>{ const [c,u]=p.cidade.split("/"); p.cidade=c; p.uf=u; });
+  Object.assign(pac[0],{geo:"-7.389200, -38.774500",cep:"63210-000",complexidade:"Alta",consciencia:"Confuso / desorientado",mobilidade:"Acamado",alimentacao:"Oral (dieta pastosa)",dispositivos:["Curativo / lesão"],riscos:["Lesão por pressão","Broncoaspiração","Queda"],medicamentos:"Losartana 50 mg às 8h e 20h\nAAS 100 mg após o almoço\nSinvastatina 20 mg à noite",medico:"Dr. Paulo Mendes (CRM-CE 00000)",medicoTel:"(88) 99999-9000"});
+  Object.assign(pac[1],{geo:"-7.213100, -39.315100",cep:"63010-000",complexidade:"Média",consciencia:"Lúcido e orientado",mobilidade:"Deambula com ajuda",alimentacao:"Oral",dispositivos:[],riscos:["Queda"],medicamentos:"Levodopa + benserazida 100/25 mg 3x ao dia\nPramipexol 0,25 mg 2x ao dia",medico:"Dra. Helena Cruz (neurologista)",medicoTel:""});
+  Object.assign(pac[2],{geo:"-7.493100, -38.985300",cep:"63260-000",complexidade:"Média",consciencia:"Lúcido e orientado",mobilidade:"Cadeira de rodas",alimentacao:"Oral",dispositivos:["Acesso venoso","Curativo / lesão"],riscos:["Queda","Infecção"],medicamentos:"Ceftriaxona 1 g EV 1x ao dia (até 14 dias)\nEnoxaparina 40 mg SC 1x ao dia\nParacetamol 750 mg se dor",medico:"Dr. Marcos Feitosa (ortopedista)",medicoTel:""});
+  Object.assign(pac[3],{complexidade:"",consciencia:"",mobilidade:"",alimentacao:"",dispositivos:[],riscos:[]});
+  const pro = [
+    {id:"pro1",exemplo:true,nome:"Maria Aparecida Souza",cpf:"",funcao:"Técnico(a) de enfermagem",registro:"COREN-CE 000001",tel:"(88) 99999-0001",email:"",cidade:"Mauriti/CE",areas:"Mauriti, Brejo Santo",disp:["Plantão 12h","Noturno"],status:"ativo",acesso:"maria@exemplo.com",senhaDemo:"123456",criado:ts(-60)},
+    {id:"pro2",exemplo:true,nome:"Josefa Bezerra",cpf:"",funcao:"Técnico(a) de enfermagem",registro:"COREN-CE 000002",tel:"(88) 99999-0002",email:"",cidade:"Mauriti/CE",areas:"Mauriti",disp:["Plantão 12h","Plantão 24h"],status:"ativo",criado:ts(-50)},
+    {id:"pro3",exemplo:true,nome:"Carlos Eduardo Rocha",cpf:"",funcao:"Fisioterapeuta",registro:"CREFITO-6 000003-F",tel:"(88) 99999-0003",email:"",cidade:"Juazeiro do Norte/CE",areas:"Juazeiro, Crato, Barbalha",disp:["Atendimento por hora"],status:"ativo",criado:ts(-40)},
+    {id:"pro4",exemplo:true,nome:"Ana Paula Leite",cpf:"",funcao:"Enfermeiro(a)",registro:"COREN-CE 000004",tel:"(88) 99999-0004",email:"",cidade:"Brejo Santo/CE",areas:"Brejo Santo, Mauriti, Milagres",disp:["Plantão 6h","Atendimento por hora"],status:"ativo",criado:ts(-45)}
+  ];
+  const tab = {"6":{cobra:180,paga:110},"8":{cobra:230,paga:140},"12":{cobra:320,paga:190},"24":{cobra:600,paga:360},"hora":{cobra:90,paga:55}};
+  const pl=[]; let n=0;
+  const mk=(pacId,profId,data,inicio,mod,horas,extra={})=>{ const h=mod==="hora"?horas:+mod; const v=tab[mod]; pl.push({id:"pl"+(++n),exemplo:true,pacId,profId,data,inicio,mod,horas:h,valorCobrado:mod==="hora"?v.cobra*h:v.cobra,valorPago:mod==="hora"?v.paga*h:v.paga,status:data<t?"realizado":"agendado",recebido:false,pago:false,evolucao:null,...extra}); };
+  for(let i=-12;i<=7;i++){
+    const d=D(i);
+    mk("pac1", i%2? "pro1":"pro2", d, "19:00","12",12);
+    const wd=new Date(d+"T12:00").getDay(); if([1,3,5].includes(wd)) mk("pac2","pro3",d,"09:00","hora",1);
+    if(i>=-6) mk("pac3", i>=5 ? "" : "pro4", d, "07:00","6",6);
+  }
+  const evos=["Paciente tranquila durante o plantão, dormiu bem. Mudança de decúbito realizada a cada 2h. Sem intercorrências.","Aceitou toda a dieta. Diurese presente. Família orientada sobre hidratação.","Agitada no início da noite, melhorou após banho. Pele íntegra."];
+  pl.forEach((p,i)=>{ if(p.status==="realizado"){ if(p.data < D(-5)){ p.recebido=true; p.pago=true; }
+    if(i%3!==2) p.evolucao={texto:p.pacId==="pac2"?"Exercícios de marcha e equilíbrio, 40 min. Boa adesão, sem queixas de dor.":p.pacId==="pac3"?"Curativo em ferida operatória limpo e seco. Antibiótico EV administrado às 8h sem intercorrências.":evos[i%3],pa:p.pacId==="pac2"?"":"130/80",fc:"78",temp:"36,4",sat:"96",glic:"",em:new Date(p.data+"T"+(p.inicio==="19:00"?"23:30":"11:00")).toISOString(),por:p.profId}; } });
+  const o = pl.find(p=>p.data===D(-2)&&p.pacId==="pac3"); if(o){ o.status="falta"; o.evolucao=null; }
+  { const nw=new Date(Date.now()-20*6e4); const ini=`${pad(nw.getHours())}:${pad(Math.floor(nw.getMinutes()/5)*5)}`; if(nw.getHours()<18) mk("pac1","pro1",isoDay(nw),ini,"6",6,{status:"agendado"}); }
+  const casa={pac1:[-7.3892,-38.7745],pac2:[-7.2131,-39.3151],pac3:[-7.4931,-38.9853]};
+  const perto=(c,m)=>[+(c[0]+(Math.random()-.5)*m/55000).toFixed(6), +(c[1]+(Math.random()-.5)*m/55000).toFixed(6)];
+  let k=0; const agora=Date.now();
+  pl.forEach(p=>{ if(p.status==="falta"||p.id===pl[pl.length-1].id&&p.profId==="pro1"&&p.horas===6) return;
+    const st=tStart(p), en=st+p.horas*36e5; if(st>agora) { p.status="agendado"; return; }
+    k++; const late = k%9===0 ? 32 : Math.round(Math.random()*12)-4; const c = k%13===0 ? perto(casa[p.pacId],2400) : perto(casa[p.pacId],80);
+    p.chegada={em:new Date(st+late*6e4).toISOString(),lat:c[0],lng:c[1],acc:12};
+    if(en<agora){ p.status="realizado"; if(k%11!==0) p.saida={em:new Date(en+Math.round(Math.random()*12)*6e4).toISOString(),lat:c[0],lng:c[1],acc:12}; }
+    else { p.status="andamento"; p.evolucao=null; } });
+  const cand=[
+    {id:"VB-EX01A",exemplo:true,nome:"Rosângela Cruz",cpf:"11144477735",nasc:"1990-05-14",tel:"(88) 99999-2001",email:"rosangela@exemplo.com",cidade:"Mauriti/CE",funcao:"Técnico(a) de enfermagem",registro:"COREN-CE 000010",anos:"6",exp:["Idosos","Sondas","Curativos"],disp:["Plantão 12h","Fins de semana"],areas:"Mauriti, Milagres",resumo:"Trabalhou 4 anos em hospital regional.",cv:{nome:"curriculo-rosangela.pdf",kb:180},status:"recebido",hist:[{s:"recebido",em:ts(-1)}],notas:"",criado:ts(-1)},
+    {id:"VB-EX02B",exemplo:true,nome:"José Ribamar Lima",cpf:"52998224725",nasc:"1979-09-30",tel:"(88) 99999-2002",email:"jose@exemplo.com",cidade:"Brejo Santo/CE",funcao:"Cuidador(a)",registro:"",anos:"5",exp:["Idosos","Alzheimer / Parkinson"],disp:["Plantão 24h"],areas:"Brejo Santo",resumo:"Curso de cuidador de idosos (160h).",cv:{nome:"cv-jose.docx",kb:64},status:"entrevista",hist:[{s:"recebido",em:ts(-6)},{s:"analise",em:ts(-4)},{s:"entrevista",em:ts(-2)}],notas:"Entrevista marcada.",criado:ts(-6)},
+    {id:"VB-EX03C",exemplo:true,nome:"Carla Menezes",cpf:"39053344705",nasc:"1992-01-05",tel:"(83) 99999-2003",email:"carla@exemplo.com",cidade:"Cajazeiras/PB",funcao:"Fisioterapeuta",registro:"CREFITO-1 000020-F",anos:"6",exp:["AVC","Pós-operatório"],disp:["Atendimento por hora"],areas:"Cajazeiras e região",resumo:"Fisioterapia neurológica domiciliar.",cv:{nome:"carla-cv.pdf",kb:240},status:"aprovado",contratoId:"ct-ex1",hist:[{s:"recebido",em:ts(-10)},{s:"analise",em:ts(-8)},{s:"entrevista",em:ts(-5)},{s:"aprovado",em:ts(-1)}],notas:"",criado:ts(-10)}
+  ];
+  const cfg={id:"empresa",nome:"Viver Bem Atendimento Domiciliar",cnpj:"",endereco:"",cidade:"",whatsapp:"",email:"",tabela:tab,diaPagamento:"10",exemploValores:true};
+  const ct=[];
+  ct.push(makeContrato("autonomo",{refId:"VB-EX03C",exemplo:true,nome:cand[2].nome,cpf:cand[2].cpf,funcao:cand[2].funcao,registro:cand[2].registro,cidade:cand[2].cidade},cfg,"ct-ex1"));
+  const cp=makeContrato("paciente",{refId:"pac1",exemplo:true,respNome:"Antônio Alves de Lima",respCpf:"52998224725",respEnd:"Rua São Pedro, 120, Centro, Mauriti/CE",pacNome:pac[0].nome,servicos:"Plantão noturno de 12h (19h às 7h), todos os dias, com técnico(a) de enfermagem, e supervisão de enfermagem semanal.",valor:"R$ 320,00 por plantão, faturado mensalmente",venc:"5"},cfg,"ct-ex2");
+  cp.status="assinado"; cp.assinatura={nome:"Antônio Alves de Lima",cpf:"52998224725",em:ts(-29),hash:"A1B2C3D4E5F60718"}; ct.push(cp);
+  return {
+    config:[cfg], pacientes:pac, profissionais:pro, candidatos:cand, plantoes:pl, contratos:ct, usuarios:[],
+    operadoras:[{id:"op1",exemplo:true,nome:"Operadora Exemplo Saúde",cnpj:"00.000.000/0001-00",contato:"Ricardo Alves",tel:"(85) 3333-0000",email:"rede@exemplo.com",status:"credenciada",valores:"Plantão 6h: R$ 200 · Plantão 12h: R$ 350 · Visita de enfermagem: R$ 120",obs:"Faturamento mensal até o dia 5, com relatório de evoluções.",criado:ts(-90)}],
+    solicitacoes:[
+      {id:"s1",exemplo:true,tipo:"familia",nome:"Luzia Gomes",tel:"(88) 99999-1404",cidade:"Mauriti/CE",paciente:"Avô, 88 anos, Alzheimer",servico:"Plantão 12h",msg:"Precisamos de alguém à noite.",status:"novo",criado:ts(-.3)},
+      {id:"s2",exemplo:true,tipo:"operadora",empresa:"Plano Exemplo Nordeste",cnpj:"",nome:"Fernanda Lima",cargo:"Coordenadora de atenção domiciliar",tel:"(85) 3333-1111",email:"fernanda@exemplo.com",regiao:"Cariri",msg:"Queremos conhecer a proposta para desospitalização.",status:"novo",criado:ts(-2)}
+    ]
+  };
+}
+
+/* =================== CONTRATOS =================== */
+function makeContrato(tipo, d, cfg, id){
+  const E = cfg || Store.cfg();
+  const emp = `<b>${esc(E.nome||"Viver Bem Atendimento Domiciliar")}</b>, inscrita no CNPJ ${esc(E.cnpj||"__.___.___/____-__")}, com sede em ${esc(E.endereco||"________________")}${E.cidade?", "+esc(E.cidade):""}`;
+  const foro = esc(E.cidade||"________________");
+  let html, titulo;
+  if(tipo==="autonomo"){
+    titulo = "Prestação de serviço autônomo · "+d.nome;
+    html = `<p><b>CONTRATO DE PRESTAÇÃO DE SERVIÇOS AUTÔNOMOS</b></p>
+    <p><b>CONTRATANTE:</b> ${emp}.</p>
+    <p><b>CONTRATADO(A):</b> ${esc(d.nome)}, CPF ${esc(fmtCPF(d.cpf))}, ${esc(d.funcao)}${d.registro?", registro "+esc(d.registro):""}, residente em ${esc(d.cidade)}.</p>
+    <h4>Cláusula 1 – Objeto</h4><p>Prestação de serviços de ${esc(String(d.funcao).toLowerCase())} em atendimento domiciliar a pacientes indicados pela CONTRATANTE, nos plantões e horários que o(a) CONTRATADO(A) aceitar previamente.</p>
+    <h4>Cláusula 2 – Autonomia</h4><p>O(A) CONTRATADO(A) atua com autonomia, sem exclusividade e sem vínculo empregatício, nos termos do art. 442-B da CLT, podendo recusar plantões e prestar serviços a terceiros.</p>
+    <h4>Cláusula 3 – Remuneração</h4><p>Os valores por hora ou plantão seguem a tabela vigente informada no aceite de cada escala. O pagamento será feito até o dia ${esc(E.diaPagamento||"10")} do mês seguinte aos plantões realizados, mediante RPA ou nota fiscal.</p>
+    <h4>Cláusula 4 – Obrigações do(a) contratado(a)</h4><p>Manter registro profissional ativo quando exigido; seguir os protocolos técnicos da CONTRATANTE e a RDC 11/2006 da Anvisa; registrar no aplicativo a chegada e a saída de cada atendimento, com horário e localização, e a evolução do paciente ao fim de cada plantão; comunicar intercorrências imediatamente; avisar com no mínimo 24 horas de antecedência qualquer impedimento em plantão aceito.</p>
+    <h4>Cláusula 5 – Sigilo e proteção de dados</h4><p>O(A) CONTRATADO(A) manterá sigilo sobre informações de pacientes e familiares e tratará dados pessoais e de saúde conforme a Lei 13.709/2018 (LGPD), inclusive após o fim deste contrato.</p>
+    <h4>Cláusula 6 – Vigência e rescisão</h4><p>Prazo indeterminado, podendo ser encerrado por qualquer das partes com aviso prévio de 7 dias, sem multa, respeitados os plantões já aceitos.</p>
+    <h4>Cláusula 7 – Foro</h4><p>Fica eleito o foro da comarca de ${foro}.</p>`;
+  } else {
+    titulo = "Atenção domiciliar · "+d.pacNome;
+    html = `<p><b>CONTRATO DE PRESTAÇÃO DE SERVIÇOS DE ATENÇÃO DOMICILIAR</b></p>
+    <p><b>CONTRATADA:</b> ${emp}.</p>
+    <p><b>CONTRATANTE (responsável):</b> ${esc(d.respNome)}, CPF ${esc(fmtCPF(d.respCpf))}, residente em ${esc(d.respEnd)}.</p>
+    <p><b>PACIENTE:</b> ${esc(d.pacNome)}.</p>
+    <h4>Cláusula 1 – Serviços</h4><p>${esc(d.servicos)}</p><p>Materiais e medicamentos: ${esc(d.materiais||"não inclusos, fornecidos pela família")}.</p><p>A presença dos profissionais é registrada no sistema da CONTRATADA com horário e localização de chegada e saída. O relatório fica disponível ao CONTRATANTE quando solicitado.</p>
+    <h4>Cláusula 2 – Valores e pagamento</h4><p>${esc(d.valor)}. Vencimento todo dia ${esc(d.venc)} de cada mês. Atrasos acima de 15 dias permitem a suspensão do atendimento, com aviso prévio à família.</p>
+    <h4>Cláusula 3 – Obrigações da contratada</h4><p>Disponibilizar profissionais habilitados, com registro ativo no conselho quando exigido; manter supervisão de enfermagem e registro diário da evolução do paciente; repor o profissional em caso de falta; seguir a RDC 11/2006 da Anvisa.</p>
+    <h4>Cláusula 4 – Obrigações do contratante</h4><p>Garantir acesso ao domicílio e condições adequadas de trabalho; informar mudanças no quadro do paciente ou na prescrição médica; fornecer os materiais e medicamentos não incluídos no pacote; não contratar diretamente os profissionais indicados pela CONTRATADA durante este contrato e por 6 meses após o seu fim.</p>
+    <h4>Cláusula 5 – Urgências</h4><p>A atenção domiciliar não substitui o atendimento de emergência. Em urgência, a equipe aciona o SAMU (192) e avisa a família imediatamente.</p>
+    <h4>Cláusula 6 – Dados de saúde</h4><p>O CONTRATANTE autoriza o tratamento dos dados de saúde do paciente para a execução dos serviços, conforme a Lei 13.709/2018 (LGPD). O acesso fica restrito à equipe envolvida no cuidado.</p>
+    <h4>Cláusula 7 – Vigência e rescisão</h4><p>Prazo indeterminado, podendo ser encerrado por qualquer das partes com aviso prévio de 15 dias.</p>
+    <h4>Cláusula 8 – Foro</h4><p>Fica eleito o foro da comarca de ${foro}.</p>`;
+  }
+  return {id:id||uid("ct-"),tipo,refId:d.refId,titulo,html,dados:d,status:"pendente",assinatura:null,exemplo:!!d.exemplo,criado:new Date().toISOString()};
+}
+const contratoLink = c => baseURL()+"#assinar-"+c.id;
+
+/* =================== FORMULÁRIOS =================== */
+function field(f, v){
+  const id="f_"+f.k, cls="f"+(f.full?" full":"");
+  const lab=`${esc(f.l)}${f.req?' <i class="req">*</i>':""}${f.h?`<small>${esc(f.h)}</small>`:""}`;
+  if(f.t==="checks") return `<div class="${cls}"><span>${lab}</span><div class="checks">${f.o.map(o=>`<label><input type="checkbox" name="${id}" value="${esc(o)}" ${(v||[]).includes(o)?"checked":""}>${esc(o)}</label>`).join("")}</div></div>`;
+  let input;
+  if(f.t==="select") input=`<select id="${id}">${f.o.map(o=>{const [val,l]=Array.isArray(o)?o:[o,o];return `<option value="${esc(val)}" ${String(v??f.d??"")===String(val)?"selected":""}>${esc(l)}</option>`}).join("")}</select>`;
+  else if(f.t==="textarea") input=`<textarea id="${id}" rows="${f.rows||3}" ${f.ph?`placeholder="${esc(f.ph)}"`:""}>${esc(v??"")}</textarea>`;
+  else input=`<input id="${id}" type="${f.t||"text"}" value="${esc(v??f.d??"")}" ${f.ph?`placeholder="${esc(f.ph)}"`:""} ${f.im?`inputmode="${f.im}"`:""} ${f.step?`step="${f.step}"`:""} ${f.ac?`autocomplete="${f.ac}"`:""}>`;
+  return `<label class="${cls}">${lab}${input}</label>`;
+}
+const fields = (spec,obj={}) => `<div class="fgrid">${spec.map(f=>field(f,obj[f.k])).join("")}</div>`;
+function readFields(spec, root=document){ const o={}; for(const f of spec){ if(f.t==="checks") o[f.k]=$$(`input[name="f_${f.k}"]:checked`,root).map(i=>i.value); else { const el=$("#f_"+f.k,root); const v=el?el.value.trim():""; o[f.k]= f.t==="number" ? (v===""?"":+v) : v; } } return o; }
+const missing = (spec,o) => { const f=spec.find(f=>f.req && (Array.isArray(o[f.k])?!o[f.k].length:o[f.k]===""||o[f.k]==null)); return f?`Preencha o campo "${f.l}".`:""; };
+function showErr(root,msg){ let e=$(".err",root); if(!e){ e=document.createElement("p"); e.className="err"; root.appendChild(e); } e.textContent=msg; e.hidden=!msg; if(msg) e.scrollIntoView({block:"nearest"}); }
+
+function modal(title, body, opts={}){
+  closeModal();
+  const o=document.createElement("div"); o.className="overlay";
+  o.innerHTML=`<div class="modal${opts.wide?" wide":""}" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="modal-h"><h2>${esc(title)}</h2><button class="x" data-act="close" aria-label="Fechar">×</button></div><div class="modal-b">${body}</div></div>`;
+  o.addEventListener("mousedown",e=>{ if(e.target===o) closeModal(); });
+  document.body.appendChild(o); const fi=$("input,select,textarea",o); if(fi && !opts.nofocus) fi.focus();
+  return $(".modal-b",o);
+}
+function closeModal(){ $(".overlay")?.remove(); }
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeModal(); });
+
+/* =================== ÍCONES =================== */
+const I = (d)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const ICON = {
+  painel:I('<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>'),
+  pacientes:I('<path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z"/>'),
+  escala:I('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>'),
+  profissionais:I('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c1.8.8 3 2.6 3.5 5.2"/>'),
+  recrutamento:I('<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>'),
+  contratos:I('<path d="M6 3h9l4 4v14H6z"/><path d="M9 17c1.5-2 2.5-2 3 0s2 1.5 3 0"/>'),
+  solicitacoes:I('<path d="M4 5h16v11H8l-4 4z"/>'),
+  operadoras:I('<path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-6h6v6M12 8v4M10 10h4"/>'),
+  financeiro:I('<path d="M3 7h18v12H3z"/><circle cx="12" cy="13" r="2.5"/><path d="M3 10h2M19 16h2"/>'),
+  config:I('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-2.7-1.1l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3.6 15H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.1-2.7l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 9.7 4.4V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1.3z"/>'),
+  ponto:I('<circle cx="12" cy="10" r="3"/><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/>'),
+  menu:I('<path d="M4 6h16M4 12h16M4 18h16"/>'),
+  plus:I('<path d="M12 5v14M5 12h14"/>'),
+  wa:I('<path d="M4 20l1.3-3.9A8 8 0 1 1 8 19z"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5l1-1.5-2-1-1 1c-1-.5-2-1.5-2.5-2.5l1-1-1-2z"/>'),
+  link:I('<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>')
+};
+const LINES = `<svg viewBox="0 0 520 300" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M40 250c40-70 120-80 190-40s150 60 220 10"/><path d="M90 210c60-40 120-30 170 0"/><path d="M330 80l-30 40M360 80l-30 40M390 80l-30 40M420 80l-30 40"/><path d="M260 220c50 10 110 0 160-40 30-25 50-60 60-90"/></svg>`;
+
+/* =================== HELPERS DE DOMÍNIO =================== */
+const pacName = id => Store.get("pacientes",id)?.nome || "Paciente removido";
+const proName = id => id ? (Store.get("profissionais",id)?.nome || "Profissional removido") : "Sem profissional";
+const fim = p => { const [h,m]=p.inicio.split(":").map(Number); const t=h*60+m+p.horas*60; return `${pad(Math.floor(t/60)%24)}:${pad(t%60)}`+(t>=1440?" (+1)":""); };
+const tStart = p => new Date(p.data+"T"+p.inicio).getTime();
+const tEnd = p => tStart(p)+p.horas*36e5;
+function conflito(p){ if(!p.profId) return null; return Store.all("plantoes").find(o=>o.id!==p.id && o.profId===p.profId && o.status!=="cancelado" && tStart(o)<tEnd(p) && tStart(p)<tEnd(o)); }
+const candContrato = c => c.contratoId ? Store.get("contratos",c.contratoId) : null;
+const candStatus = c => (c.status==="aprovado" && candContrato(c)?.status==="assinado") ? "contrato" : c.status;
+const ex = o => o?.exemplo ? '<span class="ex">EXEMPLO</span>' : "";
+function counts(){
+  const t=today();
+  return {
+    pac: Store.all("pacientes").filter(p=>p.status==="ativo").length,
+    hoje: Store.all("plantoes").filter(p=>p.data===t && p.status!=="cancelado").length,
+    semPro: Store.all("plantoes").filter(p=>!p.profId && p.data>=t && p.status==="agendado").length,
+    cand: Store.all("candidatos").filter(c=>["recebido","analise"].includes(c.status)).length,
+    ctPend: Store.all("contratos").filter(c=>c.status==="pendente").length,
+    sol: Store.all("solicitacoes").filter(s=>s.status==="novo").length,
+    semEvo: Store.all("plantoes").filter(p=>p.status==="realizado" && !p.evolucao && p.data>=addDays(t,-7)).length
+  };
+}
+
+/* =================== ROTAS =================== */
+const ADMIN_NAV = [
+  ["painel","Painel"],["pacientes","Pacientes"],["escala","Escala de plantões"],["ponto","Chegadas e saídas"],["profissionais","Profissionais"],
+  ["sep","Captação"],["recrutamento","Recrutamento"],["solicitacoes","Solicitações"],["operadoras","Operadoras"],
+  ["sep","Gestão"],["contratos","Contratos"],["financeiro","Financeiro"],["config","Configurações"]
+];
+function route(){ const h=decodeURIComponent(location.hash.slice(1)); const m=h.match(/^([a-z]+)(?:-(.+))?$/); return m?{r:m[1],id:m[2]||null}:{r:"",id:null}; }
+const PUBLIC = {trabalhe:pgTrabalhe, acompanhar:pgAcompanhar, assinar:pgAssinar, solicitar:pgSolicitar};
+const ADMIN = {ponto:pgPonto,painel:pgPainel,pacientes:pgPacientes,paciente:pgPaciente,escala:pgEscala,profissionais:pgProfissionais,profissional:pgProfissional,recrutamento:pgRecrutamento,candidato:pgCandidato,contratos:pgContratos,solicitacoes:pgSolicitacoes,operadoras:pgOperadoras,financeiro:pgFinanceiro,config:pgConfig};
+const PROF = {meus:pgMeus};
+
+async function render(){
+  const {r,id} = route();
+  const root = $("#root");
+  if(PUBLIC[r]){ root.innerHTML = pubShell(await PUBLIC[r](id)); bindPublic(r,id); return; }
+  if(!S){ root.innerHTML = pgLogin(); bindLogin(); return; }
+  const table = S.role==="admin" ? ADMIN : PROF;
+  const def = S.role==="admin" ? "painel" : "meus";
+  const fn = table[r] || table[def];
+  const cur = table[r] ? r : def;
+  root.innerHTML = appShell(cur, fn(id));
+  window.scrollTo(0,0);
+}
+window.addEventListener("hashchange", render);
+
+function appShell(cur, body){
+  const c = counts();
+  const badge = {escala:c.semPro, recrutamento:c.cand, solicitacoes:c.sol, contratos:c.ctPend};
+  const navItems = S.role==="admin" ? ADMIN_NAV : [["meus","Meus plantões"]];
+  const activeKey = {paciente:"pacientes",profissional:"profissionais",candidato:"recrutamento"}[cur] || cur;
+  const nav = navItems.map(([k,l]) => k==="sep" ? `<div class="nav-sep">${l}</div>` :
+    `<a href="#${k}" ${activeKey===k?'aria-current="page"':""}>${ICON[k]||ICON.escala}<span>${l}</span>${badge[k]?`<span class="badge">${badge[k]}</span>`:""}</a>`).join("");
+  return `<div class="shell" id="shell">
+    <header class="topbar"><button data-act="menu" aria-label="Abrir menu">${ICON.menu}</button><b>Viver Bem</b></header>
+    <aside class="side" aria-label="Menu">
+      <a class="brand" href="#"><img src="${LOGO}" alt=""><span><b>Viver Bem</b><small>Atendimento Domiciliar</small></span></a>
+      <nav class="nav">${nav}</nav>
+      <div class="side-foot"><div>${esc(S.nome)}</div><div class="small" style="color:#7FA0B6">${S.role==="admin"?"Administração":"Profissional"}${Store.mode==="demo"?" · demonstração":""}</div>
+      <button class="btn btn-sm btn-ghost-light" data-act="logout">Sair</button></div>
+    </aside>
+    <main class="main"><div class="main-in">${body}</div></main>
+  </div>`;
+}
+function pubShell(body){
+  return `<div class="pub"><header class="pub-top"><div class="in"><span class="brand" style="padding:0"><img src="${LOGO}" alt=""><span><b>Viver Bem</b><small>Atendimento Domiciliar</small></span></span></div></header><main class="pub-main">${body}</main></div>`;
+}
+
+/* =================== LOGIN =================== */
+function pgLogin(){
+  const demo = Store.mode==="demo";
+  return `<div class="login">
+    <section class="login-art"><span class="brand" style="padding:0"><img src="${LOGO}" alt=""><span><b>Viver Bem</b><small>Atendimento Domiciliar</small></span></span>
+      <div><h1>Gestão do cuidado domiciliar em um só lugar.</h1><p>Administração e profissionais de saúde entram pelo mesmo endereço. Cada um vê só o que é seu.</p></div><span></span>${LINES}</section>
+    <section class="login-form">
+      <form id="fLogin" novalidate>
+        <h2>Entrar no sistema</h2>
+        <label class="f">E-mail<input id="lg_email" type="email" autocomplete="username" inputmode="email"></label>
+        <label class="f">Senha<input id="lg_pass" type="password" autocomplete="current-password"></label>
+        <p class="err" hidden></p>
+        <button class="btn btn-primary btn-block">Entrar</button>
+        ${demo?`<div class="demo-strip">Demonstração · senha <b>123456</b><br>Administração: <b>admin@viverbem.com</b><br>Profissional: <b>maria@exemplo.com</b></div>
+          <div class="actions"><button type="button" class="btn btn-sm btn-line" data-act="demoAdmin">Entrar como administração</button><button type="button" class="btn btn-sm btn-line" data-act="demoProf">Entrar como profissional</button></div>`
+        :`<button type="button" class="btn btn-line btn-block" data-act="reset">Esqueci minha senha</button>`}
+        <p class="small muted">Quer trabalhar com a gente? <a href="#trabalhe">Trabalhe conosco</a> · <a href="#acompanhar">Acompanhar candidatura</a></p>
+      </form>
+    </section></div>`;
+}
+function bindLogin(){
+  const f=$("#fLogin"); if(!f) return;
+  f.onsubmit=async e=>{ e.preventDefault(); const email=$("#lg_email").value.trim().toLowerCase(), senha=$("#lg_pass").value;
+    if(!email||!senha) return showErr(f,"Digite e-mail e senha.");
+    if(Store.mode==="demo"){
+      if(email==="admin@viverbem.com"&&senha==="123456"){ S={role:"admin",nome:"Administração Viver Bem"}; }
+      else { const p=Store.all("profissionais").find(x=>(x.acesso||"").toLowerCase()===email); if(!p||(p.senhaDemo||"123456")!==senha) return showErr(f,"E-mail ou senha incorretos."); if(p.status!=="ativo") return showErr(f,"Seu acesso está desativado. Fale com a administração."); S={role:"prof",profId:p.id,nome:p.nome}; }
+      saveSession(); location.hash=S.role==="admin"?"painel":"meus"; return render();
+    }
+    const b=$("button.btn-primary",f); b.disabled=true;
+    try{ await login(email, senha); saveSession(); location.hash=S.role==="admin"?"painel":"meus"; render(); }
+    catch(err){ showErr(f, /password|credential|user/i.test(err.code||"")?"E-mail ou senha incorretos.":err.message); b.disabled=false; } };
+}
+/* =================== PAINEL =================== */
+function pgPainel(){
+  const c=counts(), t=today();
+  const hoje = Store.all("plantoes").filter(p=>p.data===t && p.status!=="cancelado").sort((a,b)=>a.inicio.localeCompare(b.inicio));
+  const alerts=[];
+  if(c.semPro) alerts.push(`<li><b>${c.semPro} plantão(ões) sem profissional</b> nos próximos dias. <a href="#escala">Ver escala</a></li>`);
+  const naoChegou = Store.all("plantoes").filter(p=>p.status==="agendado"&&p.profId&&tStart(p)<Date.now()-30*6e4&&tEnd(p)>Date.now());
+  naoChegou.forEach(p=>alerts.push(`<li><b>${esc(proName(p.profId))} não registrou chegada</b> em ${esc(pacName(p.pacId))} (início ${p.inicio}). <a href="#ponto">Ver chegadas</a></li>`));
+  const andamento = Store.all("plantoes").filter(p=>p.status==="andamento").length;
+  if(andamento) alerts.push(`<li><b>${andamento} profissional(is) em atendimento agora.</b> <a href="#ponto">Acompanhar</a></li>`);
+  if(c.semEvo) alerts.push(`<li><b>${c.semEvo} plantão(ões) realizados sem evolução</b> registrada na última semana.</li>`);
+  const faltas = Store.all("plantoes").filter(p=>p.status==="falta" && p.data>=addDays(t,-7)).length;
+  if(faltas) alerts.push(`<li><b>${faltas} falta(s)</b> de profissional nos últimos 7 dias.</li>`);
+  const aval = Store.all("pacientes").filter(p=>p.status==="avaliacao");
+  aval.forEach(p=>alerts.push(`<li><b>${esc(p.nome)}</b> aguarda avaliação domiciliar. <a href="#paciente-${p.id}">Abrir</a></li>`));
+  const links = [["Trabalhe conosco","trabalhe","Envie para candidatos se cadastrarem"],["Solicitar atendimento","solicitar","Coloque no Instagram e no WhatsApp da empresa"],["Acompanhar candidatura","acompanhar","Candidatos consultam o andamento"]];
+  return `<div class="pagehead"><div><h1>Bom dia, ${esc(first(S.nome))}</h1><p class="sub">${fmtDayW(t)}</p></div>
+    <div class="actions"><button class="btn btn-primary" data-act="novoPlantao">${ICON.plus}Novo plantão</button><button class="btn btn-line" data-act="novoPaciente">${ICON.plus}Novo paciente</button></div></div>
+  <div class="kpis">
+    <a class="kpi" href="#pacientes"><b>${c.pac}</b><span>Pacientes ativos</span></a>
+    <a class="kpi" href="#escala"><b>${c.hoje}</b><span>Plantões hoje</span></a>
+    <a class="kpi ${c.semPro?"alert":""}" href="#escala"><b>${c.semPro}</b><span>Plantões sem profissional</span></a>
+    <a class="kpi" href="#recrutamento"><b>${c.cand}</b><span>Currículos para analisar</span></a>
+    <a class="kpi" href="#contratos"><b>${c.ctPend}</b><span>Contratos aguardando assinatura</span></a>
+    <a class="kpi" href="#solicitacoes"><b>${c.sol}</b><span>Solicitações novas</span></a>
+  </div>
+  <div class="grid2">
+    <section class="card"><div class="card-h"><h2>Plantões de hoje</h2><a href="#escala" class="small">Escala completa</a></div>
+      ${hoje.length?`<div class="day">${hoje.map(shiftRow).join("")}</div>`:`<p class="empty">Nenhum plantão hoje.</p>`}</section>
+    <section class="card"><div class="card-h"><h2>Pontos de atenção</h2></div>
+      ${alerts.length?`<ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:8px">${alerts.join("")}</ul>`:`<p class="empty">Tudo em dia.</p>`}</section>
+  </div>
+  <section class="card"><div class="card-h"><h2>Links para divulgar</h2></div>
+    <div class="tablewrap"><table><tbody>${links.map(([l,h,d])=>`<tr><td><b>${l}</b><div class="small muted">${d}</div></td><td class="small muted" style="word-break:break-all">${esc(baseURL()+"#"+h)}</td><td class="r"><button class="btn btn-sm btn-line" data-act="copy" data-v="${esc(baseURL()+"#"+h)}">${ICON.link}Copiar</button></td></tr>`).join("")}</tbody></table></div></section>`;
+}
+function shiftRow(p){
+  const pac=Store.get("pacientes",p.pacId), at=atrasoMin(p), ch=regInfo(p.chegada,pac);
+  let pill = `<span class="pill ${PL_ST[p.status][1]}">${PL_ST[p.status][0]}</span>`;
+  if(p.status==="realizado"&&!p.evolucao) pill='<span class="pill p-warn">Sem evolução</span>';
+  else if(p.status==="realizado"&&p.chegada&&!p.saida) pill='<span class="pill p-warn">Sem saída</span>';
+  else if(p.status==="agendado"&&tStart(p)<Date.now()-30*6e4) pill='<span class="pill p-bad">Não chegou</span>';
+  const pres = p.chegada ? ` · chegou ${ch.hora}${p.saida?", saiu "+hhmm(p.saida.em):""}${at>15?` <b style="color:var(--warn);display:inline">(atraso ${at} min)</b>`:""}${ch.longe?` <b style="color:var(--bad);display:inline">fora do endereço</b>`:""}` : "";
+  return `<button class="shift s-${p.status} ${!p.profId&&p.status==="agendado"?"nopro":""}" data-act="plantao" data-id="${p.id}">
+    <span class="t">${p.inicio} – ${fim(p)}<small>${MOD_NAME[p.mod]}${p.mod==="hora"?" · "+p.horas+"h":""}</small></span>
+    <span class="w"><b>${esc(pac?.nome||"Paciente removido")}</b><span>${p.profId?esc(proName(p.profId)):'<b style="color:var(--copper);display:inline">Sem profissional</b>'}${pac?" · "+esc(loc(pac)):""}${pres}</span></span>
+    <span>${pill}</span></button>`;
+}
+/* =================== PACIENTES =================== */
+const PAC_SECTIONS = () => [
+  ["Identificação",[{k:"nome",l:"Nome do paciente",req:1,full:1},{k:"nasc",l:"Data de nascimento",t:"date"},{k:"sexo",l:"Sexo",t:"select",o:[["",""],["F","Feminino"],["M","Masculino"]]},{k:"cpf",l:"CPF",im:"numeric"},{k:"status",l:"Situação",t:"select",o:[["avaliacao","Em avaliação"],["ativo","Ativo"],["alta","Alta"]]}]],
+  ["Endereço do atendimento",[{k:"cep",l:"CEP",im:"numeric",ph:"00000-000"},{k:"endereco",l:"Rua, número e bairro",req:1,full:1},{k:"cidade",l:"Cidade",req:1},{k:"uf",l:"Estado",req:1,t:"select",o:[["","UF"],...UFS]},
+    {k:"geo",l:"Localização da casa",full:1,h:"Latitude e longitude. Serve para conferir a chegada dos profissionais. Pode ser preenchida pela primeira chegada.",ph:"-7.389200, -38.774500"}]],
+  ["Responsável e convênio",[{k:"responsavel",l:"Responsável / familiar",req:1},{k:"telResp",l:"WhatsApp do responsável",req:1,im:"tel"},{k:"cpfResp",l:"CPF do responsável",im:"numeric"},
+    {k:"tipo",l:"Atendimento",t:"select",o:[["particular","Particular"],["operadora","Operadora de saúde"]]},{k:"operadoraId",l:"Operadora",t:"select",o:[["","Não se aplica"],...Store.all("operadoras").map(o=>[o.id,o.nome])]},{k:"carteirinha",l:"Nº da carteirinha"}]],
+  ["Estado clínico",[{k:"diagnostico",l:"Diagnóstico / condição principal",full:1},
+    {k:"complexidade",l:"Complexidade (NEAD)",t:"select",o:[["","Não avaliada"],"Baixa","Média","Alta"]},
+    {k:"consciencia",l:"Nível de consciência",t:"select",o:["","Lúcido e orientado","Confuso / desorientado","Sonolento","Não responsivo"]},
+    {k:"mobilidade",l:"Mobilidade",t:"select",o:["","Deambula sozinho","Deambula com ajuda","Cadeira de rodas","Acamado"]},
+    {k:"alimentacao",l:"Alimentação",t:"select",o:["","Oral","Oral (dieta pastosa)","Sonda nasoenteral","Gastrostomia","Parenteral"]},
+    {k:"dispositivos",l:"Dispositivos em uso",t:"checks",o:DISPOSITIVOS,full:1},{k:"riscos",l:"Riscos",t:"checks",o:RISCOS,full:1},
+    {k:"alergias",l:"Alergias",full:1,h:"Aparece em destaque para toda a equipe"},
+    {k:"medicamentos",l:"Medicamentos em uso",t:"textarea",rows:4,full:1,h:"Um por linha: nome, dose e horário"},
+    {k:"medico",l:"Médico responsável"},{k:"medicoTel",l:"Contato do médico",im:"tel"}]],
+  ["Plano de cuidados",[{k:"plano",l:"O que a equipe deve fazer em cada plantão",t:"textarea",rows:4,full:1}]]
+];
+const PAC_SPEC = () => PAC_SECTIONS().flatMap(x=>x[1]);
+const COMPLEX_PILL = {Baixa:"p-ok",Média:"p-warn",Alta:"p-bad"};
+function estadoClinico(p, compact){
+  const chips=(arr,cls)=>(arr||[]).length?`<div class="chips">${arr.map(x=>`<span class="pill ${cls}">${esc(x)}</span>`).join("")}</div>`:"-";
+  const rows = `<dt>Diagnóstico</dt><dd>${esc(p.diagnostico||"-")}</dd>
+    <dt>Complexidade</dt><dd>${p.complexidade?`<span class="pill ${COMPLEX_PILL[p.complexidade]}">${esc(p.complexidade)}</span>`:"Não avaliada"}</dd>
+    <dt>Consciência</dt><dd>${esc(p.consciencia||"-")}</dd><dt>Mobilidade</dt><dd>${esc(p.mobilidade||"-")}</dd><dt>Alimentação</dt><dd>${esc(p.alimentacao||"-")}</dd>
+    <dt>Dispositivos</dt><dd>${chips(p.dispositivos,"p-blue")}</dd><dt>Riscos</dt><dd>${chips(p.riscos,"p-warn")}</dd>
+    <dt>Medicamentos</dt><dd style="white-space:pre-line">${esc(p.medicamentos||"-")}</dd>
+    ${compact?"":`<dt>Médico</dt><dd>${esc(p.medico||"-")}${p.medicoTel?" · "+esc(p.medicoTel):""}</dd>`}`;
+  return `<dl class="kv">${rows}</dl>`;
+}
+let pacFiltro="ativo", pacBusca="";
+function pgPacientes(){
+  const list = Store.all("pacientes").filter(p=>(pacFiltro==="todos"||p.status===pacFiltro) && norm(p.nome+" "+p.cidade+" "+p.responsavel).includes(norm(pacBusca))).sort((a,b)=>a.nome.localeCompare(b.nome));
+  const cnt = s => Store.all("pacientes").filter(p=>s==="todos"||p.status===s).length;
+  return `<div class="pagehead"><div><h1>Pacientes</h1><p class="sub">${cnt("ativo")} em atendimento</p></div><button class="btn btn-primary" data-act="novoPaciente">${ICON.plus}Novo paciente</button></div>
+  <div class="toolbar"><input id="pacBusca" type="search" placeholder="Buscar por nome, cidade ou responsável" value="${esc(pacBusca)}" aria-label="Buscar paciente">
+    <div class="chips">${[["ativo","Ativos"],["avaliacao","Em avaliação"],["alta","Alta"],["todos","Todos"]].map(([k,l])=>`<button class="chipbtn" data-act="pacFiltro" data-id="${k}" aria-pressed="${pacFiltro===k}">${l} · ${cnt(k)}</button>`).join("")}</div></div>
+  <div class="tablewrap"><table><thead><tr><th>Paciente</th><th>Idade</th><th>Cidade</th><th>Complexidade</th><th>Responsável</th><th>Atendimento</th><th>Situação</th></tr></thead><tbody>
+  ${list.map(p=>`<tr class="click" data-act="go" data-id="paciente-${p.id}"><td><b>${esc(p.nome)}</b>${ex(p)}<div class="small muted">${esc(p.diagnostico||"")}</div></td><td class="num">${age(p.nasc)}</td><td>${esc(loc(p))}</td><td>${p.complexidade?`<span class="pill ${COMPLEX_PILL[p.complexidade]}">${esc(p.complexidade)}</span>`:'<span class="small muted">-</span>'}</td><td>${esc(p.responsavel)}<div class="small muted">${esc(p.telResp)}</div></td><td>${p.tipo==="operadora"?esc(Store.get("operadoras",p.operadoraId)?.nome||"Operadora"):"Particular"}</td><td><span class="pill ${PAC_ST[p.status][1]}">${PAC_ST[p.status][0]}</span></td></tr>`).join("")||`<tr><td colspan="7" class="empty">Nenhum paciente encontrado.</td></tr>`}
+  </tbody></table></div>`;
+}
+function pgPaciente(id){
+  const p=Store.get("pacientes",id); if(!p) return `<p class="empty">Paciente não encontrado. <a href="#pacientes">Voltar</a></p>`;
+  const t=today(), pls=Store.all("plantoes").filter(x=>x.pacId===id);
+  const prox=pls.filter(x=>x.data>=t && ["agendado","andamento"].includes(x.status)).sort((a,b)=>tStart(a)-tStart(b)).slice(0,8);
+  const evos=pls.filter(x=>x.evolucao).sort((a,b)=>tStart(b)-tStart(a));
+  const cts=Store.all("contratos").filter(c=>c.tipo==="paciente"&&c.refId===id);
+  const op=Store.get("operadoras",p.operadoraId);
+  return `<div class="pagehead"><div><p class="small"><a href="#pacientes">Pacientes</a></p><h1>${esc(p.nome)}${ex(p)}</h1><p class="sub">${p.nasc?age(p.nasc)+" anos · ":""}${esc(loc(p))} · <span class="pill ${PAC_ST[p.status][1]}">${PAC_ST[p.status][0]}</span></p></div>
+    <div class="actions"><button class="btn btn-primary" data-act="novoPlantao" data-id="${p.id}">${ICON.plus}Plantão</button><button class="btn btn-line" data-act="editPaciente" data-id="${p.id}">Editar</button><button class="btn btn-line" data-act="novoContratoPac" data-id="${p.id}">${ICON.contratos}Contrato</button><a class="btn btn-line" target="_blank" rel="noopener" href="${wa(p.telResp,`Olá, ${first(p.responsavel)}! Aqui é da Viver Bem Atendimento Domiciliar.`)}">${ICON.wa}Família</a></div></div>
+  ${p.alergias?`<p class="note warn"><b>Alergias:</b> ${esc(p.alergias)}</p>`:""}
+  <div class="grid2">
+    <section class="card"><h2>Dados</h2><dl class="kv">
+      <dt>Endereço</dt><dd>${esc(p.endereco)}, ${esc(loc(p))}${p.cep?" · CEP "+esc(p.cep):""}</dd>
+      <dt>Localização</dt><dd>${geoOf(p)?`<a href="${rotaURL(p)}" target="_blank" rel="noopener">Ver no mapa</a>`:'<span class="muted">Não definida. É preenchida na primeira chegada do profissional.</span>'}</dd>
+      <dt>Responsável</dt><dd>${esc(p.responsavel)} · ${esc(p.telResp)}</dd>
+      <dt>Atendimento</dt><dd>${p.tipo==="operadora"?esc(op?.nome||"Operadora")+(p.carteirinha?" · carteirinha "+esc(p.carteirinha):""):"Particular"}</dd>
+      <dt>Plano de cuidados</dt><dd style="white-space:pre-line">${esc(p.plano||"-")}</dd></dl></section>
+    <section class="card"><h2>Estado clínico</h2>${estadoClinico(p)}</section>
+  </div>
+  <section class="card"><div class="card-h"><h2>Próximos plantões</h2><a class="small" href="#escala">Ver escala</a></div>
+    ${prox.length?`<div class="day">${prox.map(x=>shiftRow(x).replace('<span class="t">',`<span class="t"><small>${fmtDay(x.data).slice(0,5)}</small>`)).join("")}</div>`:`<p class="empty">Nenhum plantão agendado.</p>`}</section>
+  <section class="card"><div class="card-h"><h2>Evolução do paciente</h2><span class="small muted">${evos.length} registro(s)</span></div>
+    ${evos.length?evos.slice(0,15).map(evoBlock).join(""):`<p class="empty">Ainda não há evoluções registradas.</p>`}</section>
+  <section class="card"><div class="card-h"><h2>Contratos</h2><button class="btn btn-sm btn-line" data-act="novoContratoPac" data-id="${p.id}">${ICON.plus}Novo contrato</button></div>${ctTable(cts)}</section>`;
+}
+function evoBlock(x){
+  const e=x.evolucao, v=[e.pa&&"PA "+e.pa, e.fc&&"FC "+e.fc+" bpm", e.temp&&e.temp+" °C", e.sat&&"SpO₂ "+e.sat+"%", e.glic&&"Glicemia "+e.glic].filter(Boolean);
+  return `<div class="evo"><div class="small muted">${fmtDay(x.data)} · ${x.inicio} – ${fim(x)} · ${esc(proName(e.por||x.profId))}${x.chegada?` · presença ${hhmm(x.chegada.em)}${x.saida?"–"+hhmm(x.saida.em):""}`:""}</div>${v.length?`<div class="vitals">${v.map(s=>`<span>${esc(s)}</span>`).join("")}</div>`:""}<p>${esc(e.texto)}</p></div>`;
+}
+function formPaciente(id){
+  const p=id?Store.get("pacientes",id):{tipo:"particular",status:"avaliacao"};
+  const b=modal(id?"Editar paciente":"Novo paciente", PAC_SECTIONS().map(([t,sp])=>`<h3 style="margin-top:6px;color:var(--copper)">${t}</h3>${fields(sp,p)}`).join("")
+    +`<div class="actions"><button class="btn btn-primary" data-act="savePaciente" data-id="${id||""}">Salvar</button>${id?`<button class="btn btn-danger" data-act="delPaciente" data-id="${id}">Excluir</button>`:""}</div>`,{wide:1});
+  const cep=$("#f_cep",b); if(cep) cep.onblur=async()=>{ const d=digits(cep.value); if(d.length!==8) return;
+    try{ const r=await (await fetch(`https://viacep.com.br/ws/${d}/json/`)).json(); if(r.erro) return;
+      if(!$("#f_endereco",b).value) $("#f_endereco",b).value=[r.logradouro,r.bairro].filter(Boolean).join(", ");
+      $("#f_cidade",b).value=r.localidade; $("#f_uf",b).value=r.uf; }catch(e){} };
+}
+/* =================== ESCALA =================== */
+let esc_ini=null, escPac="", escPro="";
+function weekStart(s){ const d=new Date(s+"T12:00"); const w=(d.getDay()+6)%7; d.setDate(d.getDate()-w); return isoDay(d); }
+function pgEscala(){
+  if(!esc_ini) esc_ini=weekStart(today());
+  const days=[...Array(7)].map((_,i)=>addDays(esc_ini,i)), t=today();
+  const pls=Store.all("plantoes").filter(p=>p.data>=days[0]&&p.data<=days[6]&&(!escPac||p.pacId===escPac)&&(!escPro||p.profId===escPro||(escPro==="none"&&!p.profId)));
+  const ativos=Store.all("pacientes").filter(p=>p.status!=="alta");
+  const tot = pls.filter(p=>p.status!=="cancelado").length, semPro=pls.filter(p=>!p.profId&&p.status==="agendado").length;
+  return `<div class="pagehead"><div><h1>Escala de plantões</h1><p class="sub">${fmtDay(days[0])} a ${fmtDay(days[6])} · ${tot} plantões${semPro?` · <b style="color:var(--copper)">${semPro} sem profissional</b>`:""}</p></div>
+    <button class="btn btn-primary" data-act="novoPlantao">${ICON.plus}Novo plantão</button></div>
+  <div class="toolbar">
+    <div class="actions"><button class="btn btn-line btn-sm" data-act="semana" data-id="-7" aria-label="Semana anterior">‹ Anterior</button><button class="btn btn-line btn-sm" data-act="semana" data-id="0">Esta semana</button><button class="btn btn-line btn-sm" data-act="semana" data-id="7" aria-label="Próxima semana">Próxima ›</button></div>
+    <select id="escPac" aria-label="Filtrar paciente"><option value="">Todos os pacientes</option>${ativos.map(p=>`<option value="${p.id}" ${escPac===p.id?"selected":""}>${esc(p.nome)}</option>`).join("")}</select>
+    <select id="escPro" aria-label="Filtrar profissional"><option value="">Todos os profissionais</option><option value="none" ${escPro==="none"?"selected":""}>Sem profissional</option>${Store.all("profissionais").map(p=>`<option value="${p.id}" ${escPro===p.id?"selected":""}>${esc(p.nome)}</option>`).join("")}</select>
+  </div>
+  <div class="week">${days.map(d=>{ const l=pls.filter(p=>p.data===d).sort((a,b)=>a.inicio.localeCompare(b.inicio));
+    return `<div class="day ${d===t?"today":""}"><div class="day-h"><span style="text-transform:capitalize">${fmtDayW(d)}${d===t?" · hoje":""}</span><button class="btn btn-sm btn-line" data-act="novoPlantaoDia" data-id="${d}" aria-label="Adicionar plantão em ${fmtDay(d)}">${ICON.plus}</button></div>${l.length?l.map(shiftRow).join(""):`<p class="small muted" style="padding:10px 12px">Sem plantões</p>`}</div>`; }).join("")}</div>`;
+}
+const PL_SPEC = () => {
+  const pro=Store.all("profissionais").filter(p=>p.status==="ativo");
+  return [
+    {k:"pacId",l:"Paciente",req:1,t:"select",full:1,o:[["","Selecione"],...Store.all("pacientes").filter(p=>p.status!=="alta").map(p=>[p.id,p.nome])]},
+    {k:"profId",l:"Profissional",t:"select",full:1,o:[["","Sem profissional (definir depois)"],...pro.map(p=>[p.id,`${p.nome} · ${p.funcao}`])]},
+    {k:"data",l:"Data",t:"date",req:1},{k:"inicio",l:"Início",t:"time",req:1,d:"07:00"},
+    {k:"mod",l:"Modalidade",t:"select",o:MODS},{k:"horas",l:"Horas (se por hora)",t:"number",d:1,step:"0.5"},
+    {k:"valorCobrado",l:"Valor cobrado (R$)",t:"number",step:"0.01",h:"Do paciente ou operadora"},{k:"valorPago",l:"Valor ao profissional (R$)",t:"number",step:"0.01"}
+  ];
+};
+function formPlantao(pre={}, id){
+  const p = id ? Store.get("plantoes",id) : {data:today(),inicio:"07:00",mod:"12",horas:1,...pre};
+  if(!id){ const tb=Store.cfg().tabela?.[p.mod]; if(tb && p.valorCobrado==null){ p.valorCobrado=tb.cobra; p.valorPago=tb.paga; } }
+  const spec=PL_SPEC();
+  const rep = id?"":`<label class="f">Repetir <small>Cria o mesmo plantão nos dias seguintes</small><select id="f_rep"><option value="1">Só este dia</option><option value="7">7 dias seguidos</option><option value="14">14 dias</option><option value="30">30 dias</option><option value="dias">Dias da semana escolhidos (4 semanas)</option></select></label>
+    <div id="repDias" class="checks" hidden>${["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"].map((d,i)=>`<label><input type="checkbox" name="rep_dia" value="${i}">${d}</label>`).join("")}</div>`;
+  const b=modal(id?"Editar plantão":"Novo plantão", fields(spec,p)+rep+`<p class="note small" id="plConf" hidden></p><div class="actions"><button class="btn btn-primary" data-act="savePlantao" data-id="${id||""}">Salvar</button></div>`,{wide:1});
+  const mod=$("#f_mod",b), hr=$("#f_horas",b);
+  const sync=()=>{ hr.closest("label").style.display = mod.value==="hora"?"":"none"; };
+  const price=()=>{ const tb=Store.cfg().tabela?.[mod.value]; if(!tb) return; const h=mod.value==="hora"?(+hr.value||1):1; $("#f_valorCobrado",b).value=(tb.cobra*h).toFixed(2); $("#f_valorPago",b).value=(tb.paga*h).toFixed(2); };
+  mod.onchange=()=>{sync();price();}; hr.oninput=price; sync();
+  const r=$("#f_rep",b); if(r) r.onchange=()=>{$("#repDias",b).hidden=r.value!=="dias";};
+}
+function plantaoView(id){
+  const p=Store.get("plantoes",id); if(!p) return;
+  const pac=Store.get("pacientes",p.pacId)||{}, c=conflito(p), admin=S.role==="admin", e=p.evolucao||{};
+  const ch=regInfo(p.chegada,pac), sa=regInfo(p.saida,pac), at=atrasoMin(p);
+  const regLine=(r,raw)=> r ? `<b>${r.hora}</b>${raw.acc?` <span class="small muted">(precisão ${raw.acc} m)</span>`:""} · ${r.semGeo?'<span class="pill p-mute">Sem localização</span>':r.d==null?'<span class="small muted">casa sem localização cadastrada</span>':r.longe?`<span class="pill p-bad">A ${fmtDist(r.d)} do endereço</span>`:`<span class="pill p-ok">No endereço (${fmtDist(r.d)})</span>`}${r.map?` · <a href="${r.map}" target="_blank" rel="noopener">mapa</a>`:""}` : "-";
+  const presenca = `<div class="card" style="background:var(--surface-2)"><h3 style="margin-bottom:8px">Chegada e saída</h3><dl class="kv">
+      <dt>Chegada</dt><dd>${p.chegada?regLine(ch,p.chegada)+(at>15?` · <span class="pill p-warn">Atraso de ${at} min</span>`:at<-15?` · <span class="small muted">${-at} min antes</span>`:""):(p.status==="agendado"&&tStart(p)<Date.now()-30*6e4?'<span class="pill p-bad">Não registrada</span>':"Ainda não registrada")}</dd>
+      <dt>Saída</dt><dd>${p.saida?regLine(sa,p.saida):"-"}</dd>
+      ${p.chegada&&p.saida?`<dt>Tempo na casa</dt><dd class="num">${((new Date(p.saida.em)-new Date(p.chegada.em))/36e5).toFixed(1).replace(".",",")} h de ${p.horas} h previstas</dd>`:""}</dl>
+      ${admin&&p.chegada?.lat!=null&&!geoOf(pac)&&pac.id?`<div class="actions" style="margin-top:10px"><button class="btn btn-sm btn-line" data-act="salvarLocal" data-id="${p.id}">Usar a chegada como localização da casa</button></div>`:""}</div>`;
+  const evoForm = `<div class="fgrid">
+    <label class="f">PA<input id="ev_pa" value="${esc(e.pa||"")}" placeholder="120/80"></label><label class="f">FC (bpm)<input id="ev_fc" inputmode="numeric" value="${esc(e.fc||"")}"></label>
+    <label class="f">Temperatura (°C)<input id="ev_temp" inputmode="decimal" value="${esc(e.temp||"")}"></label><label class="f">SpO₂ (%)<input id="ev_sat" inputmode="numeric" value="${esc(e.sat||"")}"></label>
+    <label class="f">Glicemia<input id="ev_glic" inputmode="numeric" value="${esc(e.glic||"")}"></label>
+    <label class="f full">Evolução do plantão <i class="req">*</i><small>Como o paciente passou, procedimentos feitos, intercorrências</small><textarea id="ev_txt" rows="5">${esc(e.texto||"")}</textarea></label></div>`;
+  let acoes="", mostraEvo = p.status!=="cancelado" && p.status!=="falta";
+  if(!admin){
+    if(podeChegar(p)){ mostraEvo=false; acoes=`<button class="btn btn-copper btn-block" data-act="checkin" data-id="${p.id}">${ICON.ponto}Registrar chegada</button><p class="small muted">Registre ao entrar na casa do paciente. O horário e a sua localização são gravados.</p>`; }
+    else if(p.status==="agendado"){ mostraEvo=false; acoes=`<p class="note">A chegada fica disponível 2 horas antes do início do plantão.</p>`; }
+    else if(p.status==="andamento"){ acoes=`<button class="btn btn-line" data-act="saveEvo" data-id="${p.id}">Salvar evolução</button><button class="btn btn-copper" data-act="checkout" data-id="${p.id}">${ICON.ponto}Registrar saída</button>`; }
+    else if(p.status==="realizado"){ acoes=`<button class="btn btn-primary" data-act="saveEvo" data-id="${p.id}">Atualizar evolução</button>${p.chegada&&!p.saida?`<button class="btn btn-copper" data-act="checkout" data-id="${p.id}">Registrar saída</button>`:""}`; }
+  } else {
+    acoes = `${mostraEvo?`<button class="btn btn-primary" data-act="saveEvo" data-id="${p.id}">${p.evolucao?"Atualizar evolução":"Registrar evolução e concluir"}</button>`:""}
+      ${p.status!=="falta"?`<button class="btn btn-line" data-act="plStatus" data-id="${p.id}" data-v="falta">Marcar falta</button>`:""}
+      ${p.status!=="cancelado"?`<button class="btn btn-line" data-act="plStatus" data-id="${p.id}" data-v="cancelado">Cancelar plantão</button>`:`<button class="btn btn-line" data-act="plStatus" data-id="${p.id}" data-v="agendado">Reativar</button>`}
+      <button class="btn btn-line" data-act="editPlantao" data-id="${p.id}">Editar</button><button class="btn btn-danger" data-act="delPlantao" data-id="${p.id}">Excluir</button>
+      ${p.profId?`<a class="btn btn-line" target="_blank" rel="noopener" href="${wa(Store.get("profissionais",p.profId)?.tel||"",`Olá, ${first(proName(p.profId))}! Plantão confirmado: ${pac.nome}, ${fmtDay(p.data)} das ${p.inicio} às ${fim(p)}. Endereço: ${pac.endereco}, ${loc(pac)}. Lembre de registrar chegada e saída no aplicativo.`)}">${ICON.wa}Enviar ao profissional</a>`:""}`;
+  }
+  const body = `
+    <dl class="kv"><dt>Paciente</dt><dd><b>${esc(pac.nome||"-")}</b>${admin&&pac.id?` · <a href="#paciente-${pac.id}" data-act="close">abrir ficha</a>`:""}</dd>
+    <dt>Quando</dt><dd>${fmtDay(p.data)} · ${p.inicio} – ${fim(p)} · ${MOD_NAME[p.mod]}</dd>
+    <dt>Profissional</dt><dd>${esc(proName(p.profId))}</dd>
+    <dt>Endereço</dt><dd>${esc(pac.endereco||"-")}, ${esc(loc(pac))} · <a href="${rotaURL(pac)}" target="_blank" rel="noopener">Como chegar</a></dd>
+    <dt>Responsável</dt><dd>${esc(pac.responsavel||"-")} · ${esc(pac.telResp||"")}</dd>
+    ${admin?`<dt>Valores</dt><dd class="num">Cobrado ${brl(p.valorCobrado)} · Profissional ${brl(p.valorPago)}</dd>`:`<dt>Seu valor</dt><dd class="num">${brl(p.valorPago)}</dd>`}
+    <dt>Situação</dt><dd><span class="pill ${PL_ST[p.status][1]}">${PL_ST[p.status][0]}</span></dd></dl>
+    ${pac.alergias?`<p class="note warn"><b>Alergias:</b> ${esc(pac.alergias)}</p>`:""}
+    ${c&&admin?`<p class="note warn">Conflito: ${esc(proName(p.profId))} também está em ${esc(pacName(c.pacId))} das ${c.inicio} às ${fim(c)} em ${fmtDay(c.data)}.</p>`:""}
+    ${presenca}
+    ${pac.plano?`<details class="note" ${admin?"":"open"}><summary style="cursor:pointer;font-weight:600">Plano de cuidados</summary><p style="white-space:pre-line;margin-top:6px">${esc(pac.plano)}</p></details>`:""}
+    ${!admin&&pac.id?`<details class="card"><summary style="cursor:pointer;font-weight:600">Estado clínico e medicamentos</summary><div style="margin-top:10px">${estadoClinico(pac,true)}</div></details>`:""}
+    ${mostraEvo?`<h3>Evolução</h3>${evoForm}`:""}
+    <div class="actions">${acoes}</div>`;
+  modal("Plantão", body, {wide:1, nofocus:1});
+}
+function readEvo(){ const txt=$("#ev_txt")?.value.trim()||""; if(txt.length<10) return null;
+  return {texto:txt,pa:$("#ev_pa").value.trim(),fc:$("#ev_fc").value.trim(),temp:$("#ev_temp").value.trim(),sat:$("#ev_sat").value.trim(),glic:$("#ev_glic").value.trim(),em:new Date().toISOString()}; }
+/* =================== PROFISSIONAIS =================== */
+const PRO_SPEC = () => [
+  {k:"nome",l:"Nome completo",req:1,full:1},{k:"cpf",l:"CPF",im:"numeric"},{k:"funcao",l:"Função",req:1,t:"select",o:[["","Selecione"],...Object.keys(FUNCOES)]},
+  {k:"registro",l:"Registro no conselho",ph:"COREN-UF 000000"},{k:"tel",l:"WhatsApp",req:1,im:"tel"},{k:"email",l:"E-mail",t:"email"},
+  {k:"cidade",l:"Cidade/UF"},{k:"areas",l:"Cidades que atende"},{k:"status",l:"Situação",t:"select",o:[["ativo","Ativo"],["inativo","Inativo"]]},
+  {k:"pix",l:"Chave Pix para pagamento"},{k:"disp",l:"Disponibilidade",t:"checks",o:DISPON,full:1}
+];
+let proBusca="";
+function pgProfissionais(){
+  const t=today(), mes=t.slice(0,7);
+  const list=Store.all("profissionais").filter(p=>norm(p.nome+" "+p.funcao+" "+p.areas).includes(norm(proBusca))).sort((a,b)=>(a.status>b.status?1:-1)||a.nome.localeCompare(b.nome));
+  return `<div class="pagehead"><div><h1>Profissionais</h1><p class="sub">${Store.all("profissionais").filter(p=>p.status==="ativo").length} ativos na equipe</p></div><button class="btn btn-primary" data-act="novoProf">${ICON.plus}Cadastrar profissional</button></div>
+  <div class="toolbar"><input id="proBusca" type="search" placeholder="Buscar por nome, função ou cidade" value="${esc(proBusca)}" aria-label="Buscar profissional"></div>
+  <div class="tablewrap"><table><thead><tr><th>Profissional</th><th>Função</th><th>Atende em</th><th class="r">Plantões no mês</th><th>Situação</th></tr></thead><tbody>
+  ${list.map(p=>{ const n=Store.all("plantoes").filter(x=>x.profId===p.id&&x.data.startsWith(mes)&&x.status!=="cancelado").length;
+    return `<tr class="click" data-act="go" data-id="profissional-${p.id}"><td><b>${esc(p.nome)}</b>${ex(p)}<div class="small muted">${esc(p.tel)}</div></td><td>${esc(p.funcao)}<div class="small muted">${esc(p.registro||"")}</div></td><td>${esc(p.areas||p.cidade||"-")}</td><td class="r">${n}</td><td><span class="pill ${p.status==="ativo"?"p-ok":"p-mute"}">${p.status==="ativo"?"Ativo":"Inativo"}</span></td></tr>`; }).join("")||`<tr><td colspan="5" class="empty">Nenhum profissional.</td></tr>`}
+  </tbody></table></div>`;
+}
+function pgProfissional(id){
+  const p=Store.get("profissionais",id); if(!p) return `<p class="empty">Profissional não encontrado. <a href="#profissionais">Voltar</a></p>`;
+  const t=today(), mes=t.slice(0,7);
+  const pls=Store.all("plantoes").filter(x=>x.profId===id);
+  const prox=pls.filter(x=>x.data>=t&&x.status==="agendado").sort((a,b)=>tStart(a)-tStart(b)).slice(0,8);
+  const mesPl=pls.filter(x=>x.data.startsWith(mes)&&x.status==="realizado");
+  const aPagar=pls.filter(x=>x.status==="realizado"&&!x.pago).reduce((s,x)=>s+(+x.valorPago||0),0);
+  const faltas=pls.filter(x=>x.status==="falta").length;
+  const ct=Store.all("contratos").find(c=>c.tipo==="autonomo"&&(c.refId===p.candId||c.dados?.profId===id));
+  return `<div class="pagehead"><div><p class="small"><a href="#profissionais">Profissionais</a></p><h1>${esc(p.nome)}${ex(p)}</h1><p class="sub">${esc(p.funcao)} ${p.registro?"· "+esc(p.registro):""}</p></div>
+    <div class="actions"><button class="btn btn-line" data-act="editProf" data-id="${id}">Editar</button><button class="btn btn-line" data-act="acessoProf" data-id="${id}">${p.acesso?"Acesso ao app":"Criar acesso ao app"}</button><a class="btn btn-line" target="_blank" rel="noopener" href="${wa(p.tel)}">${ICON.wa}WhatsApp</a></div></div>
+  <div class="kpis"><div class="kpi"><b>${mesPl.length}</b><span>Plantões realizados no mês</span></div><div class="kpi"><b>${brl(aPagar)}</b><span>A pagar</span></div><div class="kpi"><b>${faltas}</b><span>Faltas registradas</span></div></div>
+  <div class="grid2">
+    <section class="card"><h2>Dados</h2><dl class="kv"><dt>WhatsApp</dt><dd>${esc(p.tel)}</dd><dt>E-mail</dt><dd>${esc(p.email||"-")}</dd><dt>CPF</dt><dd>${esc(fmtCPF(p.cpf)||"-")}</dd><dt>Atende em</dt><dd>${esc(p.areas||p.cidade||"-")}</dd><dt>Disponibilidade</dt><dd>${esc((p.disp||[]).join(", ")||"-")}</dd><dt>Pix</dt><dd>${esc(p.pix||"-")}</dd><dt>Acesso ao app</dt><dd>${p.acesso?esc(p.acesso):"Ainda não criado"}</dd><dt>Contrato</dt><dd>${ct?`<span class="pill ${ct.status==="assinado"?"p-ok":"p-warn"}">${ct.status==="assinado"?"Assinado":"Pendente"}</span>`:'<button class="btn btn-sm btn-line" data-act="ctProf" data-id="'+id+'">Gerar contrato de autônomo</button>'}</dd></dl></section>
+    <section class="card"><h2>Próximos plantões</h2>${prox.length?`<div class="day">${prox.map(x=>shiftRow(x).replace('<span class="t">',`<span class="t"><small>${fmtDay(x.data).slice(0,5)}</small>`)).join("")}</div>`:`<p class="empty">Nenhum plantão agendado.</p>`}</section>
+  </div>`;
+}
+function formProf(id){ const p=id?Store.get("profissionais",id):{status:"ativo"}; modal(id?"Editar profissional":"Cadastrar profissional", fields(PRO_SPEC(),p)+`<div class="actions"><button class="btn btn-primary" data-act="saveProf" data-id="${id||""}">Salvar</button></div>`,{wide:1}); }
+
+/* =================== RECRUTAMENTO =================== */
+let recFiltro="ativos";
+function pgRecrutamento(){
+  const all=Store.all("candidatos");
+  const groups=[["ativos","Em processo",c=>!["reprovado","contrato"].includes(candStatus(c))],...CAND_ST.map(([k,l])=>[k,l,c=>candStatus(c)===k]),["reprovado","Não selecionados",c=>c.status==="reprovado"],["todos","Todos",()=>true]];
+  const g=groups.find(x=>x[0]===recFiltro)||groups[0];
+  const list=all.filter(g[2]).sort((a,b)=>b.criado.localeCompare(a.criado));
+  return `<div class="pagehead"><div><h1>Recrutamento</h1><p class="sub">Candidatos que se cadastraram pelo link Trabalhe conosco</p></div><button class="btn btn-line" data-act="copy" data-v="${esc(baseURL()+"#trabalhe")}">${ICON.link}Copiar link de cadastro</button></div>
+  <div class="chips">${groups.map(([k,l,f])=>`<button class="chipbtn" data-act="recFiltro" data-id="${k}" aria-pressed="${g[0]===k}">${l} · ${all.filter(f).length}</button>`).join("")}</div>
+  <div class="tablewrap"><table><thead><tr><th>Candidato</th><th>Função</th><th>Cidade</th><th>Experiência</th><th>Recebido</th><th>Etapa</th></tr></thead><tbody>
+  ${list.map(c=>{const s=candStatus(c);return `<tr class="click" data-act="go" data-id="candidato-${c.id}"><td><b>${esc(c.nome)}</b>${ex(c)}<div class="small muted">${esc(c.id)}</div></td><td>${esc(c.funcao)}</td><td>${esc(c.cidade)}</td><td class="num">${esc(c.anos||0)} anos</td><td class="num">${fmtDay(c.criado.slice(0,10))}</td><td><span class="pill ${CAND_PILL[s]}">${CAND_NAME[s]}</span></td></tr>`}).join("")||`<tr><td colspan="6" class="empty">Nenhum candidato nesta etapa.</td></tr>`}
+  </tbody></table></div>`;
+}
+function pgCandidato(id){
+  const c=Store.get("candidatos",id); if(!c) return `<p class="empty">Candidato não encontrado. <a href="#recrutamento">Voltar</a></p>`;
+  const s=candStatus(c), ct=candContrato(c), idx=CAND_ST.findIndex(x=>x[0]===s);
+  const next={recebido:["analise","Iniciar análise"],analise:["entrevista","Chamar para entrevista"],entrevista:["aprovado","Aprovar e gerar contrato"]}[c.status];
+  const jaPro = Store.all("profissionais").find(p=>p.candId===c.id);
+  return `<div class="pagehead"><div><p class="small"><a href="#recrutamento">Recrutamento</a></p><h1>${esc(c.nome)}${ex(c)}</h1><p class="sub">${esc(c.funcao)} · protocolo ${esc(c.id)}</p></div>
+    <div class="actions">${next?`<button class="btn btn-primary" data-act="candSt" data-id="${c.id}" data-v="${next[0]}">${next[1]}</button>`:""}
+    ${["recebido","analise","entrevista"].includes(c.status)?`<button class="btn btn-line" data-act="candSt" data-id="${c.id}" data-v="reprovado">Não selecionar</button>`:""}
+    ${s==="contrato"&&!jaPro?`<button class="btn btn-copper" data-act="ativarPro" data-id="${c.id}">Adicionar à equipe</button>`:""}
+    <a class="btn btn-line" target="_blank" rel="noopener" href="${wa(c.tel,`Olá, ${first(c.nome)}! Aqui é da Viver Bem Atendimento Domiciliar, sobre sua candidatura ${c.id}.`)}">${ICON.wa}WhatsApp</a></div></div>
+  ${jaPro?`<p class="note">Já faz parte da equipe. <a href="#profissional-${jaPro.id}">Abrir cadastro do profissional</a></p>`:""}
+  <div class="grid2">
+    <section class="card"><h2>Dados do candidato</h2><dl class="kv">
+      <dt>CPF</dt><dd>${esc(fmtCPF(c.cpf))}</dd><dt>Nascimento</dt><dd>${fmtDay(c.nasc)} (${age(c.nasc)} anos)</dd><dt>WhatsApp</dt><dd>${esc(c.tel)}</dd><dt>E-mail</dt><dd>${esc(c.email)}</dd><dt>Cidade</dt><dd>${esc(c.cidade)}</dd>
+      <dt>Registro</dt><dd>${esc(c.registro||"Não se aplica")}</dd><dt>Experiência</dt><dd>${esc(c.anos||0)} anos · ${esc((c.exp||[]).join(", ")||"-")}</dd>
+      <dt>Disponibilidade</dt><dd>${esc((c.disp||[]).join(", "))}</dd><dt>Atende em</dt><dd>${esc(c.areas||"-")}</dd>
+      <dt>Currículo</dt><dd>${c.cv?esc(c.cv.nome)+` (${c.cv.kb} KB)`+(c.cv.salvo?` <button class="btn btn-sm btn-line" data-act="verCv" data-id="${c.id}">Abrir</button>`:(Store.mode==="demo"?' <span class="small muted">(na demonstração o arquivo não é guardado)</span>':"")):"-"}</dd><dt>Resumo</dt><dd>${esc(c.resumo||"-")}</dd><dt>Aceites</dt><dd>${c.aceites?fmtDT(c.aceites):"-"}</dd></dl></section>
+    <section class="card stack" style="display:flex;flex-direction:column;gap:12px"><h2>Processo seletivo</h2>
+      ${c.status==="reprovado"?`<span class="pill p-bad" style="align-self:flex-start">Não selecionado</span>`:`<ol class="timeline">${CAND_ST.map(([k,l],i)=>{const h=(c.hist||[]).find(x=>x.s===k); const em = k==="contrato"&&ct?.assinatura?ct.assinatura.em:h?.em; return `<li class="${i<idx?"done":i===idx?"now":""}"><div><b>${l}</b><span class="small muted">${em?fmtDT(em):""}</span></div></li>`}).join("")}</ol>`}
+      ${ct?`<div class="note"><b>Contrato de autônomo:</b> ${ct.status==="assinado"?`assinado em ${fmtDT(ct.assinatura.em)}`:"aguardando assinatura"}
+        <div class="actions" style="margin-top:8px"><button class="btn btn-sm btn-line" data-act="verContrato" data-id="${ct.id}">Ver contrato</button>${ct.status!=="assinado"?`<button class="btn btn-sm btn-line" data-act="copy" data-v="${esc(contratoLink(ct))}">${ICON.link}Copiar link</button><a class="btn btn-sm btn-line" target="_blank" rel="noopener" href="${wa(c.tel,`Olá, ${first(c.nome)}! Você foi aprovado(a) no processo seletivo da Viver Bem. Leia e assine seu contrato de prestação de serviço por este link: ${contratoLink(ct)}`)}">${ICON.wa}Enviar link</a>`:""}</div></div>`:""}
+      <label class="f">Anotações internas<textarea id="candNotas" rows="4">${esc(c.notas||"")}</textarea></label>
+      <div class="actions"><button class="btn btn-line btn-sm" data-act="candNotas" data-id="${c.id}">Salvar anotações</button></div>
+    </section></div>`;
+}
+
+/* =================== CONTRATOS =================== */
+let ctFiltro="todos";
+function ctTable(list){
+  if(!list.length) return `<p class="empty">Nenhum contrato.</p>`;
+  return `<div class="tablewrap"><table><thead><tr><th>Contrato</th><th>Tipo</th><th>Criado</th><th>Situação</th><th></th></tr></thead><tbody>${list.sort((a,b)=>b.criado.localeCompare(a.criado)).map(c=>`<tr><td><b>${esc(c.titulo)}</b>${ex(c)}</td><td>${c.tipo==="autonomo"?"Profissional autônomo":"Paciente / família"}</td><td class="num">${fmtDay(c.criado.slice(0,10))}</td><td><span class="pill ${c.status==="assinado"?"p-ok":"p-warn"}">${c.status==="assinado"?"Assinado":"Aguardando assinatura"}</span></td><td class="r"><div class="actions" style="justify-content:flex-end"><button class="btn btn-sm btn-line" data-act="verContrato" data-id="${c.id}">Ver</button>${c.status!=="assinado"?`<button class="btn btn-sm btn-line" data-act="copy" data-v="${esc(contratoLink(c))}">${ICON.link}Link</button>`:""}</div></td></tr>`).join("")}</tbody></table></div>`;
+}
+function pgContratos(){
+  const all=Store.all("contratos");
+  const f={todos:()=>true,pendente:c=>c.status==="pendente",assinado:c=>c.status==="assinado",autonomo:c=>c.tipo==="autonomo",paciente:c=>c.tipo==="paciente"};
+  return `<div class="pagehead"><div><h1>Contratos</h1><p class="sub">Assinatura eletrônica por link, com registro de data, hora e código de verificação</p></div><button class="btn btn-primary" data-act="novoCtEscolher">${ICON.plus}Contrato de paciente</button></div>
+  <div class="chips">${[["todos","Todos"],["pendente","Aguardando"],["assinado","Assinados"],["autonomo","Profissionais"],["paciente","Pacientes"]].map(([k,l])=>`<button class="chipbtn" data-act="ctFiltro" data-id="${k}" aria-pressed="${ctFiltro===k}">${l} · ${all.filter(f[k]).length}</button>`).join("")}</div>
+  ${ctTable(all.filter(f[ctFiltro]))}
+  <p class="small muted">Os contratos de profissionais são gerados ao aprovar um candidato. Os de pacientes, pelo botão Gerar contrato na ficha do paciente.</p>`;
+}
+function verContrato(id){
+  const c=Store.get("contratos",id); if(!c) return;
+  modal(c.titulo, `<div class="contract">${c.html}${c.assinatura?`<hr><p><b>Assinado eletronicamente</b> por ${esc(c.assinatura.nome)}, CPF ${esc(fmtCPF(c.assinatura.cpf))}, em ${fmtDT(c.assinatura.em)}.<br>Código de verificação: <b>${esc(c.assinatura.hash)}</b></p>`:""}</div>
+    <div class="actions">${c.status!=="assinado"?`<button class="btn btn-primary" data-act="copy" data-v="${esc(contratoLink(c))}">${ICON.link}Copiar link de assinatura</button>`:""}${c.status!=="assinado"?`<button class="btn btn-danger" data-act="delContrato" data-id="${c.id}">Excluir</button>`:""}</div>`,{wide:1,nofocus:1});
+}
+
+/* =================== SOLICITAÇÕES =================== */
+let solTab="familia";
+function pgSolicitacoes(){
+  const all=Store.all("solicitacoes"), list=all.filter(s=>s.tipo===solTab).sort((a,b)=>b.criado.localeCompare(a.criado));
+  return `<div class="pagehead"><div><h1>Solicitações</h1><p class="sub">Pedidos que chegam pelo link Solicitar atendimento</p></div><button class="btn btn-line" data-act="copy" data-v="${esc(baseURL()+"#solicitar")}">${ICON.link}Copiar link</button></div>
+  <div class="chips"><button class="chipbtn" data-act="solTab" data-id="familia" aria-pressed="${solTab==="familia"}">Pacientes e famílias · ${all.filter(s=>s.tipo==="familia"&&s.status==="novo").length} novas</button><button class="chipbtn" data-act="solTab" data-id="operadora" aria-pressed="${solTab==="operadora"}">Operadoras · ${all.filter(s=>s.tipo==="operadora"&&s.status==="novo").length} novas</button></div>
+  <div class="tablewrap"><table><thead><tr><th>${solTab==="familia"?"Contato":"Operadora"}</th><th>${solTab==="familia"?"Paciente / atendimento":"Região"}</th><th>Recebida</th><th>Situação</th></tr></thead><tbody>
+  ${list.map(s=>`<tr class="click" data-act="verSol" data-id="${s.id}"><td><b>${esc(s.tipo==="familia"?s.nome:s.empresa)}</b>${ex(s)}<div class="small muted">${esc(s.tipo==="familia"?s.tel+" · "+s.cidade:s.nome+" · "+s.tel)}</div></td><td>${esc(s.tipo==="familia"?(s.paciente||"-")+" · "+s.servico:s.regiao||"-")}</td><td class="num">${fmtDT(s.criado)}</td><td><span class="pill ${s.status==="novo"?"p-cop":s.status==="convertido"?"p-ok":"p-mute"}">${{novo:"Nova",respondido:"Respondida",convertido:"Convertida"}[s.status]}</span></td></tr>`).join("")||`<tr><td colspan="4" class="empty">Nenhuma solicitação.</td></tr>`}
+  </tbody></table></div>`;
+}
+function verSol(id){
+  const s=Store.get("solicitacoes",id);
+  const rows = s.tipo==="operadora" ? `<dt>Empresa</dt><dd>${esc(s.empresa)}</dd><dt>CNPJ</dt><dd>${esc(s.cnpj||"-")}</dd><dt>Responsável</dt><dd>${esc(s.nome)}${s.cargo?" · "+esc(s.cargo):""}</dd><dt>Telefone</dt><dd>${esc(s.tel)}</dd><dt>E-mail</dt><dd>${esc(s.email)}</dd><dt>Região</dt><dd>${esc(s.regiao||"-")}</dd>`
+    : `<dt>Nome</dt><dd>${esc(s.nome)}</dd><dt>WhatsApp</dt><dd>${esc(s.tel)}</dd><dt>Cidade</dt><dd>${esc(s.cidade)}</dd><dt>Atendimento</dt><dd>${esc(s.servico)}</dd><dt>Paciente</dt><dd>${esc(s.paciente||"-")}</dd>`;
+  modal(s.tipo==="operadora"?s.empresa:s.nome, `<dl class="kv">${rows}<dt>Mensagem</dt><dd>${esc(s.msg||"-")}</dd><dt>Recebida</dt><dd>${fmtDT(s.criado)}</dd></dl>
+    <div class="actions"><a class="btn btn-line" target="_blank" rel="noopener" href="${wa(s.tel,`Olá, ${first(s.nome)}! Aqui é da Viver Bem Atendimento Domiciliar. Recebemos sua solicitação.`)}">${ICON.wa}Responder no WhatsApp</a>
+    ${s.status==="novo"?`<button class="btn btn-line" data-act="solResp" data-id="${s.id}">Marcar como respondida</button>`:""}
+    ${s.status!=="convertido"?`<button class="btn btn-primary" data-act="solConv" data-id="${s.id}">${s.tipo==="familia"?"Cadastrar como paciente":"Cadastrar operadora"}</button>`:""}</div>`,{nofocus:1});
+}
+
+/* =================== OPERADORAS =================== */
+const OP_SPEC=[{k:"nome",l:"Nome da operadora",req:1,full:1},{k:"cnpj",l:"CNPJ"},{k:"status",l:"Situação",t:"select",o:[["prospeccao","Em negociação"],["credenciada","Credenciada"],["inativa","Inativa"]]},{k:"contato",l:"Contato"},{k:"tel",l:"Telefone",im:"tel"},{k:"email",l:"E-mail",t:"email"},{k:"valores",l:"Tabela de valores acordada",t:"textarea",full:1},{k:"obs",l:"Regras de faturamento e observações",t:"textarea",full:1}];
+const OP_ST={prospeccao:["Em negociação","p-warn"],credenciada:["Credenciada","p-ok"],inativa:["Inativa","p-mute"]};
+function pgOperadoras(){
+  const list=Store.all("operadoras");
+  return `<div class="pagehead"><div><h1>Operadoras de saúde</h1><p class="sub">Convênios e planos que encaminham pacientes</p></div><button class="btn btn-primary" data-act="novaOp">${ICON.plus}Nova operadora</button></div>
+  <div class="tablewrap"><table><thead><tr><th>Operadora</th><th>Contato</th><th class="r">Pacientes ativos</th><th>Situação</th></tr></thead><tbody>
+  ${list.map(o=>`<tr class="click" data-act="editOp" data-id="${o.id}"><td><b>${esc(o.nome)}</b>${ex(o)}<div class="small muted">${esc(o.cnpj||"")}</div></td><td>${esc(o.contato||"-")}<div class="small muted">${esc(o.tel||"")} ${esc(o.email||"")}</div></td><td class="r">${Store.all("pacientes").filter(p=>p.operadoraId===o.id&&p.status==="ativo").length}</td><td><span class="pill ${OP_ST[o.status]?.[1]||"p-mute"}">${OP_ST[o.status]?.[0]||"-"}</span></td></tr>`).join("")||`<tr><td colspan="4" class="empty">Nenhuma operadora cadastrada.</td></tr>`}
+  </tbody></table></div>`;
+}
+function formOp(id,pre){ const o=id?Store.get("operadoras",id):{status:"prospeccao",...pre}; modal(id?o.nome:"Nova operadora", fields(OP_SPEC,o)+`<div class="actions"><button class="btn btn-primary" data-act="saveOp" data-id="${id||""}">Salvar</button>${id?`<button class="btn btn-danger" data-act="delOp" data-id="${id}">Excluir</button>`:""}</div>`,{wide:1}); }
+
+/* =================== FINANCEIRO =================== */
+let finMes=null;
+function pgFinanceiro(){
+  if(!finMes) finMes=today().slice(0,7);
+  const [y,m]=finMes.split("-").map(Number);
+  const label=new Date(y,m-1,15).toLocaleDateString("pt-BR",{month:"long",year:"numeric"});
+  const pls=Store.all("plantoes").filter(p=>p.data.startsWith(finMes)&&p.status==="realizado");
+  const fat=pls.reduce((s,p)=>s+(+p.valorCobrado||0),0), rec=pls.filter(p=>p.recebido).reduce((s,p)=>s+(+p.valorCobrado||0),0);
+  const cus=pls.reduce((s,p)=>s+(+p.valorPago||0),0), pag=pls.filter(p=>p.pago).reduce((s,p)=>s+(+p.valorPago||0),0);
+  const byPag={}; pls.forEach(p=>{ const pac=Store.get("pacientes",p.pacId); const key=pac?.tipo==="operadora"&&pac.operadoraId?"op:"+pac.operadoraId:"pac:"+p.pacId; (byPag[key]=byPag[key]||[]).push(p); });
+  const byPro={}; pls.forEach(p=>{ if(p.profId)(byPro[p.profId]=byPro[p.profId]||[]).push(p); });
+  const rowsR=Object.entries(byPag).map(([k,l])=>{ const [t,id]=k.split(":"); const nome=t==="op"?Store.get("operadoras",id)?.nome+" (operadora)":pacName(id); const tot=l.reduce((s,p)=>s+(+p.valorCobrado||0),0), pend=l.filter(p=>!p.recebido).reduce((s,p)=>s+(+p.valorCobrado||0),0);
+    return `<tr><td><b>${esc(nome)}</b><div class="small muted">${l.length} plantões</div></td><td class="r">${brl(tot)}</td><td class="r">${pend?`<b>${brl(pend)}</b>`:"-"}</td><td class="r">${pend?`<button class="btn btn-sm btn-line" data-act="finRec" data-id="${k}">Marcar recebido</button>`:'<span class="pill p-ok">Recebido</span>'}</td></tr>`; }).join("");
+  const rowsP=Object.entries(byPro).map(([id,l])=>{ const pro=Store.get("profissionais",id); const tot=l.reduce((s,p)=>s+(+p.valorPago||0),0), pend=l.filter(p=>!p.pago).reduce((s,p)=>s+(+p.valorPago||0),0);
+    return `<tr><td><b>${esc(pro?.nome||"-")}</b><div class="small muted">${l.length} plantões${pro?.pix?" · Pix "+esc(pro.pix):""}</div></td><td class="r">${brl(tot)}</td><td class="r">${pend?`<b>${brl(pend)}</b>`:"-"}</td><td class="r">${pend?`<button class="btn btn-sm btn-line" data-act="finPag" data-id="${id}">Marcar pago</button>`:'<span class="pill p-ok">Pago</span>'}</td></tr>`; }).join("");
+  return `<div class="pagehead"><div><h1>Financeiro</h1><p class="sub" style="text-transform:capitalize">${label} · com base nos plantões realizados</p></div>
+    <div class="actions"><button class="btn btn-line btn-sm" data-act="finMes" data-id="-1">‹ Mês anterior</button><button class="btn btn-line btn-sm" data-act="finMes" data-id="1">Próximo mês ›</button></div></div>
+  <div class="kpis"><div class="kpi"><b>${brl(fat)}</b><span>Faturado</span></div><div class="kpi"><b>${brl(fat-rec)}</b><span>A receber</span></div><div class="kpi"><b>${brl(cus-pag)}</b><span>A pagar aos profissionais</span></div><div class="kpi"><b>${brl(fat-cus)}</b><span>Margem bruta${fat?` · ${Math.round((fat-cus)/fat*100)}%`:""}</span></div></div>
+  <section class="card"><h2>A receber de pacientes e operadoras</h2><div class="tablewrap"><table><thead><tr><th>Pagador</th><th class="r">Total do mês</th><th class="r">Em aberto</th><th></th></tr></thead><tbody>${rowsR||`<tr><td colspan="4" class="empty">Nenhum plantão realizado neste mês.</td></tr>`}</tbody></table></div></section>
+  <section class="card"><h2>A pagar aos profissionais</h2><div class="tablewrap"><table><thead><tr><th>Profissional</th><th class="r">Total do mês</th><th class="r">Em aberto</th><th></th></tr></thead><tbody>${rowsP||`<tr><td colspan="4" class="empty">Nenhum plantão realizado neste mês.</td></tr>`}</tbody></table></div></section>`;
+}
+
+/* =================== CONFIGURAÇÕES =================== */
+function pgConfig(){
+  const c=Store.cfg(), tb=c.tabela||{};
+  return `<div class="pagehead"><div><h1>Configurações</h1><p class="sub">Dados da empresa usados nos contratos, nos links públicos e na escala</p></div></div>
+  <section class="card"><h2>Dados da empresa</h2>${fields([{k:"nome",l:"Razão social / nome",full:1},{k:"cnpj",l:"CNPJ"},{k:"cidade",l:"Cidade/UF (foro dos contratos)"},{k:"endereco",l:"Endereço",full:1},{k:"whatsapp",l:"WhatsApp da empresa",im:"tel"},{k:"email",l:"E-mail",t:"email"},{k:"diaPagamento",l:"Dia de pagamento dos profissionais",t:"number"}],c)}</section>
+  <section class="card"><h2>Tabela de valores padrão</h2>${c.exemploValores?`<p class="note warn small" style="margin-bottom:12px">Valores de exemplo. Troque pelos valores reais da Viver Bem.</p>`:""}
+    <div class="tablewrap"><table><thead><tr><th>Modalidade</th><th>Cobrado do paciente (R$)</th><th>Pago ao profissional (R$)</th></tr></thead><tbody>
+    ${MODS.map(([k,l])=>`<tr><td><b>${l}</b>${k==="hora"?'<div class="small muted">valor por hora</div>':""}</td><td><input id="tb_c_${k}" type="number" step="0.01" value="${tb[k]?.cobra??""}" aria-label="${l} cobrado"></td><td><input id="tb_p_${k}" type="number" step="0.01" value="${tb[k]?.paga??""}" aria-label="${l} pago"></td></tr>`).join("")}</tbody></table></div></section>
+  <div class="actions"><button class="btn btn-primary" data-act="saveCfg">Salvar configurações</button>${Store.mode==="demo"?`<button class="btn btn-danger" data-act="resetDemo">Restaurar dados de exemplo</button>`:""}</div>`;
+}
+
+/* =================== PORTAL DO PROFISSIONAL =================== */
+function pgMeus(){
+  const t=today(), now=Date.now(), mine=Store.all("plantoes").filter(p=>p.profId===S.profId);
+  const atual = mine.filter(p=>p.status==="andamento"||podeChegar(p)).sort((a,b)=>tStart(a)-tStart(b))[0];
+  const pend=mine.filter(p=>p.id!==atual?.id && (p.status==="realizado"&&(!p.evolucao||(p.chegada&&!p.saida)))).sort((a,b)=>tStart(b)-tStart(a));
+  const prox=mine.filter(p=>p.id!==atual?.id && p.status==="agendado" && tStart(p)>now).sort((a,b)=>tStart(a)-tStart(b)).slice(0,10);
+  const mes=t.slice(0,7), feitos=mine.filter(p=>p.data.startsWith(mes)&&p.status==="realizado");
+  let card="";
+  if(atual){ const pac=Store.get("pacientes",atual.pacId)||{};
+    card = `<section class="card" style="border-color:var(--copper);display:flex;flex-direction:column;gap:12px">
+      <div><span class="pill ${atual.status==="andamento"?"p-cop":"p-blue"}">${atual.status==="andamento"?"Em atendimento desde "+hhmm(atual.chegada.em):"Plantão de agora"}</span>
+      <h2 style="margin-top:8px;font-size:1.3rem">${esc(pac.nome||"")}</h2><p class="muted">${atual.inicio} – ${fim(atual)} · ${esc(pac.endereco||"")}, ${esc(loc(pac))}</p></div>
+      ${pac.alergias?`<p class="note warn"><b>Alergias:</b> ${esc(pac.alergias)}</p>`:""}
+      <div class="actions">${atual.status==="andamento"
+        ? `<button class="btn btn-copper" data-act="plantao" data-id="${atual.id}">${ICON.ponto}Evolução e saída</button>`
+        : `<button class="btn btn-copper" data-act="checkin" data-id="${atual.id}">${ICON.ponto}Registrar chegada</button>`}
+        <a class="btn btn-line" target="_blank" rel="noopener" href="${rotaURL(pac)}">Como chegar</a>
+        <button class="btn btn-line" data-act="plantao" data-id="${atual.id}">Ver plano de cuidados</button></div></section>`; }
+  return `<div class="pagehead"><div><h1>Olá, ${esc(first(S.nome))}</h1><p class="sub">${fmtDayW(t)}</p></div></div>
+  ${card}
+  <div class="kpis"><div class="kpi"><b>${feitos.length}</b><span>Plantões no mês</span></div><div class="kpi"><b>${brl(feitos.reduce((s,p)=>s+(+p.valorPago||0),0))}</b><span>A receber no mês</span></div><div class="kpi"><b>${mine.filter(p=>p.data.startsWith(mes)&&atrasoMin(p)>15).length}</b><span>Atrasos no mês</span></div></div>
+  ${pend.length?`<section class="card"><h2>Pendências</h2><p class="small muted" style="margin:-6px 0 10px">Plantões sem evolução ou sem registro de saída</p><div class="day">${pend.map(x=>shiftRow(x).replace('<span class="t">',`<span class="t"><small>${fmtDay(x.data).slice(0,5)}</small>`)).join("")}</div></section>`:""}
+  <section class="card"><h2>Próximos plantões</h2>${prox.length?`<div class="day">${prox.map(x=>shiftRow(x).replace('<span class="t">',`<span class="t"><small>${fmtDay(x.data).slice(0,5)}</small>`)).join("")}</div>`:`<p class="empty">Nenhum plantão agendado.</p>`}</section>`;
+}
+
+/* =================== CHEGADAS E SAÍDAS =================== */
+let pontoIni=null, pontoOc=false, pontoPro="";
+function pgPonto(){
+  if(!pontoIni) pontoIni=weekStart(today());
+  const ate=addDays(pontoIni,6), now=Date.now();
+  const rows=Store.all("plantoes").filter(p=>p.data>=pontoIni&&p.data<=ate&&p.status!=="cancelado"&&tStart(p)<=now&&(!pontoPro||p.profId===pontoPro)).sort((a,b)=>tStart(b)-tStart(a)).map(p=>{
+    const pac=Store.get("pacientes",p.pacId), ch=regInfo(p.chegada,pac), sa=regInfo(p.saida,pac), at=atrasoMin(p), oc=[];
+    if(p.status==="falta") oc.push(["Falta","p-bad"]);
+    else if(!p.chegada) oc.push([tStart(p)<now-30*6e4?"Não registrou chegada":"Aguardando chegada",tStart(p)<now-30*6e4?"p-bad":"p-blue"]);
+    if(at>15) oc.push([`Atraso ${at} min`,"p-warn"]);
+    if(ch?.longe||sa?.longe) oc.push(["Fora do endereço","p-bad"]);
+    if(p.chegada&&!p.saida&&tEnd(p)<now-36e5) oc.push(["Sem registro de saída","p-warn"]);
+    if(ch?.semGeo||sa?.semGeo) oc.push(["Sem localização","p-mute"]);
+    return {p,pac,ch,sa,at,oc,h:p.chegada&&p.saida?(new Date(p.saida.em)-new Date(p.chegada.em))/36e5:null}; });
+  const comCh=rows.filter(r=>r.p.chegada), pont=comCh.filter(r=>r.at<=15).length;
+  const list=pontoOc?rows.filter(r=>r.oc.length&&!(r.oc.length===1&&r.oc[0][0]==="Aguardando chegada")):rows;
+  const cell=(r,raw)=> r?`<b class="num">${r.hora}</b><div class="small">${r.semGeo?'<span class="muted">sem localização</span>':r.d==null?'<span class="muted">casa sem localização</span>':`<span style="color:var(${r.longe?"--bad":"--ok"})">${r.longe?"a "+fmtDist(r.d):"no endereço"}</span>`}${r.map?` · <a href="${r.map}" target="_blank" rel="noopener">mapa</a>`:""}</div>`:'<span class="muted">-</span>';
+  return `<div class="pagehead"><div><h1>Chegadas e saídas</h1><p class="sub">${fmtDay(pontoIni)} a ${fmtDay(ate)} · registros feitos pelo celular dos profissionais, com horário e localização</p></div>
+    <div class="actions"><button class="btn btn-line btn-sm" data-act="pontoSem" data-id="-7">‹ Anterior</button><button class="btn btn-line btn-sm" data-act="pontoSem" data-id="0">Esta semana</button><button class="btn btn-line btn-sm" data-act="pontoSem" data-id="7">Próxima ›</button></div></div>
+  <div class="kpis">
+    <div class="kpi"><b>${rows.filter(r=>r.p.status==="andamento").length}</b><span>Em atendimento agora</span></div>
+    <div class="kpi"><b>${comCh.length?Math.round(pont/comCh.length*100):0}%</b><span>Chegadas no horário (até 15 min)</span></div>
+    <div class="kpi ${rows.some(r=>r.at>15)?"alert":""}"><b>${rows.filter(r=>r.at>15).length}</b><span>Atrasos</span></div>
+    <div class="kpi"><b>${rows.filter(r=>r.oc.some(o=>o[0]==="Não registrou chegada"||o[0]==="Falta")).length}</b><span>Sem chegada ou falta</span></div>
+    <div class="kpi"><b>${rows.filter(r=>r.oc.some(o=>o[0]==="Fora do endereço")).length}</b><span>Fora do endereço</span></div>
+  </div>
+  <div class="toolbar"><select id="pontoPro" aria-label="Filtrar profissional"><option value="">Todos os profissionais</option>${Store.all("profissionais").map(p=>`<option value="${p.id}" ${pontoPro===p.id?"selected":""}>${esc(p.nome)}</option>`).join("")}</select>
+    <button class="chipbtn" data-act="pontoOc" aria-pressed="${pontoOc}">Só ocorrências</button></div>
+  <div class="tablewrap"><table><thead><tr><th>Plantão previsto</th><th>Paciente</th><th>Profissional</th><th>Chegada</th><th>Saída</th><th class="r">Horas</th><th>Ocorrências</th></tr></thead><tbody>
+  ${list.map(r=>`<tr class="click" data-act="plantao" data-id="${r.p.id}"><td class="num">${fmtDay(r.p.data).slice(0,5)} · ${r.p.inicio}–${fim(r.p)}</td><td><b>${esc(r.pac?.nome||"-")}</b></td><td>${esc(proName(r.p.profId))}</td><td>${cell(r.ch,r.p.chegada)}</td><td>${cell(r.sa,r.p.saida)}</td><td class="r">${r.h!=null?r.h.toFixed(1).replace(".",","):"-"}</td><td><div class="chips">${r.oc.map(([l,c])=>`<span class="pill ${c}">${l}</span>`).join("")||'<span class="pill p-ok">OK</span>'}</div></td></tr>`).join("")||`<tr><td colspan="7" class="empty">Nenhum registro neste período.</td></tr>`}
+  </tbody></table></div>
+  <p class="small muted">A localização é comparada com a localização cadastrada na ficha do paciente. Acima de 300 metros aparece como fora do endereço.</p>`;
+}
+/* =================== PÚBLICO: TRABALHE CONOSCO =================== */
+let wz={step:1,d:{exp:[],disp:[]}};
+const W1=[{k:"nome",l:"Nome completo",req:1,full:1,ac:"name"},{k:"cpf",l:"CPF",req:1,im:"numeric",ph:"000.000.000-00"},{k:"nasc",l:"Data de nascimento",req:1,t:"date"},{k:"tel",l:"WhatsApp",req:1,im:"tel",ph:"(00) 00000-0000"},{k:"email",l:"E-mail",req:1,t:"email"},{k:"cidade",l:"Cidade onde mora",req:1,full:1,ph:"Cidade/UF"}];
+const W2=()=>[{k:"funcao",l:"Função",req:1,t:"select",o:[["","Selecione"],...Object.keys(FUNCOES)]},{k:"anos",l:"Anos de experiência",t:"number"},{k:"registro",l:"Registro no conselho",full:1,h:"COREN, CREFITO, CRP... com número e UF. Cuidadores deixam em branco.",ph:"COREN-UF 000000"},{k:"exp",l:"Experiência com",t:"checks",o:EXPERIENCIAS,full:1},{k:"disp",l:"Disponibilidade",t:"checks",o:DISPON,full:1,req:1},{k:"areas",l:"Cidades onde pode atender",full:1}];
+function pgTrabalhe(){
+  const s=wz.step, d=wz.d;
+  if(s===5) return `<div class="okbox"><h2>Candidatura enviada</h2><p>Guarde seu protocolo. Com ele e seu CPF você acompanha o processo seletivo.</p><p class="code">${esc(wz.done)}</p><div class="actions"><a class="btn btn-primary" href="#acompanhar">Acompanhar candidatura</a></div></div>`;
+  const bar=`<div class="wbar">${[1,2,3,4].map(i=>`<i class="${i<=s?"on":""}"></i>`).join("")}</div>`;
+  let body="";
+  if(s===1) body=`<h2>Seus dados</h2>${fields(W1,d)}`;
+  if(s===2) body=`<h2>Sua atuação</h2>${fields(W2(),d)}`;
+  if(s===3) body=`<h2>Currículo</h2><label class="f" style="padding:16px;border:1.5px dashed var(--line);border-radius:12px">Envie seu currículo <i class="req">*</i><small>PDF, Word ou foto, até 5 MB</small><input id="w_cv" type="file" accept=".pdf,.doc,.docx,image/*" style="border:0;padding:6px 0"></label><p class="small muted" id="w_cvname">${d.cv?`Arquivo escolhido: ${esc(d.cv.nome)} (${d.cv.kb} KB)`:""}</p>${fields([{k:"resumo",l:"Resumo profissional",t:"textarea",full:1,h:"Opcional: onde já trabalhou, cursos e especializações"}],d)}`;
+  if(s===4) body=`<h2>Termos</h2>
+    <label class="consent"><input type="checkbox" id="a1"><span>Declaro que as informações e documentos enviados são verdadeiros.</span></label>
+    <label class="consent"><input type="checkbox" id="a2"><span>Autorizo a Viver Bem a guardar e usar meus dados para o processo seletivo, conforme a LGPD (Lei 13.709/2018). Posso pedir a exclusão a qualquer momento.</span></label>
+    <label class="consent"><input type="checkbox" id="a3"><span>Estou ciente de que, se aprovado(a), atuarei como prestador(a) de serviço autônomo, mediante assinatura de contrato.</span></label>`;
+  return `<div><p class="small muted">Trabalhe conosco</p><h1>Faça parte da equipe Viver Bem</h1><p class="muted" style="margin-top:6px">Cadastro, processo seletivo e contrato, tudo por aqui. Leva uns 5 minutos.</p></div>
+  <form id="fWz" class="card" style="display:flex;flex-direction:column;gap:14px" novalidate>${bar}<p class="small muted">Etapa ${s} de 4</p>${body}<p class="err" hidden></p>
+  <div class="actions">${s>1?`<button type="button" class="btn btn-line" data-act="wzBack">Voltar</button>`:""}<button class="btn ${s===4?"btn-copper":"btn-primary"}">${s===4?"Enviar candidatura":"Continuar"}</button></div></form>
+  <p class="small muted">Já se candidatou? <a href="#acompanhar">Acompanhe aqui</a>.</p>`;
+}
+function wzRead(){ const d=wz.d; if(wz.step===1) Object.assign(d,readFields(W1)); if(wz.step===2) Object.assign(d,readFields(W2())); if(wz.step===3) d.resumo=$("#f_resumo")?.value.trim()||""; }
+function wzCheck(){
+  const d=wz.d, s=wz.step;
+  if(s===1){ const m=missing(W1,d); if(m) return m; if(d.nome.split(" ").filter(Boolean).length<2) return "Informe seu nome completo."; if(!validCPF(d.cpf)) return "CPF inválido. Confira os 11 números."; d.cpf=digits(d.cpf); if(digits(d.tel).length<10) return "Informe o WhatsApp com DDD."; if(!/.+@.+\..+/.test(d.email)) return "Informe um e-mail válido."; }
+  if(s===2){ const m=missing(W2(),d); if(m) return m; if(FUNCOES[d.funcao]&&!d.registro) return `Informe seu registro no ${FUNCOES[d.funcao]}.`; }
+  if(s===3&&!d.cv) return "Envie seu currículo para continuar.";
+  return "";
+}
+
+/* currículo: fotos são reduzidas; PDF/Word até 700 KB (cabe num documento do banco) */
+function prepCV(file){
+  return new Promise((ok,ko)=>{
+    const rd=new FileReader(); rd.onerror=()=>ko(new Error("Não foi possível ler o arquivo."));
+    if(file.type.startsWith("image/")){
+      rd.onload=()=>{ const img=new Image(); img.onload=()=>{ const k=Math.min(1,1600/Math.max(img.width,img.height)); const c=document.createElement("canvas"); c.width=Math.round(img.width*k); c.height=Math.round(img.height*k); c.getContext("2d").drawImage(img,0,0,c.width,c.height); ok(c.toDataURL("image/jpeg",0.72)); }; img.onerror=()=>ko(new Error("Imagem inválida.")); img.src=rd.result; };
+    } else {
+      if(file.size>700*1024) return ko(new Error("Arquivo maior que 700 KB. Envie um PDF menor ou uma foto do currículo."));
+      rd.onload=()=>ok(rd.result);
+    }
+    rd.readAsDataURL(file);
+  });
+}
+
+/* =================== PÚBLICO: ACOMPANHAR =================== */
+let acomp=null;
+function pgAcompanhar(){
+  if(!acomp) return `<div><h1>Acompanhar candidatura</h1><p class="muted" style="margin-top:6px">Informe o CPF e o protocolo que você recebeu ao se cadastrar.</p></div>
+    <form id="fAc" class="card" style="display:flex;flex-direction:column;gap:12px" novalidate>${fields([{k:"cpf",l:"CPF",im:"numeric"},{k:"proto",l:"Protocolo",ph:"VB-XXXXXX"}])}<p class="err" hidden></p><div class="actions"><button class="btn btn-primary">Consultar</button></div>
+    ${Store.mode==="demo"?`<p class="small muted">Teste com o CPF 390.533.447-05 e o protocolo VB-EX03C (candidata de exemplo aprovada).</p>`:""}</form>`;
+  const {c,ct}=acomp, s=(c.status==="aprovado"&&ct?.status==="assinado")?"contrato":c.status, idx=CAND_ST.findIndex(x=>x[0]===s);
+  const msg={recebido:"Recebemos seu cadastro. Em breve nossa equipe analisa seu perfil.",analise:"Seu perfil está em análise.",entrevista:"Vamos entrar em contato pelo WhatsApp para agendar a entrevista.",aprovado:"Parabéns, você foi aprovado(a)! Leia e assine seu contrato.",contrato:"Contrato assinado. Em breve você recebe seus primeiros plantões.",reprovado:"Agradecemos seu interesse. Seu cadastro fica no nosso banco de talentos."}[s];
+  return `<div class="card" style="display:flex;flex-direction:column;gap:12px"><div><h1>${esc(c.nome)}</h1><p class="muted">${esc(c.funcao)} · protocolo ${esc(c.id)}</p></div><p class="note">${msg}</p>
+    ${s!=="reprovado"?`<ol class="timeline">${CAND_ST.map(([k,l],i)=>`<li class="${i<idx?"done":i===idx?"now":""}"><div><b>${l}</b></div></li>`).join("")}</ol>`:""}
+    ${s==="aprovado"&&ct?`<a class="btn btn-copper" href="#assinar-${ct.id}">Ler e assinar contrato</a>`:""}
+    <button class="btn btn-line" data-act="acOut">Consultar outro CPF</button></div>`;
+}
+
+/* =================== PÚBLICO: ASSINAR =================== */
+async function pgAssinar(id){
+  const c = await Store.fetchOne("contratos", id);
+  if(!c) return `<div class="card"><h1>Contrato não encontrado</h1><p class="muted" style="margin-top:6px">Confira se o link está completo ou peça um novo link à Viver Bem.</p></div>`;
+  window._ct=c;
+  if(c.status==="assinado") return `<div class="okbox"><h2>Contrato assinado</h2><p>Assinado por ${esc(c.assinatura.nome)} em ${fmtDT(c.assinatura.em)}.</p><p>Código de verificação: <b>${esc(c.assinatura.hash)}</b></p></div><div class="contract">${c.html}</div>`;
+  return `<div><h1>Assinatura de contrato</h1><p class="muted" style="margin-top:6px">Leia o contrato até o fim. Para assinar, digite seu nome completo e CPF.</p></div>
+  <div class="contract" tabindex="0">${c.html}</div>
+  <form id="fSign" class="card" style="display:flex;flex-direction:column;gap:12px" novalidate>
+    ${fields([{k:"sNome",l:"Nome completo",ac:"name"},{k:"sCpf",l:"CPF",im:"numeric"}])}
+    <label class="consent"><input type="checkbox" id="sOk"><span>Li o contrato e concordo com todas as cláusulas. Reconheço esta assinatura eletrônica como válida (MP 2.200-2/2001, art. 10, §2º).</span></label>
+    <p class="err" hidden></p><button class="btn btn-copper">Assinar contrato</button></form>`;
+}
+
+/* =================== PÚBLICO: SOLICITAR =================== */
+let solPub="familia";
+const SF=[{k:"nome",l:"Seu nome",req:1,ac:"name"},{k:"tel",l:"WhatsApp",req:1,im:"tel"},{k:"cidade",l:"Cidade/UF",req:1},{k:"servico",l:"Tipo de atendimento",t:"select",o:["Ainda não sei","Atendimento por hora","Plantão 6h","Plantão 8h","Plantão 12h","Atendimento 24h","Internação domiciliar","Fisioterapia / terapias","Exame em casa"]},{k:"paciente",l:"Sobre o paciente",full:1,ph:"Ex.: meu pai, 78 anos, pós-cirúrgico"},{k:"msg",l:"Mensagem",t:"textarea",full:1}];
+const SO=[{k:"empresa",l:"Operadora / empresa",req:1},{k:"cnpj",l:"CNPJ"},{k:"nome",l:"Responsável",req:1},{k:"cargo",l:"Cargo"},{k:"tel",l:"Telefone",req:1,im:"tel"},{k:"email",l:"E-mail",req:1,t:"email"},{k:"regiao",l:"Região de interesse",full:1},{k:"msg",l:"Como podemos ajudar?",t:"textarea",full:1}];
+function pgSolicitar(){
+  return `<div><h1>Solicitar atendimento</h1><p class="muted" style="margin-top:6px">Atendimento domiciliar com equipe de saúde completa. Conte o que você precisa e retornamos para uma avaliação.</p></div>
+  <div class="chips"><button class="chipbtn" data-act="solPub" data-id="familia" aria-pressed="${solPub==="familia"}">Sou paciente ou familiar</button><button class="chipbtn" data-act="solPub" data-id="operadora" aria-pressed="${solPub==="operadora"}">Sou operadora de saúde</button></div>
+  <form id="fSol" class="card" style="display:flex;flex-direction:column;gap:12px" novalidate>${fields(solPub==="familia"?SF:SO)}
+  <label class="consent"><input type="checkbox" id="solOk"><span>Autorizo a Viver Bem a usar estes dados para entrar em contato.</span></label><p class="err" hidden></p><button class="btn btn-primary">Enviar</button></form>`;
+}
+
+function bindPublic(r){
+  if(r==="trabalhe"){ const f=$("#fWz"); if(!f) return;
+    const cv=$("#w_cv"); if(cv) cv.onchange=async()=>{ const file=cv.files[0]; if(!file) return; showErr(f,"");
+      try{ const dataUrl=await prepCV(file); wz._cv=dataUrl; wz.d.cv={nome:file.name,kb:Math.max(1,Math.round(dataUrl.length*0.75/1024))}; $("#w_cvname").textContent=`Arquivo escolhido: ${file.name} (${wz.d.cv.kb} KB)`; }
+      catch(err){ cv.value=""; showErr(f,err.message); } };
+    f.onsubmit=async e=>{ e.preventDefault(); wzRead(); const m=wzCheck(); if(m) return showErr(f,m);
+      if(wz.step<4){ wz.step++; render(); return; }
+      if(!["a1","a2","a3"].every(id=>$("#"+id).checked)) return showErr(f,"Marque os três termos para enviar.");
+      const btn=$("button:last-of-type",f); btn.disabled=true;
+      try{
+        if(Store.mode==="demo" && Store.all("candidatos").some(c=>c.cpf===wz.d.cpf&&!c.exemplo)) { btn.disabled=false; return showErr(f,"Já existe uma candidatura com este CPF. Use Acompanhar candidatura."); }
+        const now=new Date().toISOString(), id="VB-"+Math.random().toString(36).slice(2,8).toUpperCase();
+        if(Store.mode==="firebase" && wz._cv){ await Store.put("curriculos",{id,nome:wz.d.cv.nome,data:wz._cv}); wz.d.cv.salvo=true; }
+        await Store.put("candidatos",{...wz.d,id,status:"recebido",hist:[{s:"recebido",em:now}],aceites:now,notas:""});
+        wz={step:5,d:{exp:[],disp:[]},done:id}; render();
+      }catch(err){ btn.disabled=false; showErr(f,"Não foi possível enviar agora. Verifique a internet e tente de novo."); }
+    };
+  }
+  if(r==="acompanhar"){ const f=$("#fAc"); if(f) f.onsubmit=async e=>{ e.preventDefault(); const cpf=digits($("#f_cpf").value), id=$("#f_proto").value.trim().toUpperCase();
+    const c=id?await Store.fetchOne("candidatos",id):null; if(!c||c.cpf!==cpf) return showErr(f,"Não encontramos candidatura com esse CPF e protocolo. Confira os dados.");
+    acomp={c, ct:c.contratoId?await Store.fetchOne("contratos",c.contratoId):null}; render(); }; }
+  if(r==="assinar"){ const f=$("#fSign"); if(f) f.onsubmit=async e=>{ e.preventDefault(); const c=window._ct, nome=$("#f_sNome").value.trim(), cpf=digits($("#f_sCpf").value);
+    const espNome=c.tipo==="autonomo"?c.dados.nome:c.dados.respNome, espCpf=digits(c.tipo==="autonomo"?c.dados.cpf:c.dados.respCpf);
+    if(norm(nome)!==norm(espNome)) return showErr(f,`O nome precisa ser igual ao do contrato: ${espNome}.`);
+    if(espCpf && cpf!==espCpf) return showErr(f,"O CPF não confere com o do contrato.");
+    if(!validCPF(cpf)) return showErr(f,"CPF inválido.");
+    if(!$("#sOk").checked) return showErr(f,"Marque que leu e concorda com o contrato.");
+    const em=new Date().toISOString();
+    c.status="assinado"; c.assinatura={nome,cpf,em,hash:await sha(c.id+cpf+em+c.html.length),disp:navigator.userAgent.slice(0,140)};
+    try{ await Store.put("contratos",c); toast("Contrato assinado"); render(); }catch(err){ showErr(f,"Não foi possível assinar agora. Tente de novo."); } }; }
+  if(r==="solicitar"){ const f=$("#fSol"); if(f) f.onsubmit=async e=>{ e.preventDefault(); const spec=solPub==="familia"?SF:SO; const v=readFields(spec,f); const m=missing(spec,v); if(m) return showErr(f,m);
+    if(digits(v.tel).length<10) return showErr(f,"Informe o telefone com DDD."); if(!$("#solOk").checked) return showErr(f,"Marque a autorização de contato.");
+    await Store.put("solicitacoes",{id:uid("s"),tipo:solPub,status:"novo",...v});
+    const cfg=Store.cfg();
+    f.outerHTML=`<div class="okbox"><h2>Solicitação enviada</h2><p>Nossa equipe vai entrar em contato pelo telefone ${esc(v.tel)}.</p>${cfg.whatsapp&&solPub==="familia"?`<div class="actions"><a class="btn btn-primary" target="_blank" rel="noopener" href="${wa(cfg.whatsapp,`Olá, Viver Bem! Sou ${v.nome}, de ${v.cidade}. Gostaria de uma avaliação. Atendimento: ${v.servico}. Paciente: ${v.paciente||"-"}`)}">${ICON.wa}Falar agora no WhatsApp</a></div>`:""}</div>`; }; }
+}
+
+/* =================== AÇÕES =================== */
+const ACT = {
+  close: closeModal,
+  menu(){ const s=$("#shell"); s.classList.add("open"); const sc=document.createElement("div"); sc.className="scrim"; sc.onclick=()=>{s.classList.remove("open");sc.remove();}; s.appendChild(sc); },
+  go(id){ location.hash=id; },
+  logout,
+  async demoAdmin(){ S={role:"admin",nome:"Administração Viver Bem"}; saveSession(); location.hash="painel"; render(); },
+  async demoProf(){ const p=Store.all("profissionais").find(x=>x.acesso)||Store.all("profissionais")[0]; if(!p) return toast("Cadastre um profissional primeiro"); S={role:"prof",profId:p.id,nome:p.nome}; saveSession(); location.hash="meus"; render(); },
+  async reset(){ const e=$("#lg_email").value.trim(); if(!e) return showErr($("#fLogin"),"Digite seu e-mail para receber o link."); try{ await Store.auth.sendPasswordResetEmail(e); toast("Enviamos o link para "+e); }catch(_){ showErr($("#fLogin"),"Não foi possível enviar. Confira o e-mail."); } },
+  copy(_,b){ copy(b.dataset.v); },
+  pacFiltro(id){ pacFiltro=id; render(); }, recFiltro(id){ recFiltro=id; render(); }, ctFiltro(id){ ctFiltro=id; render(); }, solTab(id){ solTab=id; render(); },
+  solPub(id){ solPub=id; render(); }, acOut(){ acomp=null; render(); },
+  wzBack(){ wzRead(); wz.step--; render(); },
+  pontoSem(id){ pontoIni = +id===0 ? weekStart(today()) : addDays(pontoIni,+id); render(); },
+  pontoOc(){ pontoOc=!pontoOc; render(); },
+  semana(id){ esc_ini = +id===0 ? weekStart(today()) : addDays(esc_ini,+id); render(); },
+  finMes(id){ const [y,m]=finMes.split("-").map(Number); const d=new Date(y,m-1+(+id),1); finMes=`${d.getFullYear()}-${pad(d.getMonth()+1)}`; render(); },
+  novoPaciente(){ formPaciente(); }, editPaciente(id){ formPaciente(id); },
+  async savePaciente(id){ const b=$(".modal-b"), spec=PAC_SPEC(), v=readFields(spec,b), m=missing(spec,v); if(m) return showErr(b,m);
+    if(v.tipo==="operadora"&&!v.operadoraId) return showErr(b,"Escolha a operadora do paciente.");
+    if(v.geo&&!geoOf(v)) return showErr(b,"Localização inválida. Use o formato latitude, longitude (ex.: -7.3892, -38.7745) ou deixe em branco.");
+    const p=id?{...Store.get("pacientes",id),...v}:{id:uid("pac"),...v}; await Store.put("pacientes",p); closeModal(); toast("Paciente salvo"); location.hash="paciente-"+p.id; render(); },
+  async delPaciente(id,b){ if(b.dataset.ok!=="1"){ b.dataset.ok="1"; b.textContent="Confirmar exclusão"; return; } if(Store.all("plantoes").some(p=>p.pacId===id)) return showErr($(".modal-b"),"Este paciente tem plantões registrados. Marque como Alta em vez de excluir."); await Store.del("pacientes",id); closeModal(); location.hash="pacientes"; toast("Paciente excluído"); },
+  novoPlantao(id){ formPlantao(id?{pacId:id}:{}); }, novoPlantaoDia(d){ formPlantao({data:d}); },
+  plantao(id){ plantaoView(id); }, editPlantao(id){ formPlantao({},id); },
+  async savePlantao(id){
+    const b=$(".modal-b"), spec=PL_SPEC(), v=readFields(spec,b), m=missing(spec,v); if(m) return showErr(b,m);
+    v.horas = v.mod==="hora" ? (+v.horas||1) : +v.mod; v.valorCobrado=+v.valorCobrado||0; v.valorPago=+v.valorPago||0;
+    if(id){ const p={...Store.get("plantoes",id),...v}; const c=conflito(p); if(c&&b.dataset.force!=="1"){ b.dataset.force="1"; return showErr(b,`${proName(p.profId)} já tem plantão em ${pacName(c.pacId)} nesse horário (${fmtDay(c.data)}, ${c.inicio}–${fim(c)}). Clique em Salvar de novo para manter assim.`); } await Store.put("plantoes",p); closeModal(); toast("Plantão atualizado"); return render(); }
+    let dates=[v.data]; const rep=$("#f_rep",b).value;
+    if(rep==="dias"){ const ds=$$('input[name="rep_dia"]:checked',b).map(i=>+i.value); if(!ds.length) return showErr(b,"Escolha os dias da semana."); dates=[...Array(28)].map((_,i)=>addDays(v.data,i)).filter(d=>ds.includes(new Date(d+"T12:00").getDay())); }
+    else dates=[...Array(+rep)].map((_,i)=>addDays(v.data,i));
+    const novos=dates.map(d=>({id:uid("pl"),...v,data:d,status:"agendado",recebido:false,pago:false,evolucao:null}));
+    const conf=novos.map(conflito).filter(Boolean);
+    if(conf.length&&b.dataset.force!=="1"){ b.dataset.force="1"; return showErr(b,`${proName(v.profId)} já tem ${conf.length} plantão(ões) no mesmo horário. Clique em Salvar de novo para criar mesmo assim.`); }
+    for(const p of novos) await Store.put("plantoes",p);
+    closeModal(); toast(novos.length>1?`${novos.length} plantões criados`:"Plantão criado"); render(); },
+  async plStatus(id,b){ const p=Store.get("plantoes",id); p.status=b.dataset.v; await Store.put("plantoes",p); closeModal(); toast("Plantão: "+PL_ST[p.status][0]); render(); },
+  async delPlantao(id,b){ if(b.dataset.ok!=="1"){ b.dataset.ok="1"; b.textContent="Confirmar exclusão"; return; } await Store.del("plantoes",id); closeModal(); toast("Plantão excluído"); render(); },
+  async saveEvo(id){ const b=$(".modal-b"), p=Store.get("plantoes",id); const ev=readEvo(); if(!ev) return showErr(b,"Descreva a evolução do plantão (mínimo de 10 caracteres).");
+    if(tStart(p)>Date.now()+36e5) return showErr(b,"Este plantão ainda não começou. Registre a evolução durante ou depois do plantão.");
+    p.evolucao={...ev,por:S.role==="prof"?S.profId:(p.profId||"")}; if(S.role==="admin"&&p.status!=="andamento") p.status="realizado";
+    await Store.put("plantoes",p); closeModal(); toast("Evolução salva"); render(); },
+  async checkin(id,b){ const p=Store.get("plantoes",id); if(!podeChegar(p)) return toast("Chegada indisponível para este plantão");
+    b.disabled=true; b.textContent="Obtendo sua localização...";
+    const pos=await getPos(); p.chegada={em:new Date().toISOString(),...(pos||{})}; p.status="andamento"; await Store.put("plantoes",p);
+    const r=regInfo(p.chegada,Store.get("pacientes",p.pacId)); closeModal(); render();
+    toast(!pos?"Chegada registrada (localização não autorizada)":r.longe?`Chegada registrada a ${fmtDist(r.d)} do endereço`:"Chegada registrada"); },
+  async checkout(id,b){ const bd=$(".modal-b"), p=Store.get("plantoes",id); const ev=readEvo();
+    if(!ev && !p.evolucao) return showErr(bd,"Escreva a evolução do plantão antes de registrar a saída.");
+    b.disabled=true; b.textContent="Obtendo sua localização...";
+    const pos=await getPos(); if(ev) p.evolucao={...ev,por:S.profId||p.profId}; p.saida={em:new Date().toISOString(),...(pos||{})}; p.status="realizado";
+    await Store.put("plantoes",p); closeModal(); render(); toast(pos?"Saída registrada. Bom descanso!":"Saída registrada (localização não autorizada)"); },
+  async salvarLocal(id){ const p=Store.get("plantoes",id), pac=Store.get("pacientes",p.pacId); pac.geo=`${p.chegada.lat}, ${p.chegada.lng}`; await Store.put("pacientes",pac); closeModal(); toast("Localização da casa salva"); render(); },
+  novoCtEscolher(){ const l=Store.all("pacientes").filter(p=>p.status!=="alta");
+    modal("Novo contrato de paciente", `<label class="f">Paciente<select id="ctPac">${l.map(p=>`<option value="${p.id}">${esc(p.nome)}</option>`).join("")}</select></label><div class="actions"><button class="btn btn-primary" data-act="ctPacGo">Continuar</button></div>`); },
+  ctPacGo(){ const id=$("#ctPac").value; if(id) ACT.novoContratoPac(id); },
+  novoProf(){ formProf(); }, editProf(id){ formProf(id); },
+  async saveProf(id){ const b=$(".modal-b"), spec=PRO_SPEC(), v=readFields(spec,b), m=missing(spec,v); if(m) return showErr(b,m); v.cpf=digits(v.cpf);
+    const p=id?{...Store.get("profissionais",id),...v}:{id:uid("pro"),...v}; await Store.put("profissionais",p); closeModal(); toast("Profissional salvo"); location.hash="profissional-"+p.id; render(); },
+  acessoProf(id){ const p=Store.get("profissionais",id);
+    modal("Acesso ao app do profissional", `<p>Com o acesso, ${esc(first(p.nome))} entra no sistema pelo celular, vê os próprios plantões, o plano de cuidados de cada paciente e registra a evolução.</p>
+      ${fields([{k:"aEmail",l:"E-mail de login",t:"email"},{k:"aSenha",l:"Senha inicial",h:"Mínimo de 6 caracteres. Peça para trocar depois."}],{aEmail:p.acesso||p.email})}
+      <div class="actions"><button class="btn btn-primary" data-act="saveAcesso" data-id="${id}">${p.acesso?"Atualizar":"Criar acesso"}</button></div>`); },
+  async saveAcesso(id){ const b=$(".modal-b"), p=Store.get("profissionais",id), email=$("#f_aEmail").value.trim(), senha=$("#f_aSenha").value;
+    if(!/.+@.+\..+/.test(email)) return showErr(b,"Informe um e-mail válido."); if(senha.length<6) return showErr(b,"A senha precisa ter pelo menos 6 caracteres.");
+    try{ if(Store.mode==="firebase"){ const sec=firebase.apps.find(a=>a.name==="sec")||firebase.initializeApp(FIREBASE_CONFIG,"sec"); const cr=await sec.auth().createUserWithEmailAndPassword(email,senha); await Store.put("usuarios",{id:cr.user.uid,role:"prof",profId:id,nome:p.nome,email}); await sec.auth().signOut(); }
+      p.acesso=email; if(Store.mode==="demo") p.senhaDemo=senha; await Store.put("profissionais",p); closeModal(); toast("Acesso criado"); render();
+      const msg=`Olá, ${first(p.nome)}! Seu acesso ao sistema da Viver Bem: ${baseURL()} · login ${email} · senha ${senha}`;
+      modal("Envie o acesso", `<p>Mande os dados de login para ${esc(first(p.nome))}:</p><p class="note" style="word-break:break-all">${esc(msg)}</p><div class="actions"><a class="btn btn-primary" target="_blank" rel="noopener" href="${wa(p.tel,msg)}">${ICON.wa}Enviar pelo WhatsApp</a></div>`,{nofocus:1});
+    }catch(err){ showErr(b, err.code==="auth/email-already-in-use"?"Este e-mail já tem acesso.":"Não foi possível criar o acesso: "+(err.message||err)); } },
+  async ctProf(id){ const p=Store.get("profissionais",id); if(!p.cpf) return toast("Cadastre o CPF do profissional antes");
+    const c=makeContrato("autonomo",{refId:p.candId||id,profId:id,nome:p.nome,cpf:p.cpf,funcao:p.funcao,registro:p.registro,cidade:p.cidade}); await Store.put("contratos",c); render(); verContrato(c.id); },
+  async candSt(id,b){ const c=Store.get("candidatos",id); c.notas=$("#candNotas")?.value||c.notas; c.status=b.dataset.v; (c.hist=c.hist||[]).push({s:c.status,em:new Date().toISOString()});
+    if(c.status==="aprovado"&&!c.contratoId){ const ct=makeContrato("autonomo",{refId:c.id,nome:c.nome,cpf:c.cpf,funcao:c.funcao,registro:c.registro,cidade:c.cidade}); await Store.put("contratos",ct); c.contratoId=ct.id; }
+    await Store.put("candidatos",c); toast(CAND_NAME[c.status]); render(); },
+  async candNotas(id){ const c=Store.get("candidatos",id); c.notas=$("#candNotas").value; await Store.put("candidatos",c); toast("Anotações salvas"); },
+  async ativarPro(id){ const c=Store.get("candidatos",id); const p={id:uid("pro"),candId:c.id,nome:c.nome,cpf:c.cpf,funcao:c.funcao,registro:c.registro,tel:c.tel,email:c.email,cidade:c.cidade,areas:c.areas,disp:c.disp,status:"ativo"};
+    await Store.put("profissionais",p); toast("Adicionado à equipe"); location.hash="profissional-"+p.id; },
+  verContrato(id){ verContrato(id); },
+  async verCv(id){ const d=await Store.fetchOne("curriculos",id); if(!d) return toast("Currículo não encontrado");
+    const blob=await (await fetch(d.data)).blob(); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.target="_blank"; a.rel="noopener"; a.download=d.nome; document.body.appendChild(a); a.click(); a.remove(); },
+  async delContrato(id,b){ if(b.dataset.ok!=="1"){ b.dataset.ok="1"; b.textContent="Confirmar exclusão"; return; } const c=Store.get("contratos",id); const cand=Store.all("candidatos").find(x=>x.contratoId===id); if(cand){ delete cand.contratoId; await Store.put("candidatos",cand); } await Store.del("contratos",id); closeModal(); toast("Contrato excluído"); render(); },
+  novoContratoPac(id){ const p=Store.get("pacientes",id); const tb=Store.cfg().tabela||{};
+    const spec=[{k:"respNome",l:"Responsável financeiro (contratante)",req:1,full:1},{k:"respCpf",l:"CPF do responsável",req:1,im:"numeric"},{k:"respEnd",l:"Endereço do responsável",req:1},{k:"servicos",l:"Serviços contratados",t:"textarea",req:1,full:1},{k:"valor",l:"Valores",req:1,full:1},{k:"materiais",l:"Materiais e medicamentos",t:"select",o:["não inclusos, fornecidos pela família","inclusos no valor contratado","parcialmente inclusos, conforme descrito nos serviços"]},{k:"venc",l:"Dia de vencimento",t:"number",d:5}];
+    const pre={respNome:(p.responsavel||"").replace(/\s*\(.*\)/,""),respCpf:p.cpfResp,respEnd:p.endereco+", "+p.cidade,servicos:p.plano,valor:tb["12"]?`${brl(tb["12"].cobra)} por plantão de 12h, faturado mensalmente`:""};
+    const b=modal("Gerar contrato · "+p.nome, fields(spec,pre)+`<div class="actions"><button class="btn btn-primary" data-act="saveCtPac" data-id="${id}">Gerar e copiar link</button></div>`,{wide:1}); b._spec=spec; },
+  async saveCtPac(id){ const b=$(".modal-b"), v=readFields(b._spec,b), m=missing(b._spec,v); if(m) return showErr(b,m); if(!validCPF(v.respCpf)) return showErr(b,"CPF do responsável inválido.");
+    const p=Store.get("pacientes",id); const c=makeContrato("paciente",{refId:id,pacNome:p.nome,...v,respCpf:digits(v.respCpf)}); await Store.put("contratos",c); closeModal(); render();
+    modal("Contrato gerado", `<p>Envie o link para ${esc(v.respNome)} ler e assinar pelo celular.</p><p class="note" style="word-break:break-all">${esc(contratoLink(c))}</p><div class="actions"><button class="btn btn-line" data-act="copy" data-v="${esc(contratoLink(c))}">${ICON.link}Copiar link</button><a class="btn btn-primary" target="_blank" rel="noopener" href="${wa(p.telResp,`Olá, ${first(v.respNome)}! Segue o contrato de atendimento domiciliar de ${p.nome} para leitura e assinatura: ${contratoLink(c)}`)}">${ICON.wa}Enviar pelo WhatsApp</a></div>`,{nofocus:1}); },
+  verSol(id){ verSol(id); },
+  async solResp(id){ const s=Store.get("solicitacoes",id); s.status="respondido"; await Store.put("solicitacoes",s); closeModal(); render(); },
+  async solConv(id){ const s=Store.get("solicitacoes",id); s.status="convertido"; await Store.put("solicitacoes",s); closeModal();
+    if(s.tipo==="familia"){ const p={id:uid("pac"),nome:"",responsavel:s.nome,telResp:s.tel,cidade:s.cidade,endereco:"",tipo:"particular",status:"avaliacao",diagnostico:s.paciente,plano:`Solicitado: ${s.servico}. ${s.msg||""}`.trim()}; await Store.put("pacientes",p); render(); formPaciente(p.id); toast("Complete o cadastro do paciente"); }
+    else { render(); formOp(null,{nome:s.empresa,cnpj:s.cnpj,contato:s.nome,tel:s.tel,email:s.email,obs:s.msg}); } },
+  novaOp(){ formOp(); }, editOp(id){ formOp(id); },
+  async saveOp(id){ const b=$(".modal-b"), v=readFields(OP_SPEC,b), m=missing(OP_SPEC,v); if(m) return showErr(b,m); await Store.put("operadoras",id?{...Store.get("operadoras",id),...v}:{id:uid("op"),...v}); closeModal(); toast("Operadora salva"); render(); },
+  async delOp(id,b){ if(b.dataset.ok!=="1"){ b.dataset.ok="1"; b.textContent="Confirmar exclusão"; return; } if(Store.all("pacientes").some(p=>p.operadoraId===id)) return showErr($(".modal-b"),"Há pacientes ligados a esta operadora. Marque como Inativa."); await Store.del("operadoras",id); closeModal(); render(); },
+  async finRec(k){ const [t,id]=k.split(":"); for(const p of Store.all("plantoes").filter(p=>p.data.startsWith(finMes)&&p.status==="realizado"&&!p.recebido)){ const pac=Store.get("pacientes",p.pacId); const key=pac?.tipo==="operadora"&&pac.operadoraId?"op:"+pac.operadoraId:"pac:"+p.pacId; if(key===k){ p.recebido=true; await Store.put("plantoes",p); } } toast("Marcado como recebido"); render(); },
+  async finPag(id){ for(const p of Store.all("plantoes").filter(p=>p.data.startsWith(finMes)&&p.status==="realizado"&&!p.pago&&p.profId===id)){ p.pago=true; await Store.put("plantoes",p); } toast("Marcado como pago"); render(); },
+  async saveCfg(){ const c=Store.cfg(); const v=readFields([{k:"nome"},{k:"cnpj"},{k:"cidade"},{k:"endereco"},{k:"whatsapp"},{k:"email"},{k:"diaPagamento"}]);
+    const tabela={}; MODS.forEach(([k])=>{ tabela[k]={cobra:+$("#tb_c_"+k).value||0,paga:+$("#tb_p_"+k).value||0}; });
+    await Store.put("config",{...c,...v,id:"empresa",tabela,exemploValores:false}); toast("Configurações salvas"); render(); },
+  resetDemo(_,b){ if(b.dataset.ok!=="1"){ b.dataset.ok="1"; b.textContent="Confirmar: apagar tudo e restaurar exemplos"; return; } Store.data=seed(); Store._local(); toast("Dados de exemplo restaurados"); render(); }
+};
+document.addEventListener("click", e=>{
+  const b=e.target.closest("[data-act]"); if(!b) return;
+  const fn=ACT[b.dataset.act]; if(!fn) return;
+  if(b.tagName==="BUTTON"||b.tagName==="TR") e.preventDefault();
+  if(b.dataset.act==="close" && b.tagName==="A") { closeModal(); return; }
+  Promise.resolve(fn(b.dataset.id,b,e)).catch(err=>{ console.error(err); toast("Algo deu errado: "+(err.message||err)); });
+});
+document.addEventListener("input", e=>{
+  if(e.target.id==="pacBusca"){ pacBusca=e.target.value; const pos=e.target.selectionStart; render().then(()=>{ const i=$("#pacBusca"); i.focus(); i.setSelectionRange(pos,pos); }); }
+  if(e.target.id==="proBusca"){ proBusca=e.target.value; const pos=e.target.selectionStart; render().then(()=>{ const i=$("#proBusca"); i.focus(); i.setSelectionRange(pos,pos); }); }
+});
+document.addEventListener("change", e=>{
+  if(e.target.id==="escPac"){ escPac=e.target.value; render(); }
+  if(e.target.id==="escPro"){ escPro=e.target.value; render(); }
+  if(e.target.id==="pontoPro"){ pontoPro=e.target.value; render(); }
+});
+
+/* =================== INÍCIO =================== */
+(async()=>{
+  $("#root").innerHTML=`<p class="empty" style="padding-top:30vh">Carregando o sistema...</p>`;
+  try{
+    await Store.init();
+    if(Store.mode==="demo"){ try{ S=JSON.parse(sessionStorage.getItem(SS_KEY)); }catch(e){} }
+    else await new Promise(ok=>{ const off=Store.auth.onAuthStateChanged(async u=>{ off(); if(u){ const d=await Store.fetchOne("usuarios",u.uid); if(d){ S={role:d.role,profId:d.profId||null,nome:d.nome||u.email}; await Store.loadFor(S); } } ok(); }); });
+  }catch(err){ $("#root").innerHTML=`<p class="empty" style="padding-top:30vh">${esc(err.message)}</p>`; return; }
+  render();
+})();
+</script>
+
+</body>
+</html>
