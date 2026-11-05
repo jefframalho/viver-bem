@@ -436,6 +436,45 @@ async function sha(t){ try{ const b=await crypto.subtle.digest("SHA-256",new Tex
 const wa = (tel, msg="") => { let d=digits(tel); if(d.length && !d.startsWith("55")) d="55"+d; return `https://wa.me/${d}${msg?"?text="+encodeURIComponent(msg):""}`; };
 const baseURL = () => location.href.split("#")[0];
 
+/* --- Pix (BR Code / EMV) gerado inteiramente no navegador, sem depender de banco ou gateway --- */
+function crc16(s){ let crc=0xFFFF; for(let i=0;i<s.length;i++){ crc^=s.charCodeAt(i)<<8;
+    for(let j=0;j<8;j++){ crc = (crc&0x8000) ? ((crc<<1)^0x1021) : (crc<<1); crc&=0xFFFF; } }
+  return crc.toString(16).toUpperCase().padStart(4,"0"); }
+function pixTLV(id,v){ return id+String(v.length).padStart(2,"0")+v; }
+function pixSemAcento(s){ return String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^A-Za-z0-9 ]/g," ").replace(/\s+/g," ").trim(); }
+function pixPayload({chave, nome, cidade, valor, txid}){
+  const mai = pixTLV("00","br.gov.bcb.pix") + pixTLV("01",String(chave||"").trim());
+  let p = pixTLV("00","01") + pixTLV("01","12") + pixTLV("26",mai) + pixTLV("52","0000") + pixTLV("53","986");
+  if(valor>0) p += pixTLV("54",(+valor).toFixed(2));
+  p += pixTLV("58","BR") + pixTLV("59",(pixSemAcento(nome)||"VIVER BEM").slice(0,25).toUpperCase())
+     + pixTLV("60",(pixSemAcento(cidade)||"BRASIL").slice(0,15).toUpperCase())
+     + pixTLV("62",pixTLV("05",(txid||"***").replace(/[^A-Za-z0-9]/g,"").slice(0,25)||"***"));
+  p += "6304";
+  return p + crc16(p);
+}
+let pixLibCarregada=false;
+function carregaPixLib(cb){
+  if(pixLibCarregada || window.QRCode) { pixLibCarregada=true; return cb(); }
+  const s=document.createElement("script");
+  s.src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js";
+  s.onload=()=>{ pixLibCarregada=true; cb(); };
+  s.onerror=()=>toast("Não consegui carregar o gerador de QR Code (sem internet?)");
+  document.head.appendChild(s);
+}
+function pixModal(valor, descricao, txid){
+  const c=Store.cfg();
+  if(!c.pixChave) return toast("Cadastre a chave Pix da empresa em Configurações › Teleconsulta e pagamento");
+  const payload=pixPayload({chave:c.pixChave, nome:c.nome, cidade:(c.cidade||"").split("/")[0], valor, txid});
+  modal("Cobrar por Pix", `<p class="muted">${esc(descricao||"")}</p><p style="font-size:1.4rem;font-weight:700">${brl(valor)}</p>
+    <div id="pixQrBox" style="display:flex;justify-content:center;padding:10px"><span class="muted small">Gerando QR Code…</span></div>
+    <label class="f full">Pix copia e cola<textarea readonly rows="3" style="font-family:ui-monospace,monospace;font-size:.8rem" onclick="this.select()">${esc(payload)}</textarea></label>
+    <div class="actions"><button class="btn btn-primary" data-act="copy" data-v="${esc(payload)}">Copiar código</button></div>`,{nofocus:1});
+  carregaPixLib(()=>{ const box=$("#pixQrBox"); if(!box) return; box.innerHTML="";
+    const cv=document.createElement("canvas"); box.appendChild(cv);
+    window.QRCode.toCanvas(cv, payload, {width:220, margin:1}, err=>{ if(err) box.innerHTML=`<p class="err">Não consegui desenhar o QR Code</p>`; });
+  });
+}
+
 const FUNCOES = { "Enfermeiro(a)":"COREN","Técnico(a) de enfermagem":"COREN","Auxiliar de enfermagem":"COREN","Fisioterapeuta":"CREFITO","Fonoaudiólogo(a)":"CRFa","Psicólogo(a)":"CRP","Nutricionista":"CRN","Terapeuta ocupacional":"CREFITO","Médico(a)":"CRM" };
 const DOCS = [["selfie","Selfie","Foto do seu rosto, de frente, sem óculos escuros e com boa luz"],["identidade","Documento com foto","RG ou CNH, lado da foto"],["conselho","Carteira do conselho","Foto da sua carteira do conselho de classe (COREN, CREFITO, CRM...)"],["endereco","Comprovante de endereço","Conta de água, luz ou telefone dos últimos 3 meses"],["curriculo","Currículo","PDF, Word ou foto"]];
 const DOC_NAME = Object.fromEntries(DOCS.map(d=>[d[0],d[1]]));
@@ -1379,7 +1418,7 @@ function pgFinResumo(){
   const byPag={}; pls.forEach(p=>{ const pac=Store.get("pacientes",p.pacId); const key=pac?.tipo==="operadora"&&pac.operadoraId?"op:"+pac.operadoraId:"pac:"+p.pacId; (byPag[key]=byPag[key]||[]).push(p); });
   const byPro={}; pls.forEach(p=>{ if(p.profId)(byPro[p.profId]=byPro[p.profId]||[]).push(p); });
   const rowsR=Object.entries(byPag).map(([k,l])=>{ const [t,id]=k.split(":"); const nome=t==="op"?Store.get("operadoras",id)?.nome+" (operadora)":pacName(id); const tot=l.reduce((s,p)=>s+(+p.valorCobrado||0),0), pend=l.filter(p=>!p.recebido).reduce((s,p)=>s+(+p.valorCobrado||0),0);
-    return `<tr><td><b>${esc(nome)}</b><div class="small muted">${l.length} plantões</div></td><td class="r">${brl(tot)}</td><td class="r">${pend?`<b>${brl(pend)}</b>`:"-"}</td><td class="r">${pend?`<button class="btn btn-sm btn-line" data-act="finRec" data-id="${k}">Marcar recebido</button>`:'<span class="pill p-ok">Recebido</span>'}</td></tr>`; }).join("");
+    return `<tr><td><b>${esc(nome)}</b><div class="small muted">${l.length} plantões</div></td><td class="r">${brl(tot)}</td><td class="r">${pend?`<b>${brl(pend)}</b>`:"-"}</td><td class="r">${pend?`<div class="actions" style="justify-content:flex-end"><button class="btn btn-sm btn-copper" data-act="pixGerar" data-id="${k}" data-v="${pend}">${ICON.link||""}Gerar Pix</button><button class="btn btn-sm btn-line" data-act="finRec" data-id="${k}">Marcar recebido</button></div>`:'<span class="pill p-ok">Recebido</span>'}</td></tr>`; }).join("");
   const rowsP=Object.entries(byPro).map(([id,l])=>{ const pro=Store.get("profissionais",id); const tot=l.reduce((s,p)=>s+valorProf(p),0), pend=l.filter(p=>!p.pago).reduce((s,p)=>s+valorProf(p),0);
     return `<tr><td><b>${esc(pro?.nome||"-")}</b><div class="small muted">${l.length} plantões${pro?.pix?" · Pix "+esc(pro.pix):""}</div></td><td class="r">${brl(tot)}</td><td class="r">${pend?`<b>${brl(pend)}</b>`:"-"}</td><td class="r">${pend?`<button class="btn btn-sm btn-line" data-act="finPag" data-id="${id}">Marcar pago</button>`:'<span class="pill p-ok">Pago</span>'}</td></tr>`; }).join("");
   return `<div class="pagehead"><div><h1>Financeiro</h1><p class="sub">${capital(label)} · com base nos plantões realizados</p></div>
@@ -1674,7 +1713,7 @@ function teleForm(pre={}){
 function verTele(id){
   const c=Store.get("consultas",id); if(!c) return; const pac=Store.get("pacientes",c.pacId)||{}, cfg=Store.cfg(), role=S.role, ativo=["agendada","solicitada"].includes(c.status);
   const docs=(c.documentos||[]).map(d=>`<li><b>${esc(d.tipo)}</b>: ${esc(d.texto)}${d.link?` · <a href="${esc(d.link)}" target="_blank" rel="noopener">documento assinado</a>`:""}</li>`).join("");
-  const pagar = role==="paciente"&&c.pagamento!=="pago"&&c.status==="agendada" ? `<div class="note"><b>Pagamento da consulta: ${brl(c.valor)}</b>${cfg.linkPagamento?`<div class="actions" style="margin-top:8px"><a class="btn btn-primary btn-sm" href="${esc(cfg.linkPagamento)}" target="_blank" rel="noopener">Pagar agora</a></div>`:""}${cfg.pixChave?`<p style="margin-top:6px">Pix: <b>${esc(cfg.pixChave)}</b> <button class="btn btn-sm btn-line" data-act="copy" data-v="${esc(cfg.pixChave)}">Copiar</button></p>`:""}${!cfg.linkPagamento&&!cfg.pixChave?"<p>A central vai enviar os dados de pagamento pelo WhatsApp.</p>":""}<p class="small muted">Depois de pagar, mande o comprovante para a central.</p></div>` : "";
+  const pagar = role==="paciente"&&c.pagamento!=="pago"&&c.status==="agendada" ? `<div class="note"><b>Pagamento da consulta: ${brl(c.valor)}</b>${cfg.linkPagamento?`<div class="actions" style="margin-top:8px"><a class="btn btn-primary btn-sm" href="${esc(cfg.linkPagamento)}" target="_blank" rel="noopener">Pagar agora</a></div>`:""}${cfg.pixChave?`<p style="margin-top:6px">Pix: <b>${esc(cfg.pixChave)}</b> <button class="btn btn-sm btn-line" data-act="copy" data-v="${esc(cfg.pixChave)}">Copiar</button> <button class="btn btn-sm btn-copper" data-act="pixTele" data-id="${c.id}">Ver QR Code</button></p>`:""}${!cfg.linkPagamento&&!cfg.pixChave?"<p>A central vai enviar os dados de pagamento pelo WhatsApp.</p>":""}<p class="small muted">Depois de pagar, mande o comprovante para a central.</p></div>` : "";
   const podeEntrar = c.status==="agendada" && (role!=="paciente" || c.consentimento);
   const body=`<dl class="kv"><dt>Paciente</dt><dd>${esc(pac.nome||pacName(c.pacId))}</dd><dt>Especialidade</dt><dd>${esc(TELE_NAME[c.esp])}</dd><dt>Profissional</dt><dd>${esc(proName(c.profId))}</dd><dt>Quando</dt><dd>${fmtDayW(c.data)} · ${c.hora} (${c.dur||30} min)</dd><dt>Situação</dt><dd><span class="pill ${CONS_ST[c.status][1]}">${CONS_ST[c.status][0]}</span> <span class="pill ${c.pagamento==="pago"?"p-ok":"p-warn"}">${c.pagamento==="pago"?"Pago":"Pagamento pendente"} · ${brl(c.valor)}</span></dd>${c.obs?`<dt>Motivo</dt><dd>${esc(c.obs)}</dd>`:""}<dt>Termo</dt><dd>${c.consentimento?`Aceito em ${fmtDT(c.consentimento.em)}`:"Ainda não aceito pelo paciente"}</dd></dl>
     ${pagar}
@@ -2283,6 +2322,11 @@ const ACT = {
   async saveOp(id){ const b=$(".modal-b"), v=readFields(OP_SPEC,b), m=missing(OP_SPEC,v); if(m) return showErr(b,m); await Store.put("operadoras",id?{...Store.get("operadoras",id),...v}:{id:uid("op"),...v}); closeModal(); toast("Operadora salva"); render(); },
   async delOp(id,b){ if(b.dataset.ok!=="1"){ b.dataset.ok="1"; b.textContent="Confirmar exclusão"; return; } if(Store.all("pacientes").some(p=>p.operadoraId===id)) return showErr($(".modal-b"),"Há pacientes ligados a esta operadora. Marque como Inativa."); await Store.del("operadoras",id); closeModal(); render(); },
   async finRec(k){ const [t,id]=k.split(":"); for(const p of Store.all("plantoes").filter(p=>p.data.startsWith(finMes)&&p.status==="realizado"&&!p.recebido)){ const pac=Store.get("pacientes",p.pacId); const key=pac?.tipo==="operadora"&&pac.operadoraId?"op:"+pac.operadoraId:"pac:"+p.pacId; if(key===k){ p.recebido=true; await Store.put("plantoes",p); } } toast("Marcado como recebido"); render(); },
+  pixGerar(k,b){ const [t,id]=k.split(":"), pend=+b.dataset.v||0;
+    const nome=t==="op"?Store.get("operadoras",id)?.nome:pacName(id);
+    pixModal(pend, "Cobrança de "+(nome||"-"), (t+id).slice(0,20)); },
+  pixTele(id){ const c=Store.get("consultas",id); if(!c) return;
+    pixModal(c.valor, "Teleconsulta", "tc"+id); },
   async finPag(id){ for(const p of Store.all("plantoes").filter(p=>p.data.startsWith(finMes)&&p.status==="realizado"&&!p.pago&&p.profId===id)){ p.pago=true; await Store.put("plantoes",p); } toast("Marcado como pago"); render(); },
   async saveCfg(){ const c=Store.cfg(); const v=readFields([{k:"nome"},{k:"cnpj"},{k:"cidade"},{k:"endereco"},{k:"whatsapp"},{k:"email"},{k:"instagram"},{k:"diaPagamento"},{k:"modeloAutonomo"},{k:"modeloPaciente"},{k:"dpo"},{k:"raio"},{k:"tolerancia"},...ADDR("e_",false)]);
     v.servicosTxt=$("#f_servicosTxt").value.trim();
