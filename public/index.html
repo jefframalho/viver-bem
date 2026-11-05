@@ -431,7 +431,7 @@ const Store = {
   },
   async loadFor(session){
     if(this.mode==="demo") return;
-    const get = async (c,q) => { const s = await (q||this.fs.collection(c)).get(); this.data[c] = s.docs.map(d=>d.data()); };
+    this.bloqueadas=[]; const get = async (c,q) => { try{ const s = await (q||this.fs.collection(c)).get(); this.data[c] = s.docs.map(d=>d.data()); }catch(e){ this.data[c]=[]; this.bloqueadas.push(c); console.warn("Sem permissão para ler",c,e.message); } };
     if(session.role==="admin") await Promise.all([...COLS.filter(c=>!["curriculos","documentos","auditoria"].includes(c)).map(c=>get(c)), get("auditoria", this.fs.collection("auditoria").orderBy("em","desc").limit(500))]);
     else if(session.role==="paciente"){ const q=(c,k,v)=>get(c,this.fs.collection(c).where(k,"==",v)); this.data.pacientes=[await this.fetchOne("pacientes",session.pacId)].filter(Boolean);
       await Promise.all([q("plantoes","pacId",session.pacId),q("consultas","pacId",session.pacId),q("medicoes","pacId",session.pacId),get("agendaTele")]); this.data.profissionais=[]; }
@@ -449,6 +449,7 @@ async function login(email, senha){
   if(!u){ const id=cred.user.uid; await Store.auth.signOut(); throw new Error("Este usuário ainda não tem acesso liberado. Peça à administração. Código do usuário (UID): "+id); }
   S = {role:u.role, profId:u.profId||null, pacId:u.pacId||null, nome:u.nome||email};
   await Store.loadFor(S);
+  if(Store.bloqueadas&&Store.bloqueadas.length) setTimeout(()=>toast("Algumas áreas não carregaram por falta de permissão no banco ("+Store.bloqueadas.join(", ")+"). Atualize as regras do Firestore no console do Firebase."),600);
 }
 async function logout(){ if(Store.mode==="firebase") await Store.auth.signOut(); S=null; saveSession(); location.hash=""; render(); }
 
@@ -2127,9 +2128,10 @@ document.addEventListener("change", e=>{
   try{
     await Store.init();
     if(Store.mode==="demo"){ try{ S=JSON.parse(sessionStorage.getItem(SS_KEY)); }catch(e){} }
-    else await new Promise(ok=>{ const off=Store.auth.onAuthStateChanged(async u=>{ off(); if(u){ const d=await Store.fetchOne("usuarios",u.uid); if(d){ S={role:d.role,profId:d.profId||null,pacId:d.pacId||null,nome:d.nome||u.email}; await Store.loadFor(S); } } ok(); }); });
+    else await new Promise(ok=>{ const off=Store.auth.onAuthStateChanged(async u=>{ off(); try{ if(u){ const d=await Store.fetchOne("usuarios",u.uid); if(d){ S={role:d.role,profId:d.profId||null,pacId:d.pacId||null,nome:d.nome||u.email}; await Store.loadFor(S); } } }catch(e){ console.error(e); S=null; try{ await Store.auth.signOut(); }catch(_){} } ok(); }); });
   }catch(err){ $("#root").innerHTML=`<p class="empty" style="padding-top:30vh">${esc(err.message)}</p>`; return; }
   render();
+  if(Store.bloqueadas&&Store.bloqueadas.length) toast("Algumas áreas não carregaram por falta de permissão no banco ("+Store.bloqueadas.join(", ")+"). Atualize as regras do Firestore no console do Firebase.");
 })();
 </script>
 
