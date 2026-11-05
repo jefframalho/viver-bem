@@ -265,9 +265,14 @@ const fmtDayW = s => new Date(s+"T12:00").toLocaleDateString("pt-BR",{weekday:"l
 const fmtDT = iso => iso ? new Date(iso).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}) : "-";
 const brl = v => (+v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const age = nasc => { if(!nasc) return ""; const d=new Date(nasc+"T12:00"), n=new Date(); let a=n.getFullYear()-d.getFullYear(); if(n<new Date(n.getFullYear(),d.getMonth(),d.getDate())) a--; return a; };
-const fmtCPF = c => { c=digits(c); return c.length===11 ? c.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,"$1.$2.$3-$4") : c; };
+const fmtCPF = c => { c=digits(c); return c.length===11 ? c.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,"$1.$2.$3-$4") : c.length===14 ? c.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,"$1.$2.$3/$4-$5") : c; };
+const docLabel = c => digits(c).length===14 ? "CNPJ" : "CPF";
 const first = n => String(n||"").split(" ")[0];
 const norm = s => String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/\s+/g," ").trim();
+function validCNPJ(c){ c=digits(c); if(!/^\d{14}$/.test(c)||/^(\d)\1+$/.test(c)) return false;
+  const dv=n=>{ let s=0,w=n-7; for(let i=0;i<n;i++){ s+=+c[i]*w--; if(w<2) w=9; } const r=s%11; return r<2?0:11-r; };
+  return dv(12)===+c[12] && dv(13)===+c[13]; }
+const validDoc = c => { c=digits(c); return c.length===11 ? validCPF(c) : c.length===14 ? validCNPJ(c) : false; };
 function validCPF(c){ c=digits(c); if(!/^\d{11}$/.test(c)||/^(\d)\1+$/.test(c)) return false;
   for(const t of [9,10]){ let s=0; for(let i=0;i<t;i++) s+=+c[i]*(t+1-i); if(((s*10)%11)%10!==+c[t]) return false; } return true; }
 function toast(t){ $(".toast")?.remove(); const d=document.createElement("div"); d.className="toast"; d.setAttribute("role","status"); d.textContent=t; document.body.appendChild(d); setTimeout(()=>d.remove(),2800); }
@@ -291,6 +296,14 @@ const UFS = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","P
 const DISPOSITIVOS = ["Sonda nasoenteral","Gastrostomia","Sonda vesical","Traqueostomia","Oxigênio","Acesso venoso","Ostomia","Curativo / lesão","Ventilação mecânica"];
 const RISCOS = ["Queda","Lesão por pressão","Broncoaspiração","Agitação / fuga","Infecção"];
 const loc = p => [p?.cidade, p?.uf].filter(Boolean).join("/");
+const ADDR = (pre="", req=true) => [
+  {k:pre+"cep",l:"CEP",im:"numeric",ph:"00000-000",h:"Digite o CEP e o endereço se preenche sozinho"},
+  {k:pre+"rua",l:"Rua / Avenida",req,full:1},
+  {k:pre+"numero",l:"Número",req,ph:"Ou S/N"},{k:pre+"complemento",l:"Complemento",ph:"Casa, apto, bloco"},
+  {k:pre+"bairro",l:"Bairro",req},{k:pre+"cidade",l:"Cidade",req},{k:pre+"uf",l:"Estado",req,t:"select",o:[["","UF"],...UFS]},
+  {k:pre+"referencia",l:"Ponto de referência",full:1,ph:"Ex.: ao lado da igreja, portão azul"}];
+const montaEnd = (o,pre="") => { const g=k=>(o[pre+k]||"").trim(); return [[g("rua"),g("numero")].filter(Boolean).join(", "),g("complemento"),g("bairro")].filter(Boolean).join(" - "); };
+const endCompleto = o => !o ? "" : [montaEnd(o)||o.endereco, loc(o), o.cep&&"CEP "+o.cep].filter(Boolean).join(", ");
 const geoOf = p => { const m=String(p?.geo||"").match(/(-?\d+(?:\.\d+)?)\s*[,; ]\s*(-?\d+(?:\.\d+)?)/); return m?[+m[1],+m[2]]:null; };
 function distM(a,b){ const R=6371000, r=x=>x*Math.PI/180; const h=Math.sin(r(b[0]-a[0])/2)**2+Math.cos(r(a[0]))*Math.cos(r(b[0]))*Math.sin(r(b[1]-a[1])/2)**2; return 2*R*Math.asin(Math.sqrt(h)); }
 const fmtDist = d => d<1000 ? Math.round(d)+" m" : (d/1000).toFixed(1).replace(".",",")+" km";
@@ -372,7 +385,7 @@ function seed(){
     {id:"pac3",exemplo:true,nome:"Raimunda Soares Pinheiro",nasc:"1959-11-25",cpf:"",sexo:"F",endereco:"Rua do Cruzeiro, 33",cidade:"Brejo Santo/CE",responsavel:"Cícera Soares (filha)",telResp:"(88) 99999-1303",cpfResp:"",tipo:"operadora",operadoraId:"op1",carteirinha:"000123456",diagnostico:"Pós-operatório de artroplastia de quadril",alergias:"",plano:"Plantão diurno de 6h: curativo diário, antibiótico EV às 8h, apoio na higiene.",status:"ativo",criado:ts(-8)},
     {id:"pac4",exemplo:true,nome:"Severino Gomes",nasc:"1938-01-09",cpf:"",sexo:"M",endereco:"Sítio Baixio",cidade:"Mauriti/CE",responsavel:"Luzia Gomes (neta)",telResp:"(88) 99999-1404",cpfResp:"",tipo:"particular",operadoraId:"",carteirinha:"",diagnostico:"Alzheimer",alergias:"",plano:"Aguardando avaliação domiciliar.",status:"avaliacao",criado:ts(-1)}
   ];
-  pac.forEach(p=>{ const [c,u]=p.cidade.split("/"); p.cidade=c; p.uf=u; });
+  pac.forEach(p=>{ const [c,u]=p.cidade.split("/"); p.cidade=c; p.uf=u; const [r,n,b]=p.endereco.split(", "); p.rua=r; p.numero=n||"S/N"; p.bairro=b||"Zona rural"; p.endereco=montaEnd(p); });
   Object.assign(pac[0],{geo:"-7.389200, -38.774500",cep:"63210-000",complexidade:"Alta",consciencia:"Confuso / desorientado",mobilidade:"Acamado",alimentacao:"Oral (dieta pastosa)",dispositivos:["Curativo / lesão"],riscos:["Lesão por pressão","Broncoaspiração","Queda"],medicamentos:"Losartana 50 mg às 8h e 20h\nAAS 100 mg após o almoço\nSinvastatina 20 mg à noite",medico:"Dr. Paulo Mendes (CRM-CE 00000)",medicoTel:"(88) 99999-9000"});
   Object.assign(pac[1],{geo:"-7.213100, -39.315100",cep:"63010-000",complexidade:"Média",consciencia:"Lúcido e orientado",mobilidade:"Deambula com ajuda",alimentacao:"Oral",dispositivos:[],riscos:["Queda"],medicamentos:"Levodopa + benserazida 100/25 mg 3x ao dia\nPramipexol 0,25 mg 2x ao dia",medico:"Dra. Helena Cruz (neurologista)",medicoTel:""});
   Object.assign(pac[2],{geo:"-7.493100, -38.985300",cep:"63260-000",complexidade:"Média",consciencia:"Lúcido e orientado",mobilidade:"Cadeira de rodas",alimentacao:"Oral",dispositivos:["Acesso venoso","Curativo / lesão"],riscos:["Queda","Infecção"],medicamentos:"Ceftriaxona 1 g EV 1x ao dia (até 14 dias)\nEnoxaparina 40 mg SC 1x ao dia\nParacetamol 750 mg se dor",medico:"Dr. Marcos Feitosa (ortopedista)",medicoTel:""});
@@ -431,6 +444,30 @@ function seed(){
 }
 
 /* =================== CONTRATOS =================== */
+function lgpdHTML(tipo, E, titulo){
+  const canal = esc(E.dpo || E.email || "o e-mail informado pela CONTRATANTE");
+  const P = (n,t) => `<p><b>§${n}º</b> ${t}</p>`;
+  const itens = tipo==="autonomo" ? [
+    "A CONTRATANTE, na condição de controladora, trata os dados pessoais do(a) CONTRATADO(A) — identificação, documentos, inscrição no conselho, endereço, dados de contato e de pagamento, imagem (selfie) e localização nos registros de chegada e saída — para o processo seletivo, a execução deste contrato, os pagamentos, o cumprimento de obrigações legais e regulatórias e a segurança dos pacientes, com base no art. 7º, incisos II, V e IX, da Lei 13.709/2018 (LGPD).",
+    "A localização é coletada somente no momento em que o(a) CONTRATADO(A) registra a chegada e a saída do atendimento, nunca de forma contínua.",
+    "No exercício das atividades, o(a) CONTRATADO(A) terá acesso a dados pessoais sensíveis de saúde de pacientes (art. 5º, II, da LGPD) e se obriga a tratá-los apenas para a prestação do cuidado e conforme as instruções da CONTRATANTE, sendo proibido copiar, fotografar, gravar, armazenar em dispositivo pessoal ou compartilhar esses dados em redes sociais, aplicativos de mensagem ou com terceiros fora dos canais oficiais.",
+    "O(A) CONTRATADO(A) manterá em sigilo seu login e senha, não permitirá que terceiros usem seu acesso ao sistema e comunicará à CONTRATANTE, em até 24 horas, qualquer incidente de segurança, como perda ou furto do celular, acesso indevido ou vazamento, para as providências do art. 48 da LGPD.",
+    "As obrigações de sigilo desta cláusula somam-se ao sigilo profissional previsto no código de ética do respectivo conselho de classe e permanecem válidas após o término deste contrato.",
+    "O(A) CONTRATADO(A) pode, a qualquer momento, exercer os direitos do art. 18 da LGPD — confirmação, acesso, correção, anonimização, portabilidade, informação sobre compartilhamento e eliminação, quando cabível — pelo canal "+canal+".",
+    "Os dados serão mantidos durante a vigência do contrato e, após o seu término, pelo prazo necessário ao cumprimento de obrigações legais, fiscais e regulatórias, sendo depois eliminados ou anonimizados.",
+    "O descumprimento desta cláusula autoriza a rescisão imediata do contrato, sem prejuízo da responsabilização por danos, nos termos dos arts. 42 a 45 da LGPD."
+  ] : [
+    "Os dados pessoais do paciente e do CONTRATANTE são tratados para avaliação, prestação dos serviços de atenção domiciliar, registro em prontuário, faturamento, cobrança e cumprimento de obrigações legais e regulatórias, nos termos da Lei 13.709/2018 (LGPD).",
+    "Os dados de saúde do paciente são dados pessoais sensíveis (art. 5º, II) e são tratados com base no art. 11, II, alíneas \"a\" (cumprimento de obrigação legal ou regulatória) e \"f\" (tutela da saúde, por profissionais e serviços de saúde) da LGPD. O acesso é restrito à equipe envolvida no cuidado, com login individual.",
+    "Os dados só serão compartilhados com os profissionais da equipe, o médico assistente, laboratórios e serviços de exame solicitados, a operadora de saúde quando o atendimento for por ela custeado e autoridades públicas quando exigido por lei. A CONTRATADA não vende dados nem os utiliza para publicidade.",
+    "Fotografias de lesões, curativos ou dispositivos serão feitas apenas para acompanhamento clínico e anexadas ao prontuário. O uso da imagem do paciente ou da família em divulgação depende de autorização específica e por escrito.",
+    "A CONTRATADA adota medidas técnicas e administrativas de segurança, registra os acessos ao sistema e comunicará à Autoridade Nacional de Proteção de Dados (ANPD) e aos titulares qualquer incidente que possa gerar risco ou dano relevante, conforme o art. 48 da LGPD.",
+    "O prontuário do paciente será guardado pelo prazo mínimo de 20 anos a partir do último registro, conforme a Lei 13.787/2018, e os demais dados pelo tempo necessário ao cumprimento de obrigações legais e fiscais.",
+    "O paciente, ou seu responsável legal, pode exercer os direitos do art. 18 da LGPD — confirmação, acesso, correção, anonimização, portabilidade, informação sobre compartilhamento e revogação do consentimento, quando aplicável — pelo canal "+canal+".",
+    "O CONTRATANTE declara ter legitimidade para fornecer os dados do paciente e se compromete a manter as informações atualizadas."
+  ];
+  return `<h4>${titulo}</h4>`+itens.map((t,i)=>P(i+1,t)).join("");
+}
 function makeContrato(tipo, d, cfg, id){
   const E = cfg || Store.cfg();
   const emp = `<b>${esc(E.nome||"Viver Bem Atendimento Domiciliar")}</b>, inscrita no CNPJ ${esc(E.cnpj||"__.___.___/____-__")}, com sede em ${esc(E.endereco||"________________")}${E.cidade?", "+esc(E.cidade):""}`;
@@ -440,26 +477,26 @@ function makeContrato(tipo, d, cfg, id){
     titulo = "Prestação de serviço autônomo · "+d.nome;
     html = `<p><b>CONTRATO DE PRESTAÇÃO DE SERVIÇOS AUTÔNOMOS</b></p>
     <p><b>CONTRATANTE:</b> ${emp}.</p>
-    <p><b>CONTRATADO(A):</b> ${esc(d.nome)}, CPF ${esc(fmtCPF(d.cpf))}, ${esc(d.funcao)}${d.registro?", registro "+esc(d.registro):""}, residente em ${esc(d.cidade)}.</p>
+    <p><b>CONTRATADO(A):</b> ${esc(d.nome)}, inscrito(a) no ${docLabel(d.cpf)} ${esc(fmtCPF(d.cpf))}, ${esc(d.funcao)}${d.registro?", inscrição "+esc(d.registro):""}, ${digits(d.cpf).length===14?"com sede em":"residente em"} ${esc(d.endereco||d.cidade)}.</p>
     <h4>Cláusula 1 – Objeto</h4><p>Prestação de serviços de ${esc(String(d.funcao).toLowerCase())} em atendimento domiciliar a pacientes indicados pela CONTRATANTE, nos plantões e horários que o(a) CONTRATADO(A) aceitar previamente.</p>
     <h4>Cláusula 2 – Autonomia</h4><p>O(A) CONTRATADO(A) atua com autonomia, sem exclusividade e sem vínculo empregatício, nos termos do art. 442-B da CLT, podendo recusar plantões e prestar serviços a terceiros.</p>
     <h4>Cláusula 3 – Remuneração</h4><p>Os valores por hora ou plantão seguem a tabela vigente informada no aceite de cada escala. O pagamento será feito até o dia ${esc(E.diaPagamento||"10")} do mês seguinte aos plantões realizados, mediante RPA ou nota fiscal.</p>
     <h4>Cláusula 4 – Obrigações do(a) contratado(a)</h4><p>Manter registro profissional ativo quando exigido; seguir os protocolos técnicos da CONTRATANTE e a RDC 11/2006 da Anvisa; registrar no aplicativo a chegada e a saída de cada atendimento, com horário e localização, e a evolução do paciente ao fim de cada plantão; comunicar intercorrências imediatamente; avisar com no mínimo 24 horas de antecedência qualquer impedimento em plantão aceito.</p>
-    <h4>Cláusula 5 – Sigilo e proteção de dados</h4><p>O(A) CONTRATADO(A) manterá sigilo sobre informações de pacientes e familiares e tratará dados pessoais e de saúde conforme a Lei 13.709/2018 (LGPD), inclusive após o fim deste contrato.</p>
+    ${lgpdHTML("autonomo",E,"Cláusula 5 – Proteção de dados pessoais (LGPD)")}
     <h4>Cláusula 6 – Vigência e rescisão</h4><p>Prazo indeterminado, podendo ser encerrado por qualquer das partes com aviso prévio de 7 dias, sem multa, respeitados os plantões já aceitos.</p>
     <h4>Cláusula 7 – Foro</h4><p>Fica eleito o foro da comarca de ${foro}.</p>`;
   } else {
     titulo = "Atenção domiciliar · "+d.pacNome;
     html = `<p><b>CONTRATO DE PRESTAÇÃO DE SERVIÇOS DE ATENÇÃO DOMICILIAR</b></p>
     <p><b>CONTRATADA:</b> ${emp}.</p>
-    <p><b>CONTRATANTE (responsável):</b> ${esc(d.respNome)}, CPF ${esc(fmtCPF(d.respCpf))}, residente em ${esc(d.respEnd)}.</p>
+    <p><b>CONTRATANTE (responsável):</b> ${esc(d.respNome)}, inscrito(a) no ${docLabel(d.respCpf)} ${esc(fmtCPF(d.respCpf))}, ${digits(d.respCpf).length===14?"com sede em":"residente em"} ${esc(d.respEnd)}.</p>
     <p><b>PACIENTE:</b> ${esc(d.pacNome)}.</p>
     <h4>Cláusula 1 – Serviços</h4><p>${esc(d.servicos)}</p><p>Materiais e medicamentos: ${esc(d.materiais||"não inclusos, fornecidos pela família")}.</p><p>A presença dos profissionais é registrada no sistema da CONTRATADA com horário e localização de chegada e saída. O relatório fica disponível ao CONTRATANTE quando solicitado.</p>
     <h4>Cláusula 2 – Valores e pagamento</h4><p>${esc(d.valor)}. Vencimento todo dia ${esc(d.venc)} de cada mês. Atrasos acima de 15 dias permitem a suspensão do atendimento, com aviso prévio à família.</p>
     <h4>Cláusula 3 – Obrigações da contratada</h4><p>Disponibilizar profissionais habilitados, com registro ativo no conselho quando exigido; manter supervisão de enfermagem e registro diário da evolução do paciente; repor o profissional em caso de falta; seguir a RDC 11/2006 da Anvisa.</p>
     <h4>Cláusula 4 – Obrigações do contratante</h4><p>Garantir acesso ao domicílio e condições adequadas de trabalho; informar mudanças no quadro do paciente ou na prescrição médica; fornecer os materiais e medicamentos não incluídos no pacote; não contratar diretamente os profissionais indicados pela CONTRATADA durante este contrato e por 6 meses após o seu fim.</p>
     <h4>Cláusula 5 – Urgências</h4><p>A atenção domiciliar não substitui o atendimento de emergência. Em urgência, a equipe aciona o SAMU (192) e avisa a família imediatamente.</p>
-    <h4>Cláusula 6 – Dados de saúde</h4><p>O CONTRATANTE autoriza o tratamento dos dados de saúde do paciente para a execução dos serviços, conforme a Lei 13.709/2018 (LGPD). O acesso fica restrito à equipe envolvida no cuidado.</p>
+    ${lgpdHTML("paciente",E,"Cláusula 6 – Proteção de dados pessoais e dados de saúde (LGPD)")}
     <h4>Cláusula 7 – Vigência e rescisão</h4><p>Prazo indeterminado, podendo ser encerrado por qualquer das partes com aviso prévio de 15 dias.</p>
     <h4>Cláusula 8 – Foro</h4><p>Fica eleito o foro da comarca de ${foro}.</p>`;
   }
@@ -471,6 +508,7 @@ function makeContrato(tipo, d, cfg, id){
     const fill=t=>esc(t).replace(/\{\{\s*([a-z_]+)\s*\}\}/g,(m,k)=>vars[k]!=null&&vars[k]!==""?`<b>${esc(vars[k])}</b>`:m);
     const lines=modelo.replace(/\r/g,"").split("\n"); let first=true;
     html = lines.map(l=>{ const t=l.trim(); if(!t) return ""; if(first){ first=false; return `<p><b>${fill(t)}</b></p>`; } return /^(CL[ÁA]USULA|PAR[ÁA]GRAFO)/i.test(t)?`<h4>${fill(t)}</h4>`:`<p>${fill(t)}</p>`; }).join("");
+    if(!/13\.709/.test(modelo)) html += lgpdHTML(tipo, E, "Anexo – Proteção de dados pessoais (LGPD)");
   }
   return {id:id||uid("ct-"),tipo,refId:d.refId,titulo,html,dados:d,status:"pendente",assinatura:null,exemplo:!!d.exemplo,criado:new Date().toISOString()};
 }
@@ -676,10 +714,10 @@ function shiftRow(p){
 }
 /* =================== PACIENTES =================== */
 const PAC_SECTIONS = () => [
-  ["Identificação",[{k:"nome",l:"Nome do paciente",req:1,full:1},{k:"nasc",l:"Data de nascimento",t:"date"},{k:"sexo",l:"Sexo",t:"select",o:[["",""],["F","Feminino"],["M","Masculino"]]},{k:"cpf",l:"CPF",im:"numeric"},{k:"status",l:"Situação",t:"select",o:[["avaliacao","Em avaliação"],["ativo","Ativo"],["alta","Alta"]]}]],
-  ["Endereço do atendimento",[{k:"cep",l:"CEP",im:"numeric",ph:"00000-000"},{k:"endereco",l:"Rua, número e bairro",req:1,full:1},{k:"cidade",l:"Cidade",req:1},{k:"uf",l:"Estado",req:1,t:"select",o:[["","UF"],...UFS]},
+  ["Identificação",[{k:"nome",l:"Nome do paciente",req:1,full:1},{k:"nasc",l:"Data de nascimento",t:"date"},{k:"sexo",l:"Sexo",t:"select",o:[["",""],["F","Feminino"],["M","Masculino"]]},{k:"cpf",l:"CPF ou CNPJ",im:"numeric",ph:"CPF ou CNPJ"},{k:"status",l:"Situação",t:"select",o:[["avaliacao","Em avaliação"],["ativo","Ativo"],["alta","Alta"]]}]],
+  ["Endereço do atendimento",[...ADDR("",true),
     {k:"geo",l:"Localização da casa",full:1,h:"Latitude e longitude. Serve para conferir a chegada dos profissionais. Pode ser preenchida pela primeira chegada.",ph:"-7.389200, -38.774500"}]],
-  ["Responsável e convênio",[{k:"responsavel",l:"Responsável / familiar",req:1},{k:"telResp",l:"WhatsApp do responsável",req:1,im:"tel"},{k:"cpfResp",l:"CPF do responsável",im:"numeric"},
+  ["Responsável e convênio",[{k:"responsavel",l:"Responsável / familiar",req:1},{k:"telResp",l:"WhatsApp do responsável",req:1,im:"tel"},{k:"cpfResp",l:"CPF ou CNPJ do responsável",im:"numeric",ph:"CPF ou CNPJ"},
     {k:"tipo",l:"Atendimento",t:"select",o:[["particular","Particular"],["operadora","Operadora de saúde"]]},{k:"operadoraId",l:"Operadora",t:"select",o:[["","Não se aplica"],...Store.all("operadoras").map(o=>[o.id,o.nome])]},{k:"carteirinha",l:"Nº da carteirinha"}]],
   ["Estado clínico",[{k:"diagnostico",l:"Diagnóstico / condição principal",full:1},
     {k:"complexidade",l:"Complexidade (NEAD)",t:"select",o:[["","Não avaliada"],"Baixa","Média","Alta"]},
@@ -745,13 +783,10 @@ function evoBlock(x){
   return `<div class="evo"><div class="small muted">${fmtDay(x.data)} · ${x.inicio} – ${fim(x)} · ${esc(proName(e.por||x.profId))}${x.chegada?` · presença ${hhmm(x.chegada.em)}${x.saida?"–"+hhmm(x.saida.em):""}`:""}</div>${v.length?`<div class="vitals">${v.map(s=>`<span>${esc(s)}</span>`).join("")}</div>`:""}<p>${esc(e.texto)}</p></div>`;
 }
 function formPaciente(id){
-  const p=id?Store.get("pacientes",id):{tipo:"particular",status:"avaliacao"};
-  const b=modal(id?"Editar paciente":"Novo paciente", PAC_SECTIONS().map(([t,sp])=>`<h3 style="margin-top:6px;color:var(--copper)">${t}</h3>${fields(sp,p)}`).join("")
+  const p=id?{...Store.get("pacientes",id)}:{tipo:"particular",status:"avaliacao"};
+  if(!p.rua&&p.endereco) p.rua=p.endereco;
+  modal(id?"Editar paciente":"Novo paciente", PAC_SECTIONS().map(([t,sp])=>`<h3 style="margin-top:6px;color:var(--copper)">${t}</h3>${fields(sp,p)}`).join("")
     +`<div class="actions"><button class="btn btn-primary" data-act="savePaciente" data-id="${id||""}">Salvar</button>${id?`<button class="btn btn-danger" data-act="delPaciente" data-id="${id}">Excluir</button>`:""}</div>`,{wide:1});
-  const cep=$("#f_cep",b); if(cep) cep.onblur=async()=>{ const d=digits(cep.value); if(d.length!==8) return;
-    try{ const r=await (await fetch(`https://viacep.com.br/ws/${d}/json/`)).json(); if(r.erro) return;
-      if(!$("#f_endereco",b).value) $("#f_endereco",b).value=[r.logradouro,r.bairro].filter(Boolean).join(", ");
-      $("#f_cidade",b).value=r.localidade; $("#f_uf",b).value=r.uf; }catch(e){} };
 }
 /* =================== ESCALA =================== */
 let esc_ini=null, escPac="", escPro="";
@@ -844,9 +879,9 @@ function readEvo(){ const txt=$("#ev_txt")?.value.trim()||""; if(txt.length<10) 
   return {texto:txt,pa:$("#ev_pa").value.trim(),fc:$("#ev_fc").value.trim(),temp:$("#ev_temp").value.trim(),sat:$("#ev_sat").value.trim(),glic:$("#ev_glic").value.trim(),em:new Date().toISOString()}; }
 /* =================== PROFISSIONAIS =================== */
 const PRO_SPEC = () => [
-  {k:"nome",l:"Nome completo",req:1,full:1},{k:"cpf",l:"CPF",im:"numeric"},{k:"funcao",l:"Função",req:1,t:"select",o:[["","Selecione"],...Object.keys(FUNCOES)]},
+  {k:"nome",l:"Nome completo ou razão social",req:1,full:1},{k:"cpf",l:"CPF ou CNPJ",im:"numeric",ph:"CPF ou CNPJ",h:"CNPJ se atua como pessoa jurídica (MEI, clínica)"},{k:"funcao",l:"Função",req:1,t:"select",o:[["","Selecione"],...Object.keys(FUNCOES)]},
   {k:"registro",l:"Registro no conselho",ph:"COREN-UF 000000"},{k:"tel",l:"WhatsApp",req:1,im:"tel"},{k:"email",l:"E-mail",t:"email"},
-  {k:"cidade",l:"Cidade/UF"},{k:"areas",l:"Cidades que atende"},{k:"status",l:"Situação",t:"select",o:[["ativo","Ativo"],["inativo","Inativo"]]},
+  ...ADDR("",false),{k:"areas",l:"Cidades que atende",full:1},{k:"status",l:"Situação",t:"select",o:[["ativo","Ativo"],["inativo","Inativo"]]},
   {k:"pix",l:"Chave Pix para pagamento"},{k:"disp",l:"Disponibilidade",t:"checks",o:DISPON,full:1}
 ];
 let proBusca="";
@@ -873,7 +908,7 @@ function pgProfissional(id){
     <div class="actions"><button class="btn btn-line" data-act="editProf" data-id="${id}">Editar</button><button class="btn btn-line" data-act="acessoProf" data-id="${id}">${p.acesso?"Acesso ao app":"Criar acesso ao app"}</button><a class="btn btn-line" target="_blank" rel="noopener" href="${wa(p.tel)}">${ICON.wa}WhatsApp</a></div></div>
   <div class="kpis"><div class="kpi"><b>${mesPl.length}</b><span>Plantões realizados no mês</span></div><div class="kpi"><b>${brl(aPagar)}</b><span>A pagar</span></div><div class="kpi"><b>${faltas}</b><span>Faltas registradas</span></div></div>
   <div class="grid2">
-    <section class="card"><h2>Dados</h2><dl class="kv"><dt>WhatsApp</dt><dd>${esc(p.tel)}</dd><dt>E-mail</dt><dd>${esc(p.email||"-")}</dd><dt>CPF</dt><dd>${esc(fmtCPF(p.cpf)||"-")}</dd><dt>Atende em</dt><dd>${esc(p.areas||p.cidade||"-")}</dd><dt>Disponibilidade</dt><dd>${esc((p.disp||[]).join(", ")||"-")}</dd><dt>Pix</dt><dd>${esc(p.pix||"-")}</dd><dt>Documentos</dt><dd>${p.candId&&Store.get("candidatos",p.candId)?`<button class="btn btn-sm btn-line" data-act="verDocs" data-id="${p.candId}">Ver documentos</button>`:"Cadastrado sem candidatura"}</dd><dt>Acesso ao app</dt><dd>${p.acesso?esc(p.acesso):"Ainda não criado"}</dd><dt>Contrato</dt><dd>${ct?`<span class="pill ${ct.status==="assinado"?"p-ok":"p-warn"}">${ct.status==="assinado"?"Assinado":"Pendente"}</span>`:'<button class="btn btn-sm btn-line" data-act="ctProf" data-id="'+id+'">Gerar contrato de autônomo</button>'}</dd></dl></section>
+    <section class="card"><h2>Dados</h2><dl class="kv"><dt>WhatsApp</dt><dd>${esc(p.tel)}</dd><dt>E-mail</dt><dd>${esc(p.email||"-")}</dd><dt>CPF/CNPJ</dt><dd>${esc(fmtCPF(p.cpf)||"-")}</dd><dt>Endereço</dt><dd>${esc(endCompleto(p)||"-")}</dd><dt>Atende em</dt><dd>${esc(p.areas||p.cidade||"-")}</dd><dt>Disponibilidade</dt><dd>${esc((p.disp||[]).join(", ")||"-")}</dd><dt>Pix</dt><dd>${esc(p.pix||"-")}</dd><dt>Documentos</dt><dd>${p.candId&&Store.get("candidatos",p.candId)?`<button class="btn btn-sm btn-line" data-act="verDocs" data-id="${p.candId}">Ver documentos</button>`:"Cadastrado sem candidatura"}</dd><dt>Acesso ao app</dt><dd>${p.acesso?esc(p.acesso):"Ainda não criado"}</dd><dt>Contrato</dt><dd>${ct?`<span class="pill ${ct.status==="assinado"?"p-ok":"p-warn"}">${ct.status==="assinado"?"Assinado":"Pendente"}</span>`:'<button class="btn btn-sm btn-line" data-act="ctProf" data-id="'+id+'">Gerar contrato de autônomo</button>'}</dd></dl></section>
     <section class="card"><h2>Próximos plantões</h2>${prox.length?`<div class="day">${prox.map(x=>shiftRow(x).replace('<span class="t">',`<span class="t"><small>${fmtDay(x.data).slice(0,5)}</small>`)).join("")}</div>`:`<p class="empty">Nenhum plantão agendado.</p>`}</section>
   </div>`;
 }
@@ -915,7 +950,7 @@ function pgCandidato(id){
   ${jaPro?`<p class="note">Já faz parte da equipe. <a href="#profissional-${jaPro.id}">Abrir cadastro do profissional</a></p>`:""}
   <div class="grid2">
     <section class="card"><h2>Dados do candidato</h2><dl class="kv">
-      <dt>CPF</dt><dd>${esc(fmtCPF(c.cpf))}</dd><dt>Nascimento</dt><dd>${fmtDay(c.nasc)} (${age(c.nasc)} anos)</dd><dt>WhatsApp</dt><dd>${esc(c.tel)}</dd><dt>E-mail</dt><dd>${esc(c.email)}</dd><dt>Cidade</dt><dd>${esc(c.cidade)}</dd>
+      <dt>${docLabel(c.cpf)}</dt><dd>${esc(fmtCPF(c.cpf))}</dd><dt>Nascimento</dt><dd>${fmtDay(c.nasc)} (${age(c.nasc)} anos)</dd><dt>WhatsApp</dt><dd>${esc(c.tel)}</dd><dt>E-mail</dt><dd>${esc(c.email)}</dd><dt>Endereço</dt><dd>${esc(endCompleto(c)||c.cidade||"-")}</dd>
       <dt>Registro</dt><dd>${esc(c.registro||"Não se aplica")}</dd><dt>Experiência</dt><dd>${esc(c.anos||0)} anos · ${esc((c.exp||[]).join(", ")||"-")}</dd>
       <dt>Disponibilidade</dt><dd>${esc((c.disp||[]).join(", "))}</dd><dt>Atende em</dt><dd>${esc(c.areas||"-")}</dd>
 <dt>Resumo</dt><dd>${esc(c.resumo||"-")}</dd><dt>Aceites</dt><dd>${c.aceites?fmtDT(c.aceites):"-"}</dd></dl></section>
@@ -944,7 +979,7 @@ function pgContratos(){
 }
 function verContrato(id){
   const c=Store.get("contratos",id); if(!c) return;
-  modal(c.titulo, `<div class="contract">${c.html}${c.assinatura?`<hr><p><b>Assinado eletronicamente</b> por ${esc(c.assinatura.nome)}, CPF ${esc(fmtCPF(c.assinatura.cpf))}, em ${fmtDT(c.assinatura.em)}.<br>Código de verificação: <b>${esc(c.assinatura.hash)}</b></p>`:""}</div>
+  modal(c.titulo, `<div class="contract">${c.html}${c.assinatura?`<hr><p><b>Assinado eletronicamente</b> por ${esc(c.assinatura.nome)}, ${docLabel(c.assinatura.cpf)} ${esc(fmtCPF(c.assinatura.cpf))}, em ${fmtDT(c.assinatura.em)}.<br>Código de verificação: <b>${esc(c.assinatura.hash)}</b></p>`:""}</div>
     <div class="actions">${c.status!=="assinado"?`<button class="btn btn-primary" data-act="copy" data-v="${esc(contratoLink(c))}">${ICON.link}Copiar link de assinatura</button>`:""}${c.status!=="assinado"?`<button class="btn btn-danger" data-act="delContrato" data-id="${c.id}">Excluir</button>`:""}</div>`,{wide:1,nofocus:1});
 }
 
@@ -1006,7 +1041,7 @@ function pgFinanceiro(){
 function pgConfig(){
   const c=Store.cfg(), tb=c.tabela||{};
   return `<div class="pagehead"><div><h1>Configurações</h1><p class="sub">Dados da empresa usados nos contratos, nos links públicos e na escala</p></div></div>
-  <section class="card"><h2>Dados da empresa</h2>${fields([{k:"nome",l:"Razão social / nome",full:1},{k:"cnpj",l:"CNPJ"},{k:"cidade",l:"Cidade/UF (foro dos contratos)"},{k:"endereco",l:"Endereço",full:1},{k:"whatsapp",l:"WhatsApp da empresa",im:"tel"},{k:"email",l:"E-mail",t:"email"},{k:"instagram",l:"Instagram",ph:"@viverbem"},{k:"diaPagamento",l:"Dia de pagamento dos profissionais",t:"number"}],c)}</section>
+  <section class="card"><h2>Dados da empresa</h2>${fields([{k:"nome",l:"Razão social / nome",full:1},{k:"cnpj",l:"CNPJ"},...ADDR("e_",false).filter(f=>f.k!=="e_referencia"),{k:"dpo",l:"Encarregado de dados (LGPD)",full:1,ph:"Nome e e-mail",h:"Pessoa que responde pedidos sobre dados pessoais. Aparece nos contratos."},{k:"whatsapp",l:"WhatsApp da empresa",im:"tel"},{k:"email",l:"E-mail",t:"email"},{k:"instagram",l:"Instagram",ph:"@viverbem"},{k:"diaPagamento",l:"Dia de pagamento dos profissionais",t:"number"}],c)}</section>
   <section class="card"><h2>Modelos de contrato</h2><p class="small muted" style="margin:-4px 0 12px">Cole aqui o contrato da Viver Bem. Em branco, o sistema usa o modelo padrão. Use as marcações abaixo para o sistema preencher sozinho. Linhas que começam com "CLÁUSULA" viram títulos.</p>
     <label class="f">Contrato do profissional autônomo<small>{{empresa}} {{cnpj}} {{endereco_empresa}} {{cidade_empresa}} {{nome}} {{cpf}} {{funcao}} {{registro}} {{cidade}} {{data}} {{dia_pagamento}}</small><textarea id="f_modeloAutonomo" rows="10">${esc(c.modeloAutonomo||"")}</textarea></label>
     <label class="f" style="margin-top:12px">Contrato do paciente<small>{{empresa}} {{cnpj}} {{endereco_empresa}} {{cidade_empresa}} {{responsavel}} {{cpf_responsavel}} {{endereco_responsavel}} {{paciente}} {{servicos}} {{valor}} {{vencimento}} {{materiais}} {{data}}</small><textarea id="f_modeloPaciente" rows="10">${esc(c.modeloPaciente||"")}</textarea></label>
@@ -1077,19 +1112,19 @@ function pgPonto(){
 }
 /* =================== PÚBLICO: TRABALHE CONOSCO =================== */
 let wz={step:1,d:{exp:[],disp:[]}};
-const W1=[{k:"nome",l:"Nome completo",req:1,full:1,ac:"name"},{k:"cpf",l:"CPF",req:1,im:"numeric",ph:"000.000.000-00"},{k:"nasc",l:"Data de nascimento",req:1,t:"date"},{k:"tel",l:"WhatsApp",req:1,im:"tel",ph:"(00) 00000-0000"},{k:"email",l:"E-mail",req:1,t:"email"},{k:"cidade",l:"Cidade onde mora",req:1,full:1,ph:"Cidade/UF"}];
+const W1=[{k:"nome",l:"Nome completo",req:1,full:1,ac:"name"},{k:"cpf",l:"CPF ou CNPJ",req:1,im:"numeric",ph:"CPF ou CNPJ",h:"CNPJ se você atende como pessoa jurídica (MEI)"},{k:"nasc",l:"Data de nascimento",req:1,t:"date"},{k:"tel",l:"WhatsApp",req:1,im:"tel",ph:"(00) 00000-0000"},{k:"email",l:"E-mail",req:1,t:"email"},...ADDR("",true)];
 const W2=()=>[{k:"funcao",l:"Função",req:1,t:"select",o:[["","Selecione"],...Object.keys(FUNCOES)]},{k:"anos",l:"Anos de experiência",t:"number"},{k:"registro",l:"Número de inscrição no conselho",req:1,full:1,h:"Conselho, UF e número. Ex.: COREN-CE 123456",ph:"COREN-UF 000000"},{k:"exp",l:"Experiência com",t:"checks",o:EXPERIENCIAS,full:1},{k:"disp",l:"Disponibilidade",t:"checks",o:DISPON,full:1,req:1},{k:"areas",l:"Cidades onde pode atender",full:1}];
 function pgTrabalhe(){
   const s=wz.step, d=wz.d;
   if(s===5) return `<div class="okbox"><h2>Candidatura enviada</h2><p>Guarde seu protocolo. Com ele e seu CPF você acompanha o processo seletivo.</p><p class="code">${esc(wz.done)}</p><div class="actions"><a class="btn btn-primary" href="#acompanhar">Acompanhar candidatura</a></div></div>`;
   const bar=`<div class="wbar">${[1,2,3,4].map(i=>`<i class="${i<=s?"on":""}"></i>`).join("")}</div>`;
   let body="";
-  if(s===1) body=`<h2>Seus dados</h2>${fields(W1,d)}`;
+  if(s===1) body=`<h2>Seus dados</h2>${fields(W1.slice(0,5),d)}<h3 style="margin-top:6px">Endereço</h3>${fields(W1.slice(5),d)}`;
   if(s===2) body=`<h2>Sua atuação</h2>${fields(W2(),d)}`;
   if(s===3) body=`<h2>Documentos</h2><p class="small muted">Todos são obrigatórios. Pelo celular, toque em cada item para tirar a foto na hora ou escolher da galeria.</p><div class="docgrid">${DOCS.map(docSlot).join("")}</div>`;
   if(s===4) body=`<h2>Termos</h2>
     <label class="consent"><input type="checkbox" id="a1"><span>Declaro que as informações e documentos enviados são verdadeiros.</span></label>
-    <label class="consent"><input type="checkbox" id="a2"><span>Autorizo a Viver Bem a guardar e usar meus dados para o processo seletivo, conforme a LGPD (Lei 13.709/2018). Posso pedir a exclusão a qualquer momento.</span></label>
+    <label class="consent"><input type="checkbox" id="a2"><span>Autorizo a Viver Bem a tratar meus dados pessoais, documentos e imagem (selfie) para o processo seletivo e, se aprovado(a), para a contratação, conforme a LGPD (Lei 13.709/2018). Sei que posso pedir acesso, correção ou exclusão dos meus dados a qualquer momento.</span></label>
     <label class="consent"><input type="checkbox" id="a3"><span>Estou ciente de que, se aprovado(a), atuarei como prestador(a) de serviço autônomo, mediante assinatura de contrato.</span></label>`;
   return `<div><p class="small muted">Trabalhe conosco</p><h1>Faça parte da equipe Viver Bem</h1><p class="muted" style="margin-top:6px">Cadastro, processo seletivo e contrato, tudo por aqui. Leva uns 5 minutos.</p></div>
   <form id="fWz" class="card" style="display:flex;flex-direction:column;gap:14px" novalidate>${bar}<p class="small muted">Etapa ${s} de 4</p>${body}<p class="err" hidden></p>
@@ -1099,7 +1134,7 @@ function pgTrabalhe(){
 function wzRead(){ const d=wz.d; if(wz.step===1) Object.assign(d,readFields(W1)); if(wz.step===2) Object.assign(d,readFields(W2())); if(wz.step===3) d.resumo=$("#f_resumo")?.value.trim()||""; }
 function wzCheck(){
   const d=wz.d, s=wz.step;
-  if(s===1){ const m=missing(W1,d); if(m) return m; if(d.nome.split(" ").filter(Boolean).length<2) return "Informe seu nome completo."; if(!validCPF(d.cpf)) return "CPF inválido. Confira os 11 números."; d.cpf=digits(d.cpf); if(digits(d.tel).length<10) return "Informe o WhatsApp com DDD."; if(!/.+@.+\..+/.test(d.email)) return "Informe um e-mail válido."; }
+  if(s===1){ const m=missing(W1,d); if(m) return m; if(d.nome.split(" ").filter(Boolean).length<2) return "Informe seu nome completo."; if(!validDoc(d.cpf)) return "CPF ou CNPJ inválido. Confira os números."; d.cpf=digits(d.cpf); if(digits(d.tel).length<10) return "Informe o WhatsApp com DDD."; if(!/.+@.+\..+/.test(d.email)) return "Informe um e-mail válido."; }
   if(s===2){ const m=missing(W2(),d); if(m) return m; if(!/\d{3,}/.test(d.registro)) return `Informe o número de inscrição no ${FUNCOES[d.funcao]||"conselho"}.`; }
   if(s===3){ const f=DOCS.find(([k])=>!(d.docs||{})[k]); if(f) return `Envie: ${f[1]}.`; }
   return "";
@@ -1130,7 +1165,7 @@ function prepFile(file){
 let acomp=null, acompDocs={data:{},meta:{}};
 function pgAcompanhar(){
   if(!acomp) return `<div><h1>Acompanhar candidatura</h1><p class="muted" style="margin-top:6px">Informe o CPF e o protocolo que você recebeu ao se cadastrar.</p></div>
-    <form id="fAc" class="card" style="display:flex;flex-direction:column;gap:12px" novalidate>${fields([{k:"cpf",l:"CPF",im:"numeric"},{k:"proto",l:"Protocolo",ph:"VB-XXXXXX"}])}<p class="err" hidden></p><div class="actions"><button class="btn btn-primary">Consultar</button></div>
+    <form id="fAc" class="card" style="display:flex;flex-direction:column;gap:12px" novalidate>${fields([{k:"cpf",l:"CPF ou CNPJ",im:"numeric"},{k:"proto",l:"Protocolo",ph:"VB-XXXXXX"}])}<p class="err" hidden></p><div class="actions"><button class="btn btn-primary">Consultar</button></div>
     ${Store.mode==="demo"?`<p class="small muted">Teste com o CPF 390.533.447-05 e o protocolo VB-EX03C (candidata de exemplo aprovada).</p>`:""}</form>`;
   const {c,ct}=acomp, s=(c.status==="aprovado"&&ct?.status==="assinado")?"contrato":c.status, idx=CAND_ST.findIndex(x=>x[0]===s);
   const msg={recebido:"Recebemos seu cadastro. Em breve nossa equipe analisa seu perfil.",analise:"Seu perfil está em análise.",entrevista:"Vamos entrar em contato pelo WhatsApp para agendar a entrevista.",aprovado:"Parabéns, você foi aprovado(a)! Leia e assine seu contrato.",contrato:"Contrato assinado. Em breve você recebe seus primeiros plantões.",reprovado:"Agradecemos seu interesse. Seu cadastro fica no nosso banco de talentos."}[s];
@@ -1150,7 +1185,7 @@ async function pgAssinar(id){
   return `<div><h1>Assinatura de contrato</h1><p class="muted" style="margin-top:6px">Leia o contrato até o fim. Para assinar, digite seu nome completo e CPF.</p></div>
   <div class="contract" tabindex="0">${c.html}</div>
   <form id="fSign" class="card" style="display:flex;flex-direction:column;gap:12px" novalidate>
-    ${fields([{k:"sNome",l:"Nome completo",ac:"name"},{k:"sCpf",l:"CPF",im:"numeric"}])}
+    ${fields([{k:"sNome",l:"Nome completo",ac:"name"},{k:"sCpf",l:"CPF ou CNPJ",im:"numeric"}])}
     <label class="consent"><input type="checkbox" id="sOk"><span>Li o contrato e concordo com todas as cláusulas. Reconheço esta assinatura eletrônica como válida (MP 2.200-2/2001, art. 10, §2º).</span></label>
     <p class="err" hidden></p><button class="btn btn-copper">Assinar contrato</button></form>`;
 }
@@ -1209,8 +1244,8 @@ function bindPublic(r){
   if(r==="assinar"){ const f=$("#fSign"); if(f) f.onsubmit=async e=>{ e.preventDefault(); const c=window._ct, nome=$("#f_sNome").value.trim(), cpf=digits($("#f_sCpf").value);
     const espNome=c.tipo==="autonomo"?c.dados.nome:c.dados.respNome, espCpf=digits(c.tipo==="autonomo"?c.dados.cpf:c.dados.respCpf);
     if(norm(nome)!==norm(espNome)) return showErr(f,`O nome precisa ser igual ao do contrato: ${espNome}.`);
-    if(espCpf && cpf!==espCpf) return showErr(f,"O CPF não confere com o do contrato.");
-    if(!validCPF(cpf)) return showErr(f,"CPF inválido.");
+    if(espCpf && cpf!==espCpf) return showErr(f,`O ${docLabel(espCpf)} não confere com o do contrato.`);
+    if(!validDoc(cpf)) return showErr(f,"CPF ou CNPJ inválido.");
     if(!$("#sOk").checked) return showErr(f,"Marque que leu e concorda com o contrato.");
     const em=new Date().toISOString();
     c.status="assinado"; c.assinatura={nome,cpf,em,hash:await sha(c.id+cpf+em+c.html.length),disp:navigator.userAgent.slice(0,140)};
@@ -1242,6 +1277,8 @@ const ACT = {
   novoPaciente(){ formPaciente(); }, editPaciente(id){ formPaciente(id); },
   async savePaciente(id){ const b=$(".modal-b"), spec=PAC_SPEC(), v=readFields(spec,b), m=missing(spec,v); if(m) return showErr(b,m);
     if(v.tipo==="operadora"&&!v.operadoraId) return showErr(b,"Escolha a operadora do paciente.");
+    if(v.cpf&&!validDoc(v.cpf)) return showErr(b,"CPF ou CNPJ do paciente inválido."); if(v.cpfResp&&!validDoc(v.cpfResp)) return showErr(b,"CPF ou CNPJ do responsável inválido.");
+    v.cpf=digits(v.cpf); v.cpfResp=digits(v.cpfResp); v.endereco=montaEnd(v);
     if(v.geo&&!geoOf(v)) return showErr(b,"Localização inválida. Use o formato latitude, longitude (ex.: -7.3892, -38.7745) ou deixe em branco.");
     const p=id?{...Store.get("pacientes",id),...v}:{id:uid("pac"),...v}; await Store.put("pacientes",p); closeModal(); toast("Paciente salvo"); location.hash="paciente-"+p.id; render(); },
   async delPaciente(id,b){ if(b.dataset.ok!=="1"){ b.dataset.ok="1"; b.textContent="Confirmar exclusão"; return; } if(Store.all("plantoes").some(p=>p.pacId===id)) return showErr($(".modal-b"),"Este paciente tem plantões registrados. Marque como Alta em vez de excluir."); await Store.del("pacientes",id); closeModal(); location.hash="pacientes"; toast("Paciente excluído"); },
@@ -1280,7 +1317,8 @@ const ACT = {
     modal("Novo contrato de paciente", `<label class="f">Paciente<select id="ctPac">${l.map(p=>`<option value="${p.id}">${esc(p.nome)}</option>`).join("")}</select></label><div class="actions"><button class="btn btn-primary" data-act="ctPacGo">Continuar</button></div>`); },
   ctPacGo(){ const id=$("#ctPac").value; if(id) ACT.novoContratoPac(id); },
   novoProf(){ formProf(); }, editProf(id){ formProf(id); },
-  async saveProf(id){ const b=$(".modal-b"), spec=PRO_SPEC(), v=readFields(spec,b), m=missing(spec,v); if(m) return showErr(b,m); v.cpf=digits(v.cpf);
+  async saveProf(id){ const b=$(".modal-b"), spec=PRO_SPEC(), v=readFields(spec,b), m=missing(spec,v); if(m) return showErr(b,m);
+    if(v.cpf&&!validDoc(v.cpf)) return showErr(b,"CPF ou CNPJ inválido."); v.cpf=digits(v.cpf); v.endereco=montaEnd(v);
     const p=id?{...Store.get("profissionais",id),...v}:{id:uid("pro"),...v}; await Store.put("profissionais",p); closeModal(); toast("Profissional salvo"); location.hash="profissional-"+p.id; render(); },
   acessoProf(id){ const p=Store.get("profissionais",id);
     modal("Acesso ao app do profissional", `<p>Com o acesso, ${esc(first(p.nome))} entra no sistema pelo celular, vê os próprios plantões, o plano de cuidados de cada paciente e registra a evolução.</p>
@@ -1294,10 +1332,10 @@ const ACT = {
       modal("Envie o acesso", `<p>Mande os dados de login para ${esc(first(p.nome))}:</p><p class="note" style="word-break:break-all">${esc(msg)}</p><div class="actions"><a class="btn btn-primary" target="_blank" rel="noopener" href="${wa(p.tel,msg)}">${ICON.wa}Enviar pelo WhatsApp</a></div>`,{nofocus:1});
     }catch(err){ showErr(b, err.code==="auth/email-already-in-use"?"Este e-mail já tem acesso.":"Não foi possível criar o acesso: "+(err.message||err)); } },
   async ctProf(id){ const p=Store.get("profissionais",id); if(!p.cpf) return toast("Cadastre o CPF do profissional antes");
-    const c=makeContrato("autonomo",{refId:p.candId||id,profId:id,nome:p.nome,cpf:p.cpf,funcao:p.funcao,registro:p.registro,cidade:p.cidade}); await Store.put("contratos",c); render(); verContrato(c.id); },
+    const c=makeContrato("autonomo",{refId:p.candId||id,profId:id,nome:p.nome,cpf:p.cpf,funcao:p.funcao,registro:p.registro,cidade:p.cidade,endereco:endCompleto(p)}); await Store.put("contratos",c); render(); verContrato(c.id); },
   async candSt(id,b){ const c=Store.get("candidatos",id); c.notas=$("#candNotas")?.value||c.notas; c.status=b.dataset.v; (c.hist=c.hist||[]).push({s:c.status,em:new Date().toISOString()});
     if(c.status==="aprovado"){ const falta=DOCS.filter(([k])=>!(c.docsOk||{})[k]); if(falta.length){ c.status=c.hist.pop()&&c.hist[c.hist.length-1].s; return toast("Confira todos os documentos antes de aprovar. Falta: "+falta.map(x=>x[1]).join(", ")); } }
-    if(c.status==="aprovado"&&!c.contratoId){ const ct=makeContrato("autonomo",{refId:c.id,nome:c.nome,cpf:c.cpf,funcao:c.funcao,registro:c.registro,cidade:c.cidade}); await Store.put("contratos",ct); c.contratoId=ct.id; }
+    if(c.status==="aprovado"&&!c.contratoId){ const ct=makeContrato("autonomo",{refId:c.id,nome:c.nome,cpf:c.cpf,funcao:c.funcao,registro:c.registro,cidade:c.cidade,endereco:endCompleto(c)}); await Store.put("contratos",ct); c.contratoId=ct.id; }
     await Store.put("candidatos",c); toast(CAND_NAME[c.status]); render(); },
   async verDocs(id){ const c=Store.get("candidatos",id);
     const b=modal("Documentos · "+c.nome, `<p class="muted">Carregando...</p>`,{wide:1,nofocus:1});
@@ -1321,17 +1359,17 @@ const ACT = {
       acompDocs={data:{},meta:{}}; toast("Documentos enviados"); render(); }
     catch(e){ b.disabled=false; showErr(f,"Não foi possível enviar agora. Tente de novo."); } },
   async candNotas(id){ const c=Store.get("candidatos",id); c.notas=$("#candNotas").value; await Store.put("candidatos",c); toast("Anotações salvas"); },
-  async ativarPro(id){ const c=Store.get("candidatos",id); const p={id:uid("pro"),candId:c.id,nome:c.nome,cpf:c.cpf,funcao:c.funcao,registro:c.registro,tel:c.tel,email:c.email,cidade:c.cidade,areas:c.areas,disp:c.disp,status:"ativo"};
+  async ativarPro(id){ const c=Store.get("candidatos",id); const p={id:uid("pro"),candId:c.id,nome:c.nome,cpf:c.cpf,funcao:c.funcao,registro:c.registro,tel:c.tel,email:c.email,cep:c.cep,rua:c.rua,numero:c.numero,complemento:c.complemento,bairro:c.bairro,cidade:c.cidade,uf:c.uf,referencia:c.referencia,endereco:montaEnd(c),areas:c.areas,disp:c.disp,status:"ativo"};
     await Store.put("profissionais",p); toast("Adicionado à equipe"); location.hash="profissional-"+p.id; },
   verContrato(id){ verContrato(id); },
   async verCv(id){ const d=await Store.fetchOne("curriculos",id); if(!d) return toast("Currículo não encontrado");
     const blob=await (await fetch(d.data)).blob(); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.target="_blank"; a.rel="noopener"; a.download=d.nome; document.body.appendChild(a); a.click(); a.remove(); },
   async delContrato(id,b){ if(b.dataset.ok!=="1"){ b.dataset.ok="1"; b.textContent="Confirmar exclusão"; return; } const c=Store.get("contratos",id); const cand=Store.all("candidatos").find(x=>x.contratoId===id); if(cand){ delete cand.contratoId; await Store.put("candidatos",cand); } await Store.del("contratos",id); closeModal(); toast("Contrato excluído"); render(); },
   novoContratoPac(id){ const p=Store.get("pacientes",id); const tb=Store.cfg().tabela||{};
-    const spec=[{k:"respNome",l:"Responsável financeiro (contratante)",req:1,full:1},{k:"respCpf",l:"CPF do responsável",req:1,im:"numeric"},{k:"respEnd",l:"Endereço do responsável",req:1},{k:"servicos",l:"Serviços contratados",t:"textarea",req:1,full:1},{k:"valor",l:"Valores",req:1,full:1},{k:"materiais",l:"Materiais e medicamentos",t:"select",o:["não inclusos, fornecidos pela família","inclusos no valor contratado","parcialmente inclusos, conforme descrito nos serviços"]},{k:"venc",l:"Dia de vencimento",t:"number",d:5}];
-    const pre={respNome:(p.responsavel||"").replace(/\s*\(.*\)/,""),respCpf:p.cpfResp,respEnd:p.endereco+", "+p.cidade,servicos:p.plano,valor:tb["12"]?`${brl(tb["12"].cobra)} por plantão de 12h, faturado mensalmente`:""};
+    const spec=[{k:"respNome",l:"Responsável financeiro (contratante)",req:1,full:1},{k:"respCpf",l:"CPF ou CNPJ do contratante",req:1,im:"numeric",ph:"CPF ou CNPJ"},{k:"respEnd",l:"Endereço do responsável",req:1},{k:"servicos",l:"Serviços contratados",t:"textarea",req:1,full:1},{k:"valor",l:"Valores",req:1,full:1},{k:"materiais",l:"Materiais e medicamentos",t:"select",o:["não inclusos, fornecidos pela família","inclusos no valor contratado","parcialmente inclusos, conforme descrito nos serviços"]},{k:"venc",l:"Dia de vencimento",t:"number",d:5}];
+    const pre={respNome:(p.responsavel||"").replace(/\s*\(.*\)/,""),respCpf:p.cpfResp,respEnd:endCompleto(p),servicos:p.plano,valor:tb["12"]?`${brl(tb["12"].cobra)} por plantão de 12h, faturado mensalmente`:""};
     const b=modal("Gerar contrato · "+p.nome, fields(spec,pre)+`<div class="actions"><button class="btn btn-primary" data-act="saveCtPac" data-id="${id}">Gerar e copiar link</button></div>`,{wide:1}); b._spec=spec; },
-  async saveCtPac(id){ const b=$(".modal-b"), v=readFields(b._spec,b), m=missing(b._spec,v); if(m) return showErr(b,m); if(!validCPF(v.respCpf)) return showErr(b,"CPF do responsável inválido.");
+  async saveCtPac(id){ const b=$(".modal-b"), v=readFields(b._spec,b), m=missing(b._spec,v); if(m) return showErr(b,m); if(!validDoc(v.respCpf)) return showErr(b,"CPF ou CNPJ do contratante inválido. Confira os números.");
     const p=Store.get("pacientes",id); const c=makeContrato("paciente",{refId:id,pacNome:p.nome,...v,respCpf:digits(v.respCpf)}); await Store.put("contratos",c); closeModal(); render();
     modal("Contrato gerado", `<p>Envie o link para ${esc(v.respNome)} ler e assinar pelo celular.</p><p class="note" style="word-break:break-all">${esc(contratoLink(c))}</p><div class="actions"><button class="btn btn-line" data-act="copy" data-v="${esc(contratoLink(c))}">${ICON.link}Copiar link</button><a class="btn btn-primary" target="_blank" rel="noopener" href="${wa(p.telResp,`Olá, ${first(v.respNome)}! Segue o contrato de atendimento domiciliar de ${p.nome} para leitura e assinatura: ${contratoLink(c)}`)}">${ICON.wa}Enviar pelo WhatsApp</a></div>`,{nofocus:1}); },
   verSol(id){ verSol(id); },
@@ -1344,7 +1382,9 @@ const ACT = {
   async delOp(id,b){ if(b.dataset.ok!=="1"){ b.dataset.ok="1"; b.textContent="Confirmar exclusão"; return; } if(Store.all("pacientes").some(p=>p.operadoraId===id)) return showErr($(".modal-b"),"Há pacientes ligados a esta operadora. Marque como Inativa."); await Store.del("operadoras",id); closeModal(); render(); },
   async finRec(k){ const [t,id]=k.split(":"); for(const p of Store.all("plantoes").filter(p=>p.data.startsWith(finMes)&&p.status==="realizado"&&!p.recebido)){ const pac=Store.get("pacientes",p.pacId); const key=pac?.tipo==="operadora"&&pac.operadoraId?"op:"+pac.operadoraId:"pac:"+p.pacId; if(key===k){ p.recebido=true; await Store.put("plantoes",p); } } toast("Marcado como recebido"); render(); },
   async finPag(id){ for(const p of Store.all("plantoes").filter(p=>p.data.startsWith(finMes)&&p.status==="realizado"&&!p.pago&&p.profId===id)){ p.pago=true; await Store.put("plantoes",p); } toast("Marcado como pago"); render(); },
-  async saveCfg(){ const c=Store.cfg(); const v=readFields([{k:"nome"},{k:"cnpj"},{k:"cidade"},{k:"endereco"},{k:"whatsapp"},{k:"email"},{k:"instagram"},{k:"diaPagamento"},{k:"modeloAutonomo"},{k:"modeloPaciente"}]); v.modeloAutonomo=$("#f_modeloAutonomo").value; v.modeloPaciente=$("#f_modeloPaciente").value;
+  async saveCfg(){ const c=Store.cfg(); const v=readFields([{k:"nome"},{k:"cnpj"},{k:"cidade"},{k:"endereco"},{k:"whatsapp"},{k:"email"},{k:"instagram"},{k:"diaPagamento"},{k:"modeloAutonomo"},{k:"modeloPaciente"},{k:"dpo"},...ADDR("e_",false)]);
+    if(v.cnpj&&!validCNPJ(v.cnpj)) return toast("CNPJ da empresa inválido"); if(v.cnpj) v.cnpj=fmtCPF(v.cnpj);
+    if(v.e_rua||v.e_cidade){ v.endereco=[montaEnd(v,"e_"),v.e_cep&&"CEP "+v.e_cep].filter(Boolean).join(" - "); v.cidade=[v.e_cidade,v.e_uf].filter(Boolean).join("/"); } v.modeloAutonomo=$("#f_modeloAutonomo").value; v.modeloPaciente=$("#f_modeloPaciente").value;
     const tabela={}; MODS.forEach(([k])=>{ tabela[k]={cobra:+$("#tb_c_"+k).value||0,paga:+$("#tb_p_"+k).value||0}; });
     await Store.put("config",{...c,...v,id:"empresa",tabela,exemploValores:false}); toast("Configurações salvas"); render(); },
   verModelo(tipo){ const c={...Store.cfg(),modeloAutonomo:$("#f_modeloAutonomo").value,modeloPaciente:$("#f_modeloPaciente").value};
@@ -1363,6 +1403,23 @@ document.addEventListener("input", e=>{
   if(e.target.id==="pacBusca"){ pacBusca=e.target.value; const pos=e.target.selectionStart; render().then(()=>{ const i=$("#pacBusca"); i.focus(); i.setSelectionRange(pos,pos); }); }
   if(e.target.id==="proBusca"){ proBusca=e.target.value; const pos=e.target.selectionStart; render().then(()=>{ const i=$("#proBusca"); i.focus(); i.setSelectionRange(pos,pos); }); }
 });
+document.addEventListener("input", e=>{
+  const id=e.target.id||""; if(!/^f_(.*)cep$/.test(id)) return;
+  const d=digits(e.target.value).slice(0,8); e.target.value=d.length>5?d.slice(0,5)+"-"+d.slice(5):d;
+  if(d.length===8) buscaCep(e.target);
+});
+document.addEventListener("focusout", e=>{
+  const id=e.target.id||""; if(/^f_(cpf|cpfResp|respCpf|sCpf)$/.test(id)){ const d=digits(e.target.value); if(d.length===11||d.length===14) e.target.value=fmtCPF(d); }
+});
+async function buscaCep(input){
+  const pre=input.id.slice(2,-3), root=input.closest(".modal-b,form,section,.card")||document, d=digits(input.value);
+  if(input.dataset.last===d) return; input.dataset.last=d;
+  const set=(k,v)=>{ const el=$("#f_"+pre+k,root)||$("#f_"+pre+k); if(el&&v) el.value=v; };
+  try{ const r=await (await fetch(`https://viacep.com.br/ws/${d}/json/`)).json(); if(r.erro) return toast("CEP não encontrado. Preencha o endereço manualmente.");
+    set("rua",r.logradouro); set("bairro",r.bairro); set("cidade",r.localidade); set("uf",r.uf); if(r.complemento) set("complemento",r.complemento);
+    ($("#f_"+pre+"numero",root)||$("#f_"+pre+"numero"))?.focus(); }
+  catch(_){ /* sem internet ou bloqueado: preenchimento manual */ }
+}
 document.addEventListener("change", e=>{
   if(e.target.id==="escPac"){ escPac=e.target.value; render(); }
   if(e.target.id==="escPro"){ escPro=e.target.value; render(); }
