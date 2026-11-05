@@ -182,6 +182,39 @@ dl.kv dt{color:var(--muted);font-size:.88rem} dl.kv dd{margin:0;min-width:0;over
 
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(24px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;z-index:90;font-weight:600;max-width:90vw}
 
+/* painel diário */
+.welcome{position:relative;overflow:hidden;border-radius:18px;padding:26px 28px;background:linear-gradient(120deg,var(--blue-deep),#1F648D);color:#fff;display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;justify-content:space-between}
+.welcome::after{content:"";position:absolute;right:-60px;top:-80px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(233,180,143,.35),transparent 70%)}
+.welcome h1{font-size:clamp(1.6rem,3.4vw,2.4rem);font-weight:600;color:#fff;margin-top:8px}
+.welcome p{color:#C9DCE8}
+.welcome > *{position:relative;z-index:1}
+.eyebrow-pill{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.14);color:#E9B48F}
+.eyebrow-line{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--copper);border:1px solid var(--line);border-radius:999px;padding:3px 10px;margin-bottom:6px}
+.kpi .kl{display:block;font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.kpi.k-blue{background:var(--info-bg);border-color:transparent} .kpi.k-blue .kl,.kpi.k-blue b{color:var(--blue)}
+.kpi.k-red{background:var(--bad-bg);border-color:transparent} .kpi.k-red .kl,.kpi.k-red b{color:var(--bad)}
+.kpi.k-green{background:var(--ok-bg);border-color:transparent} .kpi.k-green .kl,.kpi.k-green b{color:var(--ok)}
+.grid3{display:grid;gap:16px;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)}
+@media (max-width:900px){.grid3{grid-template-columns:1fr}}
+.donutbox{display:flex;flex-wrap:wrap;gap:18px;align-items:center}
+.legend{list-style:none;margin:0;padding:0;display:grid;gap:8px;flex:1;min-width:200px}
+.legend li{display:grid;grid-template-columns:12px 1fr auto;gap:8px;align-items:center;font-size:.9rem}
+.legend i{width:12px;height:12px;border-radius:3px}
+.busca-side{padding:0 4px 12px} .busca-side input{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.15);color:#fff;min-height:38px;font-size:.9rem}
+.busca-side input::placeholder{color:#8FB0C4}
+.list-links{display:grid;gap:6px;margin-top:10px}
+.list-links a{display:flex;flex-direction:column;padding:10px 12px;border:1px solid var(--line);border-radius:10px;text-decoration:none;color:var(--ink)}
+.list-links a:hover{border-color:var(--blue)} .list-links span{font-size:.86rem;color:var(--muted)}
+tfoot td{background:var(--surface-2);border-top:1px solid var(--line)}
+.print-head{display:none}
+@media print{
+  .side,.topbar,.no-print,.toast,.scrim{display:none!important}
+  .shell{display:block} .main{padding:0} body{background:#fff;color:#000}
+  .card,.tablewrap{border:0;box-shadow:none;padding:0} th{background:#eee!important}
+  .print-head{display:flex;gap:12px;align-items:center;margin-bottom:14px} .print-head img{width:48px;height:48px;border-radius:10px}
+  .print-head b{display:block;font-size:1.1rem} .print-head span{color:#444}
+  .overlay{position:static;background:none;padding:0} .modal{box-shadow:none;border:0;max-width:none} .modal-h .x{display:none}
+}
 /* documentos */
 .sr{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 .docgrid{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr))}
@@ -344,8 +377,8 @@ const podeChegar = p => !p.chegada && p.status==="agendado" && Date.now()>=tStar
 const PAC_ST = {avaliacao:["Em avaliação","p-warn"],ativo:["Ativo","p-ok"],alta:["Alta","p-mute"]};
 
 /* =================== DADOS =================== */
-const COLS = ["config","curriculos","documentos","pacientes","profissionais","candidatos","plantoes","solicitacoes","operadoras","contratos","usuarios"];
-const LS_KEY = "viverbem-sistema-v4";
+const COLS = ["config","curriculos","documentos","pacientes","profissionais","candidatos","plantoes","solicitacoes","operadoras","contratos","usuarios","produtos","movEstoque","lotes","auditoria"];
+const LS_KEY = "viverbem-sistema-v5";
 const Store = {
   mode: FIREBASE_CONFIG ? "firebase" : "demo",
   data: {}, fs: null, auth: null,
@@ -357,11 +390,22 @@ const Store = {
     obj.atualizado = new Date().toISOString(); if(!obj.criado) obj.criado = obj.atualizado;
     const arr = this.data[c] || (this.data[c]=[]); const i = arr.findIndex(x=>x.id===obj.id);
     if(i>=0) arr[i]=obj; else arr.unshift(obj);
+    const novo = i<0;
     if(this.mode==="firebase") await this.fs.collection(c).doc(obj.id).set(JSON.parse(JSON.stringify(obj)));
     else this._local();
+    if(c!=="auditoria") this._audit(novo?"Criou":"Alterou", c, obj);
     return obj;
   },
+  async _audit(acao, c, obj){
+    const nomes={pacientes:"Paciente",profissionais:"Profissional",candidatos:"Candidato",plantoes:"Plantão",solicitacoes:"Solicitação",operadoras:"Operadora",contratos:"Contrato",config:"Configurações",produtos:"Produto",movEstoque:"Estoque",lotes:"Faturamento",documentos:"Documento",curriculos:"Currículo",usuarios:"Acesso"};
+    const item = obj ? (c==="plantoes" ? `${pacName(obj.pacId)} · ${fmtDay(obj.data)} ${obj.inicio}` : c==="movEstoque" ? `${obj.tipo==="entrada"?"Entrada":"Saída"} de ${obj.qtd} · ${Store.get("produtos",obj.prodId)?.nome||""}` : (obj.nome||obj.titulo||obj.empresa||obj.numero||obj.id)) : "";
+    const det = obj?.status ? "Situação: "+obj.status : "";
+    const a={id:uid("au"),em:new Date().toISOString(),usuario:S?.nome||"Link público",perfil:S?.role||"publico",acao,colecao:nomes[c]||c,docId:obj?.id||"",item:String(item).slice(0,140),detalhe:det};
+    const arr=this.data.auditoria||(this.data.auditoria=[]); arr.unshift(a); if(arr.length>600) arr.length=600;
+    try{ if(this.mode==="firebase") await this.fs.collection("auditoria").doc(a.id).set(a); else this._local(); }catch(e){}
+  },
   async del(c,id){
+    const old=this.get(c,id); if(c!=="auditoria") this._audit("Excluiu", c, old||{id});
     this.data[c] = this.all(c).filter(x=>x.id!==id);
     if(this.mode==="firebase") await this.fs.collection(c).doc(id).delete(); else this._local();
   },
@@ -384,7 +428,7 @@ const Store = {
   async loadFor(session){
     if(this.mode==="demo") return;
     const get = async (c,q) => { const s = await (q||this.fs.collection(c)).get(); this.data[c] = s.docs.map(d=>d.data()); };
-    if(session.role==="admin") await Promise.all(COLS.filter(c=>!["curriculos","documentos"].includes(c)).map(c=>get(c)));
+    if(session.role==="admin") await Promise.all([...COLS.filter(c=>!["curriculos","documentos","auditoria"].includes(c)).map(c=>get(c)), get("auditoria", this.fs.collection("auditoria").orderBy("em","desc").limit(500))]);
     else { await get("pacientes"); await get("plantoes", this.fs.collection("plantoes").where("profId","==",session.profId)); this.data.profissionais=[await this.fetchOne("profissionais",session.profId)].filter(Boolean); }
   }
 };
@@ -463,6 +507,12 @@ function seed(){
   return {
     documentos: cand.flatMap(c=>DOCS.map(([k,l],i)=>({id:`${c.id}_${k}`,cand:c.id,tipo:k,nome:k+".jpg",exemplo:true,criado:c.criado,data:fakeDoc(l+" · "+first(c.nome),["#1F648D","#2C7A52","#B46E43","#5A7287","#0F3550"][i])}))),
     config:[cfg], pacientes:pac, profissionais:pro, candidatos:cand, plantoes:pl, contratos:ct, usuarios:[],
+    produtos:[["Luva de procedimento M","caixa c/ 100",10,32],["Gaze estéril 7,5 x 7,5","pacote c/ 10",30,2.9],["Soro fisiológico 0,9% 500 ml","frasco",20,6.5],["Seringa descartável 10 ml","unidade",50,0.85],["Equipo macrogotas","unidade",15,3.2],["Sonda nasoenteral 12 Fr","unidade",4,28],["Fralda geriátrica G","pacote c/ 8",6,39.9],["Álcool 70% 1 L","frasco",5,12.5]]
+      .map(([nome,unidade,minimo,custo],i)=>({id:"prd"+i,exemplo:true,nome,unidade,minimo,custo,categoria:i===6?"Higiene":i===2||i===4||i===5?"Material de enfermagem":i===1?"Curativo":"Material de enfermagem",criado:ts(-60)})),
+    movEstoque:[[0,"entrada",15,null,-40],[1,"entrada",80,null,-40],[2,"entrada",40,null,-40],[3,"entrada",200,null,-40],[4,"entrada",30,null,-40],[5,"entrada",6,null,-40],[6,"entrada",10,null,-40],[7,"entrada",8,null,-40],
+      [1,"saida",30,"pac3",-6],[2,"saida",18,"pac3",-6],[4,"saida",14,"pac3",-6],[3,"saida",40,"pac3",-6],[6,"saida",5,"pac1",-10],[0,"saida",4,"pac1",-10],[5,"saida",3,"pac1",-12],[7,"saida",4,"pac1",-8]]
+      .map(([pi,tipo,qtd,pacId,d],i)=>({id:"mv"+i,exemplo:true,prodId:"prd"+pi,tipo,qtd,pacId:pacId||"",data:D(d),obs:tipo==="entrada"?"Compra inicial":"",por:"Administração Viver Bem",criado:ts(d)})),
+    lotes:[], auditoria:[],
     operadoras:[{id:"op1",exemplo:true,nome:"Operadora Exemplo Saúde",cnpj:"00.000.000/0001-00",contato:"Ricardo Alves",tel:"(85) 3333-0000",email:"rede@exemplo.com",status:"credenciada",valores:"Plantão 6h: R$ 200 · Plantão 12h: R$ 350 · Visita de enfermagem: R$ 120",obs:"Faturamento mensal até o dia 5, com relatório de evoluções.",criado:ts(-90)}],
     solicitacoes:[
       {id:"s1",exemplo:true,tipo:"familia",nome:"Luzia Gomes",tel:"(88) 99999-1404",cidade:"Mauriti/CE",paciente:"Avô, 88 anos, Alzheimer",servico:"Plantão 12h",msg:"Precisamos de alguém à noite.",status:"novo",criado:ts(-.3)},
@@ -585,6 +635,11 @@ const ICON = {
   ponto:I('<circle cx="12" cy="10" r="3"/><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/>'),
   folha:I('<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>'),
   pagamentos:I('<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/>'),
+  faturamento:I('<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>'),
+  estoque:I('<path d="M3 7l9-4 9 4-9 4z"/><path d="M3 7v10l9 4 9-4V7M12 11v10"/>'),
+  relatorios:I('<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>'),
+  auditoria:I('<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="M9 12l2 2 4-4"/>'),
+  busca:I('<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>'),
   menu:I('<path d="M4 6h16M4 12h16M4 18h16"/>'),
   plus:I('<path d="M12 5v14M5 12h14"/>'),
   wa:I('<path d="M4 20l1.3-3.9A8 8 0 1 1 8 19z"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5l1-1.5-2-1-1 1c-1-.5-2-1.5-2.5-2.5l1-1-1-2z"/>'),
@@ -611,19 +666,21 @@ function counts(){
     cand: Store.all("candidatos").filter(c=>["recebido","analise"].includes(c.status)).length,
     ctPend: Store.all("contratos").filter(c=>c.status==="pendente").length,
     sol: Store.all("solicitacoes").filter(s=>s.status==="novo").length,
+    estBaixo: Store.all("produtos").filter(p=>saldo(p.id)<=(+p.minimo||0)).length,
     semEvo: Store.all("plantoes").filter(p=>p.status==="realizado" && !p.evolucao && p.data>=addDays(t,-7)).length
   };
 }
 
 /* =================== ROTAS =================== */
 const ADMIN_NAV = [
-  ["painel","Painel"],["pacientes","Pacientes"],["escala","Escala de plantões"],["ponto","Chegadas e saídas"],["profissionais","Profissionais"],
+  ["sep","Operação"],["painel","Painel"],["escala","Agenda de plantões"],["ponto","Chegadas e saídas"],["pacientes","Pacientes"],["profissionais","Profissionais"],
   ["sep","Captação"],["recrutamento","Recrutamento"],["solicitacoes","Solicitações"],["operadoras","Operadoras"],
-  ["sep","Gestão"],["contratos","Contratos"],["folha","Folha de pagamento"],["financeiro","Financeiro"],["config","Configurações"]
+  ["sep","Gestão"],["faturamento","Faturamento de convênios"],["financeiro","Financeiro"],["folha","Folha de pagamento"],["estoque","Estoque"],["contratos","Contratos"],
+  ["relatorios","Relatórios"],["auditoria","Auditoria"],["config","Configurações"]
 ];
 function route(){ const h=decodeURIComponent(location.hash.slice(1)); const m=h.match(/^([a-z]+)(?:-(.+))?$/); return m?{r:m[1],id:m[2]||null}:{r:"",id:null}; }
 const PUBLIC = {links:pgLinks, trabalhe:pgTrabalhe, acompanhar:pgAcompanhar, assinar:pgAssinar, solicitar:pgSolicitar};
-const ADMIN = {folha:pgFolha,ponto:pgPonto,painel:pgPainel,pacientes:pgPacientes,paciente:pgPaciente,escala:pgEscala,profissionais:pgProfissionais,profissional:pgProfissional,recrutamento:pgRecrutamento,candidato:pgCandidato,contratos:pgContratos,solicitacoes:pgSolicitacoes,operadoras:pgOperadoras,financeiro:pgFinanceiro,config:pgConfig};
+const ADMIN = {busca:pgBusca,estoque:pgEstoque,faturamento:pgFaturamento,relatorios:pgRelatorios,auditoria:pgAuditoria,folha:pgFolha,ponto:pgPonto,painel:pgPainel,pacientes:pgPacientes,paciente:pgPaciente,escala:pgEscala,profissionais:pgProfissionais,profissional:pgProfissional,recrutamento:pgRecrutamento,candidato:pgCandidato,contratos:pgContratos,solicitacoes:pgSolicitacoes,operadoras:pgOperadoras,financeiro:pgFinanceiro,config:pgConfig};
 const PROF = {meus:pgMeus, pagamentos:pgPagamentos};
 
 async function render(){
@@ -642,7 +699,7 @@ window.addEventListener("hashchange", render);
 
 function appShell(cur, body){
   const c = counts();
-  const badge = {escala:c.semPro, recrutamento:c.cand, solicitacoes:c.sol, contratos:c.ctPend};
+  const badge = {escala:c.semPro, recrutamento:c.cand, solicitacoes:c.sol, contratos:c.ctPend, estoque:c.estBaixo};
   const navItems = S.role==="admin" ? ADMIN_NAV : [["meus","Meus plantões"],["pagamentos","Meus pagamentos"]];
   const activeKey = {paciente:"pacientes",profissional:"profissionais",candidato:"recrutamento"}[cur] || cur;
   const nav = navItems.map(([k,l]) => k==="sep" ? `<div class="nav-sep">${l}</div>` :
@@ -651,6 +708,7 @@ function appShell(cur, body){
     <header class="topbar"><button data-act="menu" aria-label="Abrir menu">${ICON.menu}</button><b>Viver Bem</b></header>
     <aside class="side" aria-label="Menu">
       <a class="brand" href="#"><img src="${LOGO}" alt=""><span><b>Viver Bem</b><small>Atendimento Domiciliar</small></span></a>
+      ${S.role==="admin"?`<form class="busca-side" id="fBusca" role="search"><input id="buscaGeral" type="search" placeholder="Buscar paciente, profissional..." value="${esc(buscaTxt)}" aria-label="Busca geral"></form>`:""}
       <nav class="nav">${nav}</nav>
       <div class="side-foot"><div>${esc(S.nome)}</div><div class="small" style="color:#7FA0B6">${S.role==="admin"?"Administração":"Profissional"}${Store.mode==="demo"?" · demonstração":""}</div>
       <button class="btn btn-sm btn-ghost-light" data-act="logout">Sair</button></div>
@@ -696,39 +754,56 @@ function bindLogin(){
     catch(err){ showErr(f, /password|credential|user/i.test(err.code||"")?"E-mail ou senha incorretos.":err.message); b.disabled=false; } };
 }
 /* =================== PAINEL =================== */
+function statusDia(p){ if(p.status==="realizado") return "concluido"; if(p.status==="andamento") return "andamento"; if(p.status==="falta") return "falta";
+  return Date.now()>tStart(p)+15*6e4 ? "atrasado" : "nao"; }
+const ST_DIA = {nao:["Não iniciados","var(--blue)"],atrasado:["Atrasados","var(--bad)"],andamento:["Em andamento","var(--copper)"],concluido:["Concluídos","var(--ok)"],falta:["Faltas","var(--muted)"]};
+function donut(parts, centro, legenda){
+  const tot=parts.reduce((a,x)=>a+x.v,0), R=52, C=2*Math.PI*R; let off=0;
+  const segs = tot ? parts.filter(x=>x.v>0).map(x=>{ const len=C*x.v/tot; const el=`<circle r="${R}" cx="70" cy="70" fill="none" style="stroke:${x.c}" stroke-width="18" stroke-dasharray="${len.toFixed(2)} ${(C-len).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 70 70)"/>`; off+=len; return el; }).join("") : "";
+  return `<svg viewBox="0 0 140 140" width="150" height="150" role="img" aria-label="${esc(legenda)}"><circle r="${R}" cx="70" cy="70" fill="none" style="stroke:var(--line)" stroke-width="18"/>${segs}<text x="70" y="70" text-anchor="middle" style="fill:var(--ink);font:500 18px var(--f-display)">${centro}</text><text x="70" y="88" text-anchor="middle" style="fill:var(--muted);font:10px var(--f-body)">${legenda}</text></svg>`;
+}
 function pgPainel(){
-  const c=counts(), t=today();
-  const hoje = Store.all("plantoes").filter(p=>p.data===t && p.status!=="cancelado").sort((a,b)=>a.inicio.localeCompare(b.inicio));
+  const c=counts(), t=today(), cfg=Store.cfg();
+  const hoje=Store.all("plantoes").filter(p=>p.data===t&&p.status!=="cancelado").sort((a,b)=>a.inicio.localeCompare(b.inicio));
+  const grp={}; Object.keys(ST_DIA).forEach(k=>grp[k]={n:0,v:0}); hoje.forEach(p=>{ const k=statusDia(p); grp[k].n++; grp[k].v+=(+p.valorCobrado||0); });
+  const receita=hoje.filter(p=>p.status!=="falta").reduce((a,p)=>a+(+p.valorCobrado||0),0);
   const alerts=[];
-  if(c.semPro) alerts.push(`<li><b>${c.semPro} plantão(ões) sem profissional</b> nos próximos dias. <a href="#escala">Ver escala</a></li>`);
-  const naoChegou = Store.all("plantoes").filter(p=>p.status==="agendado"&&p.profId&&tStart(p)<Date.now()-30*6e4&&tEnd(p)>Date.now());
-  naoChegou.forEach(p=>alerts.push(`<li><b>${esc(proName(p.profId))} não registrou chegada</b> em ${esc(pacName(p.pacId))} (início ${p.inicio}). <a href="#ponto">Ver chegadas</a></li>`));
-  const andamento = Store.all("plantoes").filter(p=>p.status==="andamento").length;
-  if(andamento) alerts.push(`<li><b>${andamento} profissional(is) em atendimento agora.</b> <a href="#ponto">Acompanhar</a></li>`);
-  if(c.semEvo) alerts.push(`<li><b>${c.semEvo} plantão(ões) realizados sem evolução</b> registrada na última semana.</li>`);
-  const faltas = Store.all("plantoes").filter(p=>p.status==="falta" && p.data>=addDays(t,-7)).length;
-  if(faltas) alerts.push(`<li><b>${faltas} falta(s)</b> de profissional nos últimos 7 dias.</li>`);
-  const aval = Store.all("pacientes").filter(p=>p.status==="avaliacao");
-  aval.forEach(p=>alerts.push(`<li><b>${esc(p.nome)}</b> aguarda avaliação domiciliar. <a href="#paciente-${p.id}">Abrir</a></li>`));
-  const links = [["Link da bio do Instagram","links","Página com todos os botões: atendimento, WhatsApp e trabalhe conosco"],["Trabalhe conosco","trabalhe","Envie para candidatos se cadastrarem"],["Solicitar atendimento","solicitar","Coloque no Instagram e no WhatsApp da empresa"],["Acompanhar candidatura","acompanhar","Candidatos consultam o andamento"]];
-  return `<div class="pagehead"><div><h1>Bom dia, ${esc(first(S.nome))}</h1><p class="sub">${fmtDayW(t)}</p></div>
-    <div class="actions"><button class="btn btn-primary" data-act="novoPlantao">${ICON.plus}Novo plantão</button><button class="btn btn-line" data-act="novoPaciente">${ICON.plus}Novo paciente</button></div></div>
+  hoje.filter(p=>statusDia(p)==="atrasado"&&p.profId).forEach(p=>alerts.push(`<li><b>${esc(proName(p.profId))} não registrou chegada</b> em ${esc(pacName(p.pacId))} (início ${p.inicio}).</li>`));
+  if(c.semPro) alerts.push(`<li><b>${c.semPro} plantão(ões) sem profissional</b> nos próximos dias. <a href="#escala">Ver agenda</a></li>`);
+  if(c.semEvo) alerts.push(`<li><b>${c.semEvo} plantão(ões) sem evolução</b> na última semana.</li>`);
+  if(c.estBaixo) alerts.push(`<li><b>${c.estBaixo} item(ns) de estoque</b> no mínimo ou abaixo. <a href="#estoque">Ver estoque</a></li>`);
+  Store.all("pacientes").filter(p=>p.status==="avaliacao").forEach(p=>alerts.push(`<li><b>${esc(p.nome||p.responsavel)}</b> aguarda avaliação domiciliar. <a href="#paciente-${p.id}">Abrir</a></li>`));
+  const lotesAbertos=Store.all("lotes").filter(l=>l.status!=="pago").length;
+  if(lotesAbertos) alerts.push(`<li><b>${lotesAbertos} lote(s) de faturamento</b> aguardando pagamento da operadora. <a href="#faturamento">Ver faturamento</a></li>`);
+  const links=[["Link da bio do Instagram","links"],["Trabalhe conosco","trabalhe"],["Solicitar atendimento","solicitar"],["Acompanhar candidatura","acompanhar"]];
+  return `<section class="welcome"><div><span class="eyebrow-pill">Gestão de home care</span><h1>${esc(cfg.nome||"Viver Bem Atendimento Domiciliar")}</h1><p>Sua operação em um só lugar · ${fmtDayW(t)}</p></div>
+    <div class="actions"><button class="btn btn-copper" data-act="novoPlantao">${ICON.plus}Novo plantão</button><button class="btn btn-ghost-light" data-act="novoPaciente">${ICON.plus}Novo paciente</button></div></section>
+  <div><p class="eyebrow-line">Operação de hoje</p><h2 style="font-size:1.3rem">Painel diário</h2><p class="muted small">Acompanhe o que exige ação agora e mantenha a agenda do dia sob controle.</p></div>
   <div class="kpis">
-    <a class="kpi" href="#pacientes"><b>${c.pac}</b><span>Pacientes ativos</span></a>
-    <a class="kpi" href="#escala"><b>${c.hoje}</b><span>Plantões hoje</span></a>
-    <a class="kpi ${c.semPro?"alert":""}" href="#escala"><b>${c.semPro}</b><span>Plantões sem profissional</span></a>
-    <a class="kpi" href="#recrutamento"><b>${c.cand}</b><span>Currículos para analisar</span></a>
-    <a class="kpi" href="#contratos"><b>${c.ctPend}</b><span>Contratos aguardando assinatura</span></a>
-    <a class="kpi" href="#solicitacoes"><b>${c.sol}</b><span>Solicitações novas</span></a>
+    <a class="kpi" href="#escala"><small class="kl">Total do dia</small><b>${hoje.length}</b><span>Atendimentos previstos</span></a>
+    <a class="kpi k-blue" href="#ponto"><small class="kl">Em andamento</small><b>${grp.andamento.n}</b><span>Profissionais em campo</span></a>
+    <a class="kpi k-red" href="#ponto"><small class="kl">Atrasados</small><b>${grp.atrasado.n}</b><span>Exigem atenção imediata</span></a>
+    <div class="kpi k-green"><small class="kl">Receita prevista</small><b>${brl(receita)}</b><span>Estimativa do dia</span></div>
+  </div>
+  <div class="grid3">
+    <section class="card"><div class="card-h"><h2>Atendimentos do dia</h2><a href="#escala" class="small">Agenda completa</a></div>
+      ${hoje.length?`<div class="day" style="max-height:420px;overflow:auto">${hoje.map(shiftRow).join("")}</div>`:`<p class="empty">Nenhum atendimento hoje.</p>`}</section>
+    <section class="card"><div class="card-h"><h2>Status do dia</h2><span class="small muted">receita por situação</span></div>
+      <div class="donutbox">${donut(Object.entries(ST_DIA).map(([k,[l,col]])=>({v:grp[k].n,c:col})), hoje.length, "atendimentos")}
+      <ul class="legend">${Object.entries(ST_DIA).map(([k,[l,col]])=>`<li><i style="background:${col}"></i><span>${l} · ${grp[k].n}</span><b class="num">${brl(grp[k].v)}</b></li>`).join("")}</ul></div></section>
   </div>
   <div class="grid2">
-    <section class="card"><div class="card-h"><h2>Plantões de hoje</h2><a href="#escala" class="small">Escala completa</a></div>
-      ${hoje.length?`<div class="day">${hoje.map(shiftRow).join("")}</div>`:`<p class="empty">Nenhum plantão hoje.</p>`}</section>
     <section class="card"><div class="card-h"><h2>Pontos de atenção</h2></div>
       ${alerts.length?`<ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:8px">${alerts.join("")}</ul>`:`<p class="empty">Tudo em dia.</p>`}</section>
+    <section class="card"><div class="card-h"><h2>Captação</h2></div>
+      <div class="kpis" style="grid-template-columns:repeat(auto-fit,minmax(120px,1fr))">
+        <a class="kpi" href="#recrutamento"><b>${c.cand}</b><span>Currículos para analisar</span></a>
+        <a class="kpi" href="#solicitacoes"><b>${c.sol}</b><span>Solicitações novas</span></a>
+        <a class="kpi" href="#contratos"><b>${c.ctPend}</b><span>Contratos pendentes</span></a>
+        <a class="kpi" href="#pacientes"><b>${c.pac}</b><span>Pacientes ativos</span></a></div></section>
   </div>
   <section class="card"><div class="card-h"><h2>Links para divulgar</h2></div>
-    <div class="tablewrap"><table><tbody>${links.map(([l,h,d])=>`<tr><td><b>${l}</b><div class="small muted">${d}</div></td><td class="small muted" style="word-break:break-all">${esc(baseURL()+"#"+h)}</td><td class="r"><button class="btn btn-sm btn-line" data-act="copy" data-v="${esc(baseURL()+"#"+h)}">${ICON.link}Copiar</button></td></tr>`).join("")}</tbody></table></div></section>`;
+    <div class="tablewrap"><table><tbody>${links.map(([l,h])=>`<tr><td><b>${l}</b></td><td class="small muted" style="word-break:break-all">${esc(baseURL()+"#"+h)}</td><td class="r"><button class="btn btn-sm btn-line" data-act="copy" data-v="${esc(baseURL()+"#"+h)}">${ICON.link}Copiar</button></td></tr>`).join("")}</tbody></table></div></section>`;
 }
 function shiftRow(p){
   const pac=Store.get("pacientes",p.pacId), at=atrasoMin(p), ch=regInfo(p.chegada,pac);
@@ -1118,6 +1193,135 @@ function pgPagamentos(){
   <p class="small muted">Registre sempre a chegada e a saída no endereço do paciente. Dúvidas sobre valores, fale com a administração.</p>`;
 }
 
+/* =================== UTILITÁRIOS DE RELATÓRIO =================== */
+const TOPO = (()=>{ try{ return window.self===window.top; }catch(e){ return false; } })();
+function exportBar(nome){ return TOPO ? `<div class="actions no-print"><button class="btn btn-sm btn-line" data-act="csv" data-v="${esc(nome)}">Exportar planilha (CSV)</button><button class="btn btn-sm btn-line" data-act="imprimir">Imprimir / salvar PDF</button></div>` : ""; }
+let CSV_ROWS = [];
+function baixarCSV(nome){ const txt="﻿"+CSV_ROWS.map(r=>r.map(v=>{ const x=String(v??""); return /[";\n]/.test(x)?`"${x.replace(/"/g,'""')}"`:x; }).join(";")).join("\n");
+  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([txt],{type:"text/csv;charset=utf-8"})); a.download=nome+".csv"; document.body.appendChild(a); a.click(); a.remove(); }
+
+/* =================== BUSCA GERAL =================== */
+let buscaTxt="";
+function pgBusca(){
+  const q=norm(buscaTxt);
+  if(q.length<2) return `<div class="pagehead"><div><h1>Busca</h1><p class="sub">Digite pelo menos 2 letras na busca do menu.</p></div></div>`;
+  const has=(...v)=>norm(v.join(" ")).includes(q)||digits(v.join(" ")).includes(digits(buscaTxt))&&digits(buscaTxt).length>=4;
+  const grupos=[
+    ["Pacientes", Store.all("pacientes").filter(p=>has(p.nome,p.responsavel,p.cidade,p.cpf,p.telResp,p.carteirinha)).map(p=>[`#paciente-${p.id}`,p.nome||p.responsavel,`${loc(p)} · ${PAC_ST[p.status]?.[0]||""}`])],
+    ["Profissionais", Store.all("profissionais").filter(p=>has(p.nome,p.funcao,p.registro,p.cpf,p.tel)).map(p=>[`#profissional-${p.id}`,p.nome,`${p.funcao} · ${p.registro||""}`])],
+    ["Candidatos", Store.all("candidatos").filter(c=>has(c.nome,c.funcao,c.id,c.cpf,c.tel)).map(c=>[`#candidato-${c.id}`,c.nome,`${c.funcao} · ${CAND_NAME[candStatus(c)]}`])],
+    ["Operadoras", Store.all("operadoras").filter(o=>has(o.nome,o.cnpj,o.contato)).map(o=>["#operadoras",o.nome,OP_ST[o.status]?.[0]||""])],
+    ["Produtos do estoque", Store.all("produtos").filter(x=>has(x.nome,x.categoria)).map(x=>["#estoque",x.nome,`Saldo ${saldo(x.id)} ${x.unidade||""}`])]
+  ].filter(g=>g[1].length);
+  return `<div class="pagehead"><div><h1>Busca</h1><p class="sub">Resultados para "${esc(buscaTxt)}"</p></div></div>
+  ${grupos.length?grupos.map(([t,l])=>`<section class="card"><h2>${t} · ${l.length}</h2><div class="list-links">${l.slice(0,30).map(([h,a,b])=>`<a href="${h}"><b>${esc(a)}</b><span>${esc(b)}</span></a>`).join("")}</div></section>`).join(""):`<p class="empty">Nada encontrado.</p>`}`;
+}
+
+/* =================== ESTOQUE =================== */
+let estTab="produtos";
+const saldo = id => Store.all("movEstoque").filter(m=>m.prodId===id).reduce((a,m)=>a+(m.tipo==="entrada"?1:-1)*(+m.qtd||0),0);
+const PROD_SPEC=[{k:"nome",l:"Produto",req:1,full:1},{k:"categoria",l:"Categoria",t:"select",o:["Material de enfermagem","Curativo","Medicamento","Higiene","Equipamento","Outros"]},{k:"unidade",l:"Unidade",ph:"caixa, unidade, frasco"},{k:"minimo",l:"Estoque mínimo",t:"number"},{k:"custo",l:"Custo unitário (R$)",t:"number",step:"0.01"}];
+function pgEstoque(){
+  const prods=Store.all("produtos").map(x=>({...x,s:saldo(x.id)})).sort((a,b)=>a.nome.localeCompare(b.nome));
+  const baixo=prods.filter(x=>x.s<=(+x.minimo||0)), valor=prods.reduce((a,x)=>a+Math.max(0,x.s)*(+x.custo||0),0);
+  const movs=Store.all("movEstoque").slice().sort((a,b)=>(b.data+b.criado).localeCompare(a.data+a.criado)).slice(0,120);
+  return `<div class="pagehead"><div><h1>Estoque</h1><p class="sub">Materiais e medicamentos da empresa e o que foi usado em cada paciente</p></div>
+    <div class="actions"><button class="btn btn-primary" data-act="movEst" data-v="entrada">${ICON.plus}Entrada</button><button class="btn btn-copper" data-act="movEst" data-v="saida">Saída para paciente</button><button class="btn btn-line" data-act="novoProd">Novo produto</button></div></div>
+  <div class="kpis"><div class="kpi"><b>${prods.length}</b><span>Itens cadastrados</span></div><div class="kpi ${baixo.length?"alert":""}"><b>${baixo.length}</b><span>No mínimo ou abaixo</span></div><div class="kpi"><b>${brl(valor)}</b><span>Valor em estoque</span></div></div>
+  <div class="chips"><button class="chipbtn" data-act="estTab" data-id="produtos" aria-pressed="${estTab==="produtos"}">Produtos</button><button class="chipbtn" data-act="estTab" data-id="movs" aria-pressed="${estTab==="movs"}">Movimentações</button></div>
+  ${estTab==="produtos"?`<div class="tablewrap"><table><thead><tr><th>Produto</th><th>Categoria</th><th class="r">Saldo</th><th class="r">Mínimo</th><th class="r">Custo un.</th><th class="r">Valor</th></tr></thead><tbody>
+    ${prods.map(x=>`<tr class="click" data-act="editProd" data-id="${x.id}"><td><b>${esc(x.nome)}</b>${ex(x)}</td><td>${esc(x.categoria||"-")}</td><td class="r"><span class="pill ${x.s<=(+x.minimo||0)?"p-bad":"p-ok"}">${x.s} ${esc(x.unidade||"")}</span></td><td class="r">${esc(x.minimo??"-")}</td><td class="r">${brl(x.custo)}</td><td class="r">${brl(Math.max(0,x.s)*(+x.custo||0))}</td></tr>`).join("")||`<tr><td colspan="6" class="empty">Cadastre o primeiro produto.</td></tr>`}</tbody></table></div>`
+  :`<div class="tablewrap"><table><thead><tr><th>Data</th><th>Produto</th><th>Tipo</th><th class="r">Qtd</th><th>Paciente / origem</th><th>Por</th><th></th></tr></thead><tbody>
+    ${movs.map(m=>`<tr><td class="num">${fmtDay(m.data)}</td><td>${esc(Store.get("produtos",m.prodId)?.nome||"-")}</td><td><span class="pill ${m.tipo==="entrada"?"p-ok":"p-cop"}">${m.tipo==="entrada"?"Entrada":"Saída"}</span></td><td class="r">${m.qtd}</td><td>${m.pacId?esc(pacName(m.pacId)):esc(m.obs||"-")}</td><td class="small muted">${esc(m.por||"")}</td><td class="r"><button class="btn btn-sm btn-line" data-act="delMov" data-id="${m.id}">Excluir</button></td></tr>`).join("")||`<tr><td colspan="7" class="empty">Nenhuma movimentação.</td></tr>`}</tbody></table></div>`}`;
+}
+
+/* =================== FATURAMENTO DE CONVÊNIOS =================== */
+let fatMes=null;
+const LOTE_ST={aberto:["Em aberto","p-blue"],enviado:["Enviado à operadora","p-warn"],pago:["Pago","p-ok"]};
+function itensFaturaveis(opId, mes){ const usados=new Set(Store.all("lotes").flatMap(l=>l.itens.map(i=>i.plantaoId)));
+  return Store.all("plantoes").filter(p=>p.status==="realizado"&&p.data.startsWith(mes)&&Store.get("pacientes",p.pacId)?.operadoraId===opId&&!usados.has(p.id)).sort((a,b)=>tStart(a)-tStart(b)); }
+const glosaTot = l => (l.glosas||[]).reduce((a,g)=>a+(+g.valor||0),0);
+function pgFaturamento(){
+  if(!fatMes) fatMes=today().slice(0,7);
+  const ops=Store.all("operadoras").filter(o=>o.status!=="inativa");
+  const lotes=Store.all("lotes").slice().sort((a,b)=>b.criado.localeCompare(a.criado));
+  const aberto=lotes.filter(l=>l.status!=="pago").reduce((a,l)=>a+l.total-glosaTot(l),0), glos=lotes.reduce((a,l)=>a+glosaTot(l),0);
+  return `<div class="pagehead"><div><h1>Faturamento de convênios</h1><p class="sub" style="text-transform:capitalize">${mesLabel(fatMes)} · atendimentos de pacientes de operadoras, agrupados em lotes</p></div>
+    <div class="actions"><button class="btn btn-line btn-sm" data-act="fatMes" data-id="-1">‹ Mês anterior</button><button class="btn btn-line btn-sm" data-act="fatMes" data-id="1">Próximo mês ›</button></div></div>
+  <div class="kpis"><div class="kpi"><b>${brl(aberto)}</b><span>A receber das operadoras</span></div><div class="kpi"><b>${brl(glos)}</b><span>Glosas registradas</span></div><div class="kpi"><b>${lotes.filter(l=>l.status==="enviado").length}</b><span>Lotes enviados aguardando</span></div></div>
+  <section class="card"><h2>Prontos para faturar</h2><div class="tablewrap" style="margin-top:10px"><table><thead><tr><th>Operadora</th><th class="r">Atendimentos</th><th class="r">Valor</th><th></th></tr></thead><tbody>
+    ${ops.map(o=>{ const it=itensFaturaveis(o.id,fatMes); return `<tr><td><b>${esc(o.nome)}</b>${ex(o)}</td><td class="r">${it.length}</td><td class="r">${brl(it.reduce((a,p)=>a+(+p.valorCobrado||0),0))}</td><td class="r">${it.length?`<button class="btn btn-sm btn-primary" data-act="gerarLote" data-id="${o.id}">Gerar lote</button>`:'<span class="small muted">Nada pendente</span>'}</td></tr>`; }).join("")||`<tr><td colspan="4" class="empty">Cadastre as operadoras credenciadas.</td></tr>`}</tbody></table></div></section>
+  <section class="card"><h2>Lotes</h2><div class="tablewrap" style="margin-top:10px"><table><thead><tr><th>Lote</th><th>Operadora</th><th>Competência</th><th class="r">Valor</th><th class="r">Glosas</th><th>Situação</th></tr></thead><tbody>
+    ${lotes.map(l=>`<tr class="click" data-act="verLote" data-id="${l.id}"><td><b>${esc(l.numero)}</b>${ex(l)}</td><td>${esc(Store.get("operadoras",l.operadoraId)?.nome||"-")}</td><td style="text-transform:capitalize">${mesLabel(l.mes)}</td><td class="r">${brl(l.total)}</td><td class="r">${glosaTot(l)?brl(glosaTot(l)):"-"}</td><td><span class="pill ${LOTE_ST[l.status][1]}">${LOTE_ST[l.status][0]}</span></td></tr>`).join("")||`<tr><td colspan="6" class="empty">Nenhum lote gerado.</td></tr>`}</tbody></table></div></section>
+  <p class="small muted">O lote reúne os atendimentos com número da carteirinha, data, procedimento e valor, pronto para conferência e envio. O arquivo XML no padrão TISS da ANS pode ser adicionado quando a operadora informar a versão e a tabela de códigos (TUSS) exigidas.</p>`;
+}
+function loteView(id){
+  const l=Store.get("lotes",id), op=Store.get("operadoras",l.operadoraId);
+  CSV_ROWS=[["Lote","Operadora","Paciente","Carteirinha","Data","Procedimento","Horário","Profissional","Valor","Glosa","Motivo da glosa"],
+    ...l.itens.map(i=>{ const g=(l.glosas||[]).find(x=>x.plantaoId===i.plantaoId); return [l.numero,op?.nome,i.paciente,i.carteirinha,fmtDay(i.data),i.procedimento,i.horario,i.profissional,(+i.valor).toFixed(2).replace(".",","),g?(+g.valor).toFixed(2).replace(".",","):"",g?.motivo||""]; })];
+  modal(`Lote ${l.numero}`, `<p class="muted">${esc(op?.nome||"")} · <span style="text-transform:capitalize">${mesLabel(l.mes)}</span> · <span class="pill ${LOTE_ST[l.status][1]}">${LOTE_ST[l.status][0]}</span>${l.protocolo?` · protocolo ${esc(l.protocolo)}`:""}</p>
+    <div class="tablewrap"><table><thead><tr><th>Paciente</th><th>Carteirinha</th><th>Data</th><th>Procedimento</th><th class="r">Valor</th><th>Glosa</th></tr></thead><tbody>
+    ${l.itens.map(i=>{ const g=(l.glosas||[]).find(x=>x.plantaoId===i.plantaoId); return `<tr><td>${esc(i.paciente)}</td><td>${esc(i.carteirinha||"-")}</td><td class="num">${fmtDay(i.data)} ${esc(i.horario)}</td><td>${esc(i.procedimento)}</td><td class="r">${brl(i.valor)}</td><td>${g?`<span class="pill p-bad">${brl(g.valor)}</span> <span class="small muted">${esc(g.motivo)}</span>`:l.status!=="pago"?`<a href="#" class="small" data-act="glosa" data-id="${l.id}" data-v="${i.plantaoId}">registrar</a>`:"-"}</td></tr>`; }).join("")}</tbody>
+    <tfoot><tr><td colspan="4"><b>Total</b> · ${l.itens.length} atendimentos</td><td class="r"><b>${brl(l.total)}</b></td><td>${glosaTot(l)?`Líquido ${brl(l.total-glosaTot(l))}`:""}</td></tr></tfoot></table></div>
+    <div class="actions">${l.status==="aberto"?`<button class="btn btn-primary" data-act="loteEnviado" data-id="${l.id}">Marcar como enviado</button>`:""}${l.status!=="pago"?`<button class="btn btn-copper" data-act="lotePago" data-id="${l.id}">Registrar pagamento</button>`:""}${exportBar("lote-"+l.numero)}${l.status==="aberto"?`<button class="btn btn-danger" data-act="delLote" data-id="${l.id}">Excluir lote</button>`:""}</div>`,{wide:1,nofocus:1});
+}
+
+/* =================== RELATÓRIOS =================== */
+let rel={tipo:"atendimentos",de:null,ate:null,pac:"",pro:""};
+const REL_TIPOS=[["atendimentos","Atendimentos por período"],["presenca","Presença e pontualidade"],["produtividade","Produtividade por profissional"],["pacientes","Resumo por paciente"],["prontuario","Prontuário (evoluções do paciente)"],["estoque","Consumo de materiais"],["financeiro","Financeiro por mês"]];
+function pgRelatorios(){
+  if(!rel.de){ rel.de=today().slice(0,8)+"01"; rel.ate=today(); }
+  const pls=Store.all("plantoes").filter(p=>p.data>=rel.de&&p.data<=rel.ate&&(!rel.pac||p.pacId===rel.pac)&&(!rel.pro||p.profId===rel.pro)).sort((a,b)=>tStart(a)-tStart(b));
+  let head=[], rows=[], foot=null, nota="";
+  const h1=n=>n.toFixed(1).replace(".",",");
+  if(rel.tipo==="atendimentos"){ head=["Data","Horário","Paciente","Profissional","Modalidade","Situação","Chegada","Saída","Valor cobrado"];
+    rows=pls.map(p=>[fmtDay(p.data),`${p.inicio}–${fim(p)}`,pacName(p.pacId),proName(p.profId),MOD_NAME[p.mod],PL_ST[p.status][0],p.chegada?hhmm(p.chegada.em):"-",p.saida?hhmm(p.saida.em):"-",brl(p.valorCobrado)]);
+    foot=["Total",`${pls.length} atendimentos`,"","","","","","",brl(pls.filter(p=>p.status!=="cancelado").reduce((a,p)=>a+(+p.valorCobrado||0),0))]; }
+  if(rel.tipo==="presenca"||rel.tipo==="produtividade"){
+    const by={}; pls.filter(p=>p.profId&&p.status!=="cancelado"&&tStart(p)<Date.now()).forEach(p=>(by[p.profId]=by[p.profId]||[]).push(p));
+    if(rel.tipo==="presenca"){ head=["Profissional","Plantões","Com chegada","Atrasos (>15 min)","Atraso médio","Fora do endereço","Sem saída","Faltas","Lançados pela adm."];
+      rows=Object.entries(by).map(([id,l])=>{ const ch=l.filter(p=>p.chegada), at=ch.map(atrasoMin).filter(x=>x>15), fora=l.filter(p=>regInfo(p.chegada,Store.get("pacientes",p.pacId))?.longe||regInfo(p.saida,Store.get("pacientes",p.pacId))?.longe).length;
+        return [proName(id),l.length,ch.length,at.length,at.length?Math.round(at.reduce((a,x)=>a+x,0)/at.length)+" min":"-",fora,l.filter(p=>p.chegada&&!p.saida&&p.status==="realizado").length,l.filter(p=>p.status==="falta").length,l.filter(p=>p.chegada?.manual||p.saida?.manual).length]; }); }
+    else { head=["Profissional","Função","Plantões realizados","Horas previstas","Horas registradas","Valor a pagar","Faltas"];
+      rows=Object.entries(by).map(([id,l])=>{ const r=l.filter(p=>p.status==="realizado"), cs=r.map(calcPag); return [proName(id),Store.get("profissionais",id)?.funcao||"",r.length,r.reduce((a,p)=>a+p.horas,0),h1(cs.reduce((a,c)=>a+(c.horas??0),0)),brl(cs.reduce((a,c)=>a+c.valor,0)),l.filter(p=>p.status==="falta").length]; }); } }
+  if(rel.tipo==="pacientes"){ head=["Paciente","Atendimento","Plantões realizados","Horas","Evoluções","Faltas","Faturado"];
+    const by={}; pls.forEach(p=>(by[p.pacId]=by[p.pacId]||[]).push(p));
+    rows=Object.entries(by).map(([id,l])=>{ const pac=Store.get("pacientes",id), r=l.filter(p=>p.status==="realizado"); return [pacName(id),pac?.tipo==="operadora"?(Store.get("operadoras",pac.operadoraId)?.nome||"Operadora"):"Particular",r.length,r.reduce((a,p)=>a+p.horas,0),l.filter(p=>p.evolucao).length,l.filter(p=>p.status==="falta").length,brl(r.reduce((a,p)=>a+(+p.valorCobrado||0),0))]; }); }
+  if(rel.tipo==="prontuario"){ head=["Data","Horário","Profissional","Sinais vitais","Evolução"];
+    if(!rel.pac) nota="Escolha um paciente para ver o prontuário.";
+    rows=rel.pac?pls.filter(p=>p.evolucao).map(p=>{ const e=p.evolucao; return [fmtDay(p.data),`${p.chegada?hhmm(p.chegada.em):p.inicio}–${p.saida?hhmm(p.saida.em):fim(p)}`,proName(e.por||p.profId),[e.pa&&"PA "+e.pa,e.fc&&"FC "+e.fc,e.temp&&e.temp+"°C",e.sat&&"SpO₂ "+e.sat+"%",e.glic&&"Glic "+e.glic].filter(Boolean).join(" · "),e.texto]; }):[]; }
+  if(rel.tipo==="estoque"){ head=["Data","Produto","Quantidade","Paciente","Custo"];
+    const ms=Store.all("movEstoque").filter(m=>m.tipo==="saida"&&m.data>=rel.de&&m.data<=rel.ate&&(!rel.pac||m.pacId===rel.pac)).sort((a,b)=>a.data.localeCompare(b.data));
+    rows=ms.map(m=>{ const pr=Store.get("produtos",m.prodId); return [fmtDay(m.data),pr?.nome||"-",`${m.qtd} ${pr?.unidade||""}`,m.pacId?pacName(m.pacId):"-",brl((+pr?.custo||0)*m.qtd)]; });
+    foot=["Total","","","",brl(ms.reduce((a,m)=>a+(+Store.get("produtos",m.prodId)?.custo||0)*m.qtd,0))]; }
+  if(rel.tipo==="financeiro"){ head=["Mês","Plantões","Faturado","Recebido","Custo profissionais","Margem"];
+    const by={}; pls.filter(p=>p.status==="realizado").forEach(p=>(by[p.data.slice(0,7)]=by[p.data.slice(0,7)]||[]).push(p));
+    rows=Object.entries(by).sort().map(([m,l])=>{ const f=l.reduce((a,p)=>a+(+p.valorCobrado||0),0), c=l.reduce((a,p)=>a+valorProf(p),0); return [mesLabel(m),l.length,brl(f),brl(l.filter(p=>p.recebido).reduce((a,p)=>a+(+p.valorCobrado||0),0)),brl(c),brl(f-c)]; }); }
+  CSV_ROWS=[head,...rows,...(foot?[foot]:[])];
+  const titulo=REL_TIPOS.find(x=>x[0]===rel.tipo)[1];
+  return `<div class="pagehead no-print"><div><h1>Relatórios</h1><p class="sub">Escolha o relatório e o período</p></div>${exportBar("relatorio-"+rel.tipo)}</div>
+  <section class="card no-print"><div class="fgrid">
+    <label class="f">Relatório<select id="rel_tipo">${REL_TIPOS.map(([k,l])=>`<option value="${k}" ${rel.tipo===k?"selected":""}>${l}</option>`).join("")}</select></label>
+    <label class="f">De<input id="rel_de" type="date" value="${rel.de}"></label><label class="f">Até<input id="rel_ate" type="date" value="${rel.ate}"></label>
+    <label class="f">Paciente<select id="rel_pac"><option value="">Todos</option>${Store.all("pacientes").map(p=>`<option value="${p.id}" ${rel.pac===p.id?"selected":""}>${esc(p.nome||p.responsavel)}</option>`).join("")}</select></label>
+    <label class="f">Profissional<select id="rel_pro"><option value="">Todos</option>${Store.all("profissionais").map(p=>`<option value="${p.id}" ${rel.pro===p.id?"selected":""}>${esc(p.nome)}</option>`).join("")}</select></label></div></section>
+  <section class="card"><div class="print-head"><img src="${LOGO}" alt=""><div><b>${esc(Store.cfg().nome||"Viver Bem Atendimento Domiciliar")}</b><span>${titulo} · ${fmtDay(rel.de)} a ${fmtDay(rel.ate)}${rel.pac?" · "+esc(pacName(rel.pac)):""}${rel.pro?" · "+esc(proName(rel.pro)):""}</span></div></div>
+    <h2 class="no-print" style="margin-bottom:10px">${titulo}</h2>
+    ${nota?`<p class="empty">${nota}</p>`:`<div class="tablewrap"><table><thead><tr>${head.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map(v=>`<td>${esc(v)}</td>`).join("")}</tr>`).join("")||`<tr><td colspan="${head.length}" class="empty">Nada no período.</td></tr>`}</tbody>${foot?`<tfoot><tr>${foot.map(v=>`<td><b>${esc(v)}</b></td>`).join("")}</tr></tfoot>`:""}</table></div>`}
+    <p class="small muted" style="margin-top:10px">Gerado em ${fmtDT(new Date().toISOString())} por ${esc(S.nome)}</p></section>`;
+}
+
+/* =================== AUDITORIA =================== */
+let audBusca="";
+function pgAuditoria(){
+  const l=Store.all("auditoria").filter(a=>norm([a.usuario,a.acao,a.colecao,a.item,a.detalhe].join(" ")).includes(norm(audBusca))).slice(0,300);
+  return `<div class="pagehead"><div><h1>Auditoria</h1><p class="sub">Quem criou, alterou ou excluiu cada registro, com data e hora</p></div></div>
+  <div class="toolbar"><input id="audBusca" type="search" placeholder="Filtrar por pessoa, tipo ou item" value="${esc(audBusca)}" aria-label="Filtrar auditoria"></div>
+  <div class="tablewrap"><table><thead><tr><th>Data e hora</th><th>Quem</th><th>Ação</th><th>Tipo</th><th>Item</th><th>Detalhe</th></tr></thead><tbody>
+  ${l.map(a=>`<tr><td class="num">${fmtDT(a.em)}</td><td>${esc(a.usuario)}<div class="small muted">${{admin:"Administração",prof:"Profissional",publico:"Link público"}[a.perfil]||""}</div></td><td><span class="pill ${a.acao==="Excluiu"?"p-bad":a.acao==="Criou"?"p-ok":"p-blue"}">${esc(a.acao)}</span></td><td>${esc(a.colecao)}</td><td>${esc(a.item)}</td><td class="small muted">${esc(a.detalhe||"")}</td></tr>`).join("")||`<tr><td colspan="6" class="empty">Nenhum registro ainda. As próximas alterações aparecem aqui.</td></tr>`}
+  </tbody></table></div><p class="small muted">Mostra os 500 registros mais recentes.</p>`;
+}
+
 /* =================== CONFIGURAÇÕES =================== */
 function pgConfig(){
   const c=Store.cfg(), tb=c.tabela||{};
@@ -1415,6 +1619,38 @@ const ACT = {
   async saveAjuste(id){ const bd=$(".modal-b"), p=Store.get("plantoes",id), v=$("#aj_v").value, m=$("#aj_m").value.trim(); if(v==="") return showErr(bd,"Informe o valor."); if(m.length<5) return showErr(bd,"Escreva o motivo do ajuste.");
     p.valorAjustado=+v; p.ajusteMotivo=m; await Store.put("plantoes",p); closeModal(); toast("Valor ajustado"); render(); },
   async limpaAjuste(id){ const p=Store.get("plantoes",id); delete p.valorAjustado; delete p.ajusteMotivo; await Store.put("plantoes",p); closeModal(); toast("Cálculo automático restaurado"); render(); },
+  csv(_,b){ baixarCSV(b.dataset.v); },
+  imprimir(){ window.print(); },
+  estTab(id){ estTab=id; render(); },
+  fatMes(id){ const [y,m]=fatMes.split("-").map(Number); const d=new Date(y,m-1+(+id),1); fatMes=`${d.getFullYear()}-${pad(d.getMonth()+1)}`; render(); },
+  novoProd(){ modal("Novo produto", fields(PROD_SPEC,{categoria:"Material de enfermagem"})+`<div class="actions"><button class="btn btn-primary" data-act="saveProd">Salvar</button></div>`); },
+  editProd(id){ const x=Store.get("produtos",id); modal(x.nome, fields(PROD_SPEC,x)+`<p class="small muted">Saldo atual: ${saldo(id)} ${esc(x.unidade||"")}</p><div class="actions"><button class="btn btn-primary" data-act="saveProd" data-id="${id}">Salvar</button><button class="btn btn-line" data-act="movEst" data-v="entrada" data-p="${id}">Entrada</button><button class="btn btn-line" data-act="movEst" data-v="saida" data-p="${id}">Saída</button><button class="btn btn-danger" data-act="delProd" data-id="${id}">Excluir</button></div>`); },
+  async saveProd(id){ const b=$(".modal-b"), v=readFields(PROD_SPEC,b), m=missing(PROD_SPEC,v); if(m) return showErr(b,m); await Store.put("produtos",id?{...Store.get("produtos",id),...v}:{id:uid("prd"),...v}); closeModal(); toast("Produto salvo"); render(); },
+  async delProd(id,b){ if(b.dataset.ok!=="1"){ b.dataset.ok="1"; b.textContent="Confirmar exclusão"; return; } if(Store.all("movEstoque").some(m=>m.prodId===id)) return showErr($(".modal-b"),"Este produto tem movimentações. Ajuste o saldo em vez de excluir."); await Store.del("produtos",id); closeModal(); render(); },
+  movEst(_,b){ const tipo=b.dataset.v, prods=Store.all("produtos").sort((a,c)=>a.nome.localeCompare(c.nome)); if(!prods.length) return toast("Cadastre um produto primeiro");
+    modal(tipo==="entrada"?"Entrada no estoque":"Saída para paciente", `<div class="fgrid"><label class="f full">Produto<select id="mv_prod">${prods.map(x=>`<option value="${x.id}" ${b.dataset.p===x.id?"selected":""}>${esc(x.nome)} · saldo ${saldo(x.id)}</option>`).join("")}</select></label>
+      <label class="f">Quantidade<input id="mv_qtd" type="number" min="1" value="1"></label><label class="f">Data<input id="mv_data" type="date" value="${today()}"></label>
+      ${tipo==="saida"?`<label class="f full">Paciente<select id="mv_pac"><option value="">Uso interno / perda</option>${Store.all("pacientes").filter(p=>p.status!=="alta").map(p=>`<option value="${p.id}">${esc(p.nome||p.responsavel)}</option>`).join("")}</select></label>`:""}
+      <label class="f full">${tipo==="entrada"?"Fornecedor / nota fiscal":"Observação"}<input id="mv_obs"></label></div>
+      <div class="actions"><button class="btn btn-primary" data-act="saveMov" data-v="${tipo}">Registrar ${tipo==="entrada"?"entrada":"saída"}</button></div>`); },
+  async saveMov(_,b){ const bd=$(".modal-b"), tipo=b.dataset.v, prodId=$("#mv_prod").value, qtd=+$("#mv_qtd").value; if(!(qtd>0)) return showErr(bd,"Informe a quantidade.");
+    if(tipo==="saida"&&qtd>saldo(prodId)&&b.dataset.ok!=="1"){ b.dataset.ok="1"; return showErr(bd,`O saldo é ${saldo(prodId)}. Clique de novo para registrar mesmo assim.`); }
+    await Store.put("movEstoque",{id:uid("mv"),prodId,tipo,qtd,data:$("#mv_data").value||today(),pacId:$("#mv_pac")?.value||"",obs:$("#mv_obs").value.trim(),por:S.nome}); closeModal(); toast(tipo==="entrada"?"Entrada registrada":"Saída registrada"); render(); },
+  async delMov(id,b){ if(b.dataset.ok!=="1"){ b.dataset.ok="1"; b.textContent="Confirmar"; return; } await Store.del("movEstoque",id); render(); },
+  async gerarLote(opId){ const it=itensFaturaveis(opId,fatMes); if(!it.length) return; const n=Store.all("lotes").filter(l=>l.mes===fatMes).length+1;
+    const l={id:uid("lt"),numero:`${fatMes.replace("-","")}-${String(n).padStart(3,"0")}`,operadoraId:opId,mes:fatMes,status:"aberto",glosas:[],
+      itens:it.map(p=>{ const pac=Store.get("pacientes",p.pacId); return {plantaoId:p.id,pacId:p.pacId,paciente:pac?.nome||"",carteirinha:pac?.carteirinha||"",data:p.data,horario:`${p.inicio}–${fim(p)}`,procedimento:MOD_NAME[p.mod]+(p.mod==="hora"?` (${p.horas}h)`:""),profissional:proName(p.profId),valor:+p.valorCobrado||0}; })};
+    l.total=l.itens.reduce((a,i)=>a+i.valor,0); await Store.put("lotes",l); toast("Lote "+l.numero+" gerado"); render(); loteView(l.id); },
+  verLote(id){ loteView(id); },
+  async loteEnviado(id){ const l=Store.get("lotes",id); l.status="enviado"; l.enviadoEm=new Date().toISOString(); await Store.put("lotes",l); toast("Lote marcado como enviado"); render(); loteView(id); },
+  glosa(id,b){ const l=Store.get("lotes",id), i=l.itens.find(x=>x.plantaoId===b.dataset.v);
+    modal("Registrar glosa", `<p class="muted">${esc(i.paciente)} · ${fmtDay(i.data)} · ${esc(i.procedimento)} · ${brl(i.valor)}</p><div class="fgrid"><label class="f">Valor glosado (R$)<input id="gl_v" type="number" step="0.01" value="${i.valor}"></label><label class="f full">Motivo<input id="gl_m" placeholder="Ex.: falta de autorização, carteirinha inválida"></label></div><div class="actions"><button class="btn btn-primary" data-act="saveGlosa" data-id="${id}" data-v="${i.plantaoId}">Salvar glosa</button></div>`); },
+  async saveGlosa(id,b){ const l=Store.get("lotes",id), v=+$("#gl_v").value, m=$("#gl_m").value.trim(); if(!(v>0)||!m) return showErr($(".modal-b"),"Informe o valor e o motivo da glosa.");
+    l.glosas=[...(l.glosas||[]).filter(g=>g.plantaoId!==b.dataset.v),{plantaoId:b.dataset.v,valor:v,motivo:m}]; await Store.put("lotes",l); toast("Glosa registrada"); render(); loteView(id); },
+  async lotePago(id){ const l=Store.get("lotes",id); l.status="pago"; l.pagoEm=new Date().toISOString(); l.recebido=l.total-glosaTot(l);
+    for(const i of l.itens){ const p=Store.get("plantoes",i.plantaoId); if(p&&!p.recebido){ p.recebido=true; await Store.put("plantoes",p); } }
+    await Store.put("lotes",l); toast(`Pagamento de ${brl(l.recebido)} registrado`); render(); loteView(id); },
+  async delLote(id,b){ if(b.dataset.ok!=="1"){ b.dataset.ok="1"; b.textContent="Confirmar exclusão"; return; } await Store.del("lotes",id); closeModal(); render(); },
   folhaMes(id){ const [y,m]=folhaMes.split("-").map(Number); const d=new Date(y,m-1+(+id),1); folhaMes=`${d.getFullYear()}-${pad(d.getMonth()+1)}`; render(); },
   verFolha(id){ const pro=Store.get("profissionais",id); modal("Folha · "+(pro?.nome||""), folhaTabela(id,folhaMes,true),{wide:1,nofocus:1}); },
   async folhaPag(id){ for(const p of folhaPlantoes(id,folhaMes).filter(p=>p.status==="realizado"&&!p.pago)){ p.pago=true; await Store.put("plantoes",p); } toast("Marcado como pago"); render(); },
@@ -1519,6 +1755,7 @@ document.addEventListener("click", e=>{
 });
 document.addEventListener("input", e=>{
   if(e.target.id==="pacBusca"){ pacBusca=e.target.value; const pos=e.target.selectionStart; render().then(()=>{ const i=$("#pacBusca"); i.focus(); i.setSelectionRange(pos,pos); }); }
+  if(e.target.id==="audBusca"){ audBusca=e.target.value; const pos=e.target.selectionStart; render().then(()=>{ const i=$("#audBusca"); i.focus(); i.setSelectionRange(pos,pos); }); }
   if(e.target.id==="proBusca"){ proBusca=e.target.value; const pos=e.target.selectionStart; render().then(()=>{ const i=$("#proBusca"); i.focus(); i.setSelectionRange(pos,pos); }); }
 });
 document.addEventListener("input", e=>{
@@ -1538,7 +1775,9 @@ async function buscaCep(input){
     ($("#f_"+pre+"numero",root)||$("#f_"+pre+"numero"))?.focus(); }
   catch(_){ /* sem internet ou bloqueado: preenchimento manual */ }
 }
+document.addEventListener("submit", e=>{ if(e.target.id==="fBusca"){ e.preventDefault(); buscaTxt=$("#buscaGeral").value.trim(); if(location.hash==="#busca") render(); else location.hash="busca"; } });
 document.addEventListener("change", e=>{
+  if(/^rel_/.test(e.target.id||"")){ rel={tipo:$("#rel_tipo").value,de:$("#rel_de").value||rel.de,ate:$("#rel_ate").value||rel.ate,pac:$("#rel_pac").value,pro:$("#rel_pro").value}; render(); }
   if(e.target.id==="escPac"){ escPac=e.target.value; render(); }
   if(e.target.id==="escPro"){ escPro=e.target.value; render(); }
   if(e.target.id==="pontoPro"){ pontoPro=e.target.value; render(); }

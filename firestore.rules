@@ -44,5 +44,11 @@ service cloud.firestore {
     match /pacientes/{id}     { allow read: if isAdmin() || isProf(); allow write: if isAdmin(); }
     match /profissionais/{id} { allow read: if isAdmin() || (isProf() && me().profId == id); allow write: if isAdmin(); }
     match /operadoras/{id}    { allow read, write: if isAdmin(); }
+    // Estoque, faturamento de convênios
+    match /produtos/{id}      { allow read, write: if isAdmin(); }
+    match /movEstoque/{id}    { allow read, write: if isAdmin(); }
+    match /lotes/{id}         { allow read, write: if isAdmin(); }
+    // Auditoria: todos registram o que fizeram; só a administração lê; ninguém altera ou apaga
+    match /auditoria/{id}     { allow create: if request.resource.data.keys().hasOnly(['id','em','usuario','perfil','acao','colecao','docId','item','detalhe']); allow read: if isAdmin(); }
   }
 }
