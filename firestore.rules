@@ -8,6 +8,7 @@ service cloud.firestore {
     function isAdmin() { return temPerfil() && me().role == 'admin'; }
     function isProf()  { return temPerfil() && me().role == 'prof'; }
     function isPac()   { return temPerfil() && me().role == 'paciente'; }
+    function meuProf() { return isProf() && resource.data.profId == me().profId; }
     function only(keys){ return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys); }
 
     // Dados da empresa: leitura pública (contratos, links e site), escrita só da administração
@@ -36,8 +37,8 @@ service cloud.firestore {
 
     // Plantões: profissional vê e evolui os próprios; a família vê os do seu paciente
     match /plantoes/{id} {
-      allow read: if isAdmin() || (isProf() && resource.data.profId == me().profId) || (isPac() && resource.data.pacId == me().pacId);
-      allow update: if isAdmin() || (isProf() && resource.data.profId == me().profId && only(['status','evolucao','chegada','saida','tentativas','atualizado']));
+      allow read: if isAdmin() || meuProf() || (isPac() && resource.data.pacId == me().pacId);
+      allow update: if isAdmin() || (meuProf() && only(['status','evolucao','chegada','saida','tentativas','atualizado']));
       allow create, delete: if isAdmin();
     }
 
@@ -48,10 +49,10 @@ service cloud.firestore {
 
     // Teleconsultas
     match /consultas/{id} {
-      allow read: if isAdmin() || (isProf() && resource.data.profId == me().profId) || (isPac() && resource.data.pacId == me().pacId);
+      allow read: if isAdmin() || meuProf() || (isPac() && resource.data.pacId == me().pacId);
       allow create: if isAdmin() || (isPac() && request.resource.data.pacId == me().pacId && request.resource.data.status == 'solicitada' && request.resource.data.pagamento == 'pendente');
       allow update: if isAdmin()
-        || (isProf() && resource.data.profId == me().profId && only(['evolucao','orientacoes','documentos','status','retornoEm','atualizado']))
+        || (meuProf() && only(['evolucao','orientacoes','documentos','status','retornoEm','atualizado']))
         || (isPac() && resource.data.pacId == me().pacId && only(['consentimento','status','atualizado']) && request.resource.data.status in [resource.data.status, 'cancelada']);
       allow delete: if isAdmin();
     }
@@ -65,10 +66,41 @@ service cloud.firestore {
     }
     match /intercorrencias/{id} { allow read, create: if isAdmin() || isProf(); allow update, delete: if isAdmin(); }
 
-    // Estoque, faturamento de convênios
+    // Estoque e faturamento de convênios
     match /produtos/{id}      { allow read, write: if isAdmin(); }
     match /movEstoque/{id}    { allow read, write: if isAdmin(); }
     match /lotes/{id}         { allow read, write: if isAdmin(); }
+    match /inventarios/{id}   { allow read, write: if isAdmin(); }
+    match /tuss/{id}          { allow read: if isAdmin() || isProf(); allow write: if isAdmin(); }
+    match /mapTuss/{id}       { allow read, write: if isAdmin(); }
+
+    // Cadastros da operação
+    match /funcionarios/{id}  { allow read, write: if isAdmin(); }
+    match /coordenadores/{id} { allow read: if isAdmin() || isProf(); allow write: if isAdmin(); }
+    match /organizacoes/{id}  { allow read: if isAdmin() || isProf(); allow write: if isAdmin(); }
+    match /rotas/{id}         { allow read: if isAdmin() || isProf(); allow write: if isAdmin(); }
+
+    // Chat: cada profissional só vê e escreve na própria conversa
+    match /mensagens/{id} {
+      allow read: if isAdmin() || meuProf();
+      allow create: if isAdmin() || (isProf() && request.resource.data.profId == me().profId && request.resource.data.de == 'prof');
+      allow update: if isAdmin() || (meuProf() && only(['lida','atualizado']));
+      allow delete: if isAdmin();
+    }
+    // Folgas e férias: o profissional avisa as suas
+    match /indisponibilidades/{id} {
+      allow read: if isAdmin() || meuProf();
+      allow create: if isAdmin() || (isProf() && request.resource.data.profId == me().profId);
+      allow update, delete: if isAdmin() || meuProf();
+    }
+
+    // Financeiro: só a administração. O profissional lê os próprios adiantamentos.
+    match /despesas/{id}      { allow read, write: if isAdmin(); }
+    match /adiantamentos/{id} { allow read: if isAdmin() || meuProf(); allow write: if isAdmin(); }
+    match /lancamentos/{id}   { allow read, write: if isAdmin(); }
+    match /extratoBanco/{id}  { allow read, write: if isAdmin(); }
+    match /conferencias/{id}  { allow read, write: if isAdmin(); }
+
     // Auditoria: todos registram o que fizeram; só a administração lê; ninguém altera ou apaga
     match /auditoria/{id}     { allow create: if request.resource.data.keys().hasOnly(['id','em','usuario','perfil','acao','colecao','docId','item','detalhe']); allow read: if isAdmin(); }
   }
