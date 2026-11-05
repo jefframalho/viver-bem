@@ -328,7 +328,7 @@ function saveSession(){ try{ S ? sessionStorage.setItem(SS_KEY,JSON.stringify(S)
 async function login(email, senha){
   const cred = await Store.auth.signInWithEmailAndPassword(email, senha);
   const u = await Store.fetchOne("usuarios", cred.user.uid);
-  if(!u){ await Store.auth.signOut(); throw new Error("Este usuário ainda não tem acesso liberado. Peça à administração."); }
+  if(!u){ const id=cred.user.uid; await Store.auth.signOut(); throw new Error("Este usuário ainda não tem acesso liberado. Peça à administração. Código do usuário (UID): "+id); }
   S = {role:u.role, profId:u.profId||null, nome:u.nome||email};
   await Store.loadFor(S);
 }
