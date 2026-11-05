@@ -182,6 +182,10 @@ dl.kv dt{color:var(--muted);font-size:.88rem} dl.kv dd{margin:0;min-width:0;over
 
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(24px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;z-index:90;font-weight:600;max-width:90vw}
 
+/* gráficos de monitoramento */
+.trends{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr))}
+.trend{margin:0;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--surface)}
+.trend figcaption{font-weight:600;font-size:.9rem;margin-bottom:4px}
 /* painel diário */
 .welcome{position:relative;overflow:hidden;border-radius:18px;padding:26px 28px;background:linear-gradient(120deg,var(--blue-deep),#1F648D);color:#fff;display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;justify-content:space-between}
 .welcome::after{content:"";position:absolute;right:-60px;top:-80px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(233,180,143,.35),transparent 70%)}
@@ -377,8 +381,8 @@ const podeChegar = p => !p.chegada && p.status==="agendado" && Date.now()>=tStar
 const PAC_ST = {avaliacao:["Em avaliação","p-warn"],ativo:["Ativo","p-ok"],alta:["Alta","p-mute"]};
 
 /* =================== DADOS =================== */
-const COLS = ["config","curriculos","documentos","pacientes","profissionais","candidatos","plantoes","solicitacoes","operadoras","contratos","usuarios","produtos","movEstoque","lotes","auditoria"];
-const LS_KEY = "viverbem-sistema-v5";
+const COLS = ["config","curriculos","documentos","pacientes","profissionais","candidatos","plantoes","solicitacoes","operadoras","contratos","usuarios","produtos","movEstoque","lotes","auditoria","consultas","medicoes","intercorrencias","agendaTele"];
+const LS_KEY = "viverbem-sistema-v6";
 const Store = {
   mode: FIREBASE_CONFIG ? "firebase" : "demo",
   data: {}, fs: null, auth: null,
@@ -429,7 +433,9 @@ const Store = {
     if(this.mode==="demo") return;
     const get = async (c,q) => { const s = await (q||this.fs.collection(c)).get(); this.data[c] = s.docs.map(d=>d.data()); };
     if(session.role==="admin") await Promise.all([...COLS.filter(c=>!["curriculos","documentos","auditoria"].includes(c)).map(c=>get(c)), get("auditoria", this.fs.collection("auditoria").orderBy("em","desc").limit(500))]);
-    else { await get("pacientes"); await get("plantoes", this.fs.collection("plantoes").where("profId","==",session.profId)); this.data.profissionais=[await this.fetchOne("profissionais",session.profId)].filter(Boolean); }
+    else if(session.role==="paciente"){ const q=(c,k,v)=>get(c,this.fs.collection(c).where(k,"==",v)); this.data.pacientes=[await this.fetchOne("pacientes",session.pacId)].filter(Boolean);
+      await Promise.all([q("plantoes","pacId",session.pacId),q("consultas","pacId",session.pacId),q("medicoes","pacId",session.pacId),get("agendaTele")]); this.data.profissionais=[]; }
+    else { await get("pacientes"); await get("plantoes", this.fs.collection("plantoes").where("profId","==",session.profId)); await get("consultas", this.fs.collection("consultas").where("profId","==",session.profId)); this.data.profissionais=[await this.fetchOne("profissionais",session.profId)].filter(Boolean); }
   }
 };
 
@@ -441,7 +447,7 @@ async function login(email, senha){
   const cred = await Store.auth.signInWithEmailAndPassword(email, senha);
   const u = await Store.fetchOne("usuarios", cred.user.uid);
   if(!u){ const id=cred.user.uid; await Store.auth.signOut(); throw new Error("Este usuário ainda não tem acesso liberado. Peça à administração. Código do usuário (UID): "+id); }
-  S = {role:u.role, profId:u.profId||null, nome:u.nome||email};
+  S = {role:u.role, profId:u.profId||null, pacId:u.pacId||null, nome:u.nome||email};
   await Store.loadFor(S);
 }
 async function logout(){ if(Store.mode==="firebase") await Store.auth.signOut(); S=null; saveSession(); location.hash=""; render(); }
@@ -460,12 +466,16 @@ function seed(){
   Object.assign(pac[0],{geo:"-7.389200, -38.774500",cep:"63210-000",complexidade:"Alta",consciencia:"Confuso / desorientado",mobilidade:"Acamado",alimentacao:"Oral (dieta pastosa)",dispositivos:["Curativo / lesão"],riscos:["Lesão por pressão","Broncoaspiração","Queda"],medicamentos:"Losartana 50 mg às 8h e 20h\nAAS 100 mg após o almoço\nSinvastatina 20 mg à noite",medico:"Dr. Paulo Mendes (CRM-CE 00000)",medicoTel:"(88) 99999-9000"});
   Object.assign(pac[1],{exigeLocal:"nao",geo:"-7.213100, -39.315100",cep:"63010-000",complexidade:"Média",consciencia:"Lúcido e orientado",mobilidade:"Deambula com ajuda",alimentacao:"Oral",dispositivos:[],riscos:["Queda"],medicamentos:"Levodopa + benserazida 100/25 mg 3x ao dia\nPramipexol 0,25 mg 2x ao dia",medico:"Dra. Helena Cruz (neurologista)",medicoTel:""});
   Object.assign(pac[2],{geo:"-7.493100, -38.985300",cep:"63260-000",complexidade:"Média",consciencia:"Lúcido e orientado",mobilidade:"Cadeira de rodas",alimentacao:"Oral",dispositivos:["Acesso venoso","Curativo / lesão"],riscos:["Queda","Infecção"],medicamentos:"Ceftriaxona 1 g EV 1x ao dia (até 14 dias)\nEnoxaparina 40 mg SC 1x ao dia\nParacetamol 750 mg se dor",medico:"Dr. Marcos Feitosa (ortopedista)",medicoTel:""});
-  Object.assign(pac[3],{complexidade:"",consciencia:"",mobilidade:"",alimentacao:"",dispositivos:[],riscos:[]});
+  Object.assign(pac[0],{modalidade:"domicilio",programa:"sim",perfis:["Hipertenso","Idoso","Mobilidade reduzida"],freqMed:"2",paMax:"150/95",proxReavaliacao:D(3),acessoFamilia:"familia@exemplo.com",senhaDemo:"123456"});
+  Object.assign(pac[1],{modalidade:"domicilio",programa:"sim",perfis:["Idoso","Mobilidade reduzida"],freqMed:"1",proxReavaliacao:D(20)});
+  Object.assign(pac[2],{modalidade:"domicilio",programa:"nao"});
+  Object.assign(pac[3],{modalidade:"ilpi",instituicao:"Residencial Bem Viver (exemplo)",complexidade:"",consciencia:"",mobilidade:"",alimentacao:"",dispositivos:[],riscos:[]});
   const pro = [
+    {id:"pro5",exemplo:true,nome:"Dra. Helena Cruz",cpf:"",funcao:"Médico(a)",registro:"CRM-CE 000005",tel:"(88) 99999-0005",email:"",cidade:"Juazeiro do Norte",uf:"CE",areas:"Teleconsulta",disp:[],status:"ativo",teleEsp:"medica",teleDias:["Seg","Qua","Sex"],teleIni:"08:00",teleFim:"11:00",teleDur:20,criado:ts(-30)},
     {id:"pro1",exemplo:true,nome:"Maria Aparecida Souza",cpf:"",funcao:"Técnico(a) de enfermagem",registro:"COREN-CE 000001",tel:"(88) 99999-0001",email:"",cidade:"Mauriti/CE",areas:"Mauriti, Brejo Santo",disp:["Plantão 12h","Noturno"],status:"ativo",acesso:"maria@exemplo.com",senhaDemo:"123456",porHora:"sim",exigeLocal:"sim",criado:ts(-60)},
     {id:"pro2",exemplo:true,nome:"Josefa Bezerra",cpf:"",funcao:"Técnico(a) de enfermagem",registro:"COREN-CE 000002",tel:"(88) 99999-0002",email:"",cidade:"Mauriti/CE",areas:"Mauriti",disp:["Plantão 12h","Plantão 24h"],status:"ativo",criado:ts(-50)},
-    {id:"pro3",exemplo:true,nome:"Carlos Eduardo Rocha",cpf:"",funcao:"Fisioterapeuta",registro:"CREFITO-6 000003-F",tel:"(88) 99999-0003",email:"",cidade:"Juazeiro do Norte/CE",areas:"Juazeiro, Crato, Barbalha",disp:["Atendimento por hora"],status:"ativo",criado:ts(-40)},
-    {id:"pro4",exemplo:true,nome:"Ana Paula Leite",cpf:"",funcao:"Enfermeiro(a)",registro:"COREN-CE 000004",tel:"(88) 99999-0004",email:"",cidade:"Brejo Santo/CE",areas:"Brejo Santo, Mauriti, Milagres",disp:["Plantão 6h","Atendimento por hora"],status:"ativo",criado:ts(-45)}
+    {id:"pro3",exemplo:true,teleEsp:"fisioterapia",teleDias:["Ter","Qui"],teleIni:"18:00",teleFim:"20:00",teleDur:30,nome:"Carlos Eduardo Rocha",cpf:"",funcao:"Fisioterapeuta",registro:"CREFITO-6 000003-F",tel:"(88) 99999-0003",email:"",cidade:"Juazeiro do Norte/CE",areas:"Juazeiro, Crato, Barbalha",disp:["Atendimento por hora"],status:"ativo",criado:ts(-40)},
+    {id:"pro4",exemplo:true,teleEsp:"enfermagem",teleDias:["Seg","Ter","Qua","Qui","Sex"],teleIni:"14:00",teleFim:"17:00",teleDur:30,nome:"Ana Paula Leite",cpf:"",funcao:"Enfermeiro(a)",registro:"COREN-CE 000004",tel:"(88) 99999-0004",email:"",cidade:"Brejo Santo/CE",areas:"Brejo Santo, Mauriti, Milagres",disp:["Plantão 6h","Atendimento por hora"],status:"ativo",criado:ts(-45)}
   ];
   const tab = {"6":{cobra:180,paga:110},"8":{cobra:230,paga:140},"12":{cobra:320,paga:190},"24":{cobra:600,paga:360},"hora":{cobra:90,paga:55}};
   const pl=[]; let n=0;
@@ -490,6 +500,7 @@ function seed(){
     p.chegada={em:new Date(st+late*6e4).toISOString(),lat:c[0],lng:c[1],acc:12};
     if(en<agora){ p.status="realizado"; if(k%11!==0) p.saida={em:new Date(en+Math.round(Math.random()*12)*6e4).toISOString(),lat:c[0],lng:c[1],acc:12}; }
     else { p.status="andamento"; p.evolucao=null; } });
+  pl.forEach(p=>{ const pf=pro.find(x=>x.id===p.profId); p.profNome=pf?.nome||""; p.profFuncao=pf?.funcao||""; });
   { const x=pl.find(p=>p.profId==="pro1"&&p.status==="realizado"&&p.chegada&&p.saida); if(x) x.chegada.em=new Date(tStart(x)+62*6e4).toISOString(); }
   const cand=[
     {id:"VB-EX01A",exemplo:true,nome:"Rosângela Cruz",cpf:"11144477735",nasc:"1990-05-14",tel:"(88) 99999-2001",email:"rosangela@exemplo.com",cidade:"Mauriti/CE",funcao:"Técnico(a) de enfermagem",registro:"COREN-CE 000010",anos:"6",exp:["Idosos","Sondas","Curativos"],disp:["Plantão 12h","Fins de semana"],areas:"Mauriti, Milagres",resumo:"Trabalhou 4 anos em hospital regional.",cv:{nome:"curriculo-rosangela.pdf",kb:180},status:"recebido",hist:[{s:"recebido",em:ts(-1)}],notas:"",criado:ts(-1)},
@@ -499,7 +510,7 @@ function seed(){
   cand.forEach(c=>{ c.docs=Object.fromEntries(DOCS.map(([k])=>[k,{nome:k+".jpg",kb:120,em:c.criado}])); delete c.cv; });
   cand[2].docsOk=Object.fromEntries(DOCS.map(([k])=>[k,true]));
   cand[1].docsOk={selfie:true,identidade:true,conselho:true,curriculo:true}; cand[1].reenvio=["endereco"];
-  const cfg={id:"empresa",nome:"Viver Bem Atendimento Domiciliar",cnpj:"",endereco:"",cidade:"",whatsapp:"",email:"",tabela:tab,diaPagamento:"10",raio:300,tolerancia:15,exemploValores:true};
+  const cfg={id:"empresa",nome:"Viver Bem Atendimento Domiciliar",cnpj:"",endereco:"",cidade:"",whatsapp:"",email:"",tabela:tab,diaPagamento:"10",raio:300,tolerancia:15,exemploValores:true,teleValores:{medica:180,enfermagem:90,fisioterapia:120,fono:120,nutricao:120,psicologia:150},videoBase:"https://meet.jit.si/",pixChave:"",linkPagamento:""};
   const ct=[];
   ct.push(makeContrato("autonomo",{refId:"VB-EX03C",exemplo:true,nome:cand[2].nome,cpf:cand[2].cpf,funcao:cand[2].funcao,registro:cand[2].registro,cidade:cand[2].cidade},cfg,"ct-ex1"));
   const cp=makeContrato("paciente",{refId:"pac1",exemplo:true,respNome:"Antônio Alves de Lima",respCpf:"52998224725",respEnd:"Rua São Pedro, 120, Centro, Mauriti/CE",pacNome:pac[0].nome,servicos:"Plantão noturno de 12h (19h às 7h), todos os dias, com técnico(a) de enfermagem, e supervisão de enfermagem semanal.",valor:"R$ 320,00 por plantão, faturado mensalmente",venc:"5"},cfg,"ct-ex2");
@@ -513,6 +524,19 @@ function seed(){
       [1,"saida",30,"pac3",-6],[2,"saida",18,"pac3",-6],[4,"saida",14,"pac3",-6],[3,"saida",40,"pac3",-6],[6,"saida",5,"pac1",-10],[0,"saida",4,"pac1",-10],[5,"saida",3,"pac1",-12],[7,"saida",4,"pac1",-8]]
       .map(([pi,tipo,qtd,pacId,d],i)=>({id:"mv"+i,exemplo:true,prodId:"prd"+pi,tipo,qtd,pacId:pacId||"",data:D(d),obs:tipo==="entrada"?"Compra inicial":"",por:"Administração Viver Bem",criado:ts(d)})),
     lotes:[], auditoria:[],
+    agendaTele: pro.filter(x=>x.teleEsp).map(x=>({id:x.id,nome:x.nome,funcao:x.funcao,registro:x.registro,esp:x.teleEsp,dias:x.teleDias,ini:x.teleIni,fim:x.teleFim,dur:x.teleDur,ativo:true,ocupados:[]})),
+    consultas:[
+      {id:"tc1",exemplo:true,pacId:"pac1",profId:"pro4",profNome:"Ana Paula Leite",esp:"enfermagem",data:D(-3),hora:"15:00",dur:30,valor:90,status:"realizada",pagamento:"pago",sala:"ViverBem-exemplo-1",consentimento:{em:ts(-4)},evolucao:"Revisão do curativo por vídeo com a filha. Ferida limpa, sem sinais de infecção. Pressão da manhã 138/86.",orientacoes:"Manter mudança de decúbito a cada 2 horas. Medir a pressão às 8h e às 20h e registrar no app.",documentos:[],criado:ts(-5)},
+      {id:"tc2",exemplo:true,pacId:"pac1",profId:"pro5",profNome:"Dra. Helena Cruz",esp:"medica",data:D(1),hora:"09:00",dur:20,valor:180,status:"agendada",pagamento:"pendente",sala:"ViverBem-exemplo-2",criado:ts(-1)},
+      {id:"tc3",exemplo:true,pacId:"pac2",profId:"pro3",profNome:"Carlos Eduardo Rocha",esp:"fisioterapia",data:D(2),hora:"18:30",dur:30,valor:120,status:"solicitada",pagamento:"pendente",sala:"ViverBem-exemplo-3",consentimento:{em:ts(-.2)},criado:ts(-.2)}],
+    medicoes: (()=>{ const out=[]; let n=0; for(let i=20;i>=0;i--){ const dia=new Date(Date.now()-i*864e5);
+        [8,20].forEach(h=>{ if(i===0&&h===20) return; const t=new Date(dia); t.setHours(h,5,0,0); const s=128+Math.round(Math.sin(i*1.3+h)*9), d=82+Math.round(Math.cos(i)*5);
+          const pa = (i===2&&h===20)?"168/102":(i===6&&h===8)?"162/98":`${s}/${d}`; const m={id:"md"+(++n),exemplo:true,pacId:"pac1",em:t.toISOString(),pa,fc:72+(i%5),sat:95+(i%3),glic:"",peso:i%7===0?58.4:"",sintomas:(i===2&&h===20)?["Tontura"]:[],obs:"",por:"Família"};
+          out.push(m); }); if(i%3===0) { const t=new Date(dia); t.setHours(9,0,0,0); out.push({id:"md"+(++n),exemplo:true,pacId:"pac2",em:t.toISOString(),pa:`${122+i%6}/${78+i%4}`,fc:68,sat:96,glic:110+i,peso:"",sintomas:[],obs:"",por:"Família"}); } }
+      out.forEach(m=>{ m.alertas=avaliaMedicao(m,pac.find(x=>x.id===m.pacId)); m.alertaStatus=m.alertas.length?"aberto":null; });
+      const velho=out.find(m=>m.alertas.length&&Date.now()-new Date(m.em).getTime()>4*864e5); if(velho){ velho.alertaStatus="resolvido"; velho.conduta={tipo:"Orientação por telefone ou WhatsApp",texto:"Família orientada a repetir a medição em repouso; segunda medida 142/88.",por:"Ana Paula Leite",em:velho.em}; }
+      return out; })(),
+    intercorrencias:[{id:"ic1",exemplo:true,pacId:"pac1",em:ts(-4),tipo:"Lesão de pele",gravidade:"leve",descricao:"Hiperemia na região sacral, sem rompimento de pele.",conduta:"Aumentada a frequência de mudança de decúbito e aplicado protetor cutâneo.",por:"Maria Aparecida Souza"}],
     operadoras:[{id:"op1",exemplo:true,nome:"Operadora Exemplo Saúde",cnpj:"00.000.000/0001-00",contato:"Ricardo Alves",tel:"(85) 3333-0000",email:"rede@exemplo.com",status:"credenciada",valores:"Plantão 6h: R$ 200 · Plantão 12h: R$ 350 · Visita de enfermagem: R$ 120",obs:"Faturamento mensal até o dia 5, com relatório de evoluções.",criado:ts(-90)}],
     solicitacoes:[
       {id:"s1",exemplo:true,tipo:"familia",nome:"Luzia Gomes",tel:"(88) 99999-1404",cidade:"Mauriti/CE",paciente:"Avô, 88 anos, Alzheimer",servico:"Plantão 12h",msg:"Precisamos de alguém à noite.",status:"novo",criado:ts(-.3)},
@@ -640,6 +664,15 @@ const ICON = {
   relatorios:I('<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>'),
   auditoria:I('<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="M9 12l2 2 4-4"/>'),
   busca:I('<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>'),
+  teleconsultas:I('<rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10 5-3v10l-5-3"/>'),
+  teleprof:I('<rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10 5-3v10l-5-3"/>'),
+  teleconsulta:I('<rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10 5-3v10l-5-3"/>'),
+  monitoramento:I('<path d="M3 12h4l2-5 3 10 2-5h7"/>'),
+  medicoes:I('<path d="M3 12h4l2-5 3 10 2-5h7"/>'),
+  inicio:I('<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>'),
+  servicos:I('<path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z"/>'),
+  agenda:I('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>'),
+  cuidado:I('<path d="M6 3h9l4 4v14H6z"/><path d="M9 12h6M9 16h4"/>'),
   menu:I('<path d="M4 6h16M4 12h16M4 18h16"/>'),
   plus:I('<path d="M12 5v14M5 12h14"/>'),
   wa:I('<path d="M4 20l1.3-3.9A8 8 0 1 1 8 19z"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5l1-1.5-2-1-1 1c-1-.5-2-1.5-2.5-2.5l1-1-1-2z"/>'),
@@ -649,7 +682,18 @@ const LINES = `<svg viewBox="0 0 520 300" fill="none" stroke="#fff" stroke-width
 
 /* =================== HELPERS DE DOMÍNIO =================== */
 const pacName = id => Store.get("pacientes",id)?.nome || "Paciente removido";
-const proName = id => id ? (Store.get("profissionais",id)?.nome || "Profissional removido") : "Sem profissional";
+const proName = id => id ? (Store.get("profissionais",id)?.nome || Store.all("plantoes").find(x=>x.profId===id&&x.profNome)?.profNome || Store.all("consultas").find(x=>x.profId===id&&x.profNome)?.profNome || Store.get("agendaTele",id)?.nome || "Profissional") : "Sem profissional";
+const MODALIDADES=[["domicilio","Domicílio"],["ilpi","Clínica de repouso / ILPI"],["hospital","Hospital"]];
+const MOD_LOCAL=Object.fromEntries(MODALIDADES);
+const TELE=[["medica","Teleconsulta médica"],["enfermagem","Teleconsulta de enfermagem"],["fisioterapia","Teleatendimento de fisioterapia"],["fono","Teleatendimento de fonoaudiologia"],["nutricao","Teleconsulta de nutrição"],["psicologia","Teleatendimento de psicologia"]];
+const TELE_NAME=Object.fromEntries(TELE);
+const DIAS=["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+const PERFIS=["Hipertenso","Diabético","Cardiopata","Doença respiratória crônica","Idoso","Mobilidade reduzida","Internado"];
+const SINTOMAS=["Falta de ar","Dor no peito","Tontura","Inchaço nas pernas","Febre","Confusão mental","Queda","Dor forte"];
+const SINT_ALERTA=["Falta de ar","Dor no peito","Confusão mental","Queda"];
+const CONS_ST={solicitada:["Aguardando confirmação","p-warn"],agendada:["Agendada","p-blue"],realizada:["Realizada","p-ok"],cancelada:["Cancelada","p-mute"],falta:["Paciente faltou","p-bad"]};
+const INTER_TIPOS=["Queda","Piora clínica","Lesão de pele","Problema com medicação","Problema com dispositivo (sonda, acesso)","Encaminhado ao hospital","Outro"];
+const SAMU_NOTE=`<p class="note warn small"><b>Isto não é serviço de emergência.</b> Em caso de falta de ar forte, dor no peito, desmaio ou piora rápida, ligue <b>192 (SAMU)</b>.</p>`;
 const fim = p => { const [h,m]=p.inicio.split(":").map(Number); const t=h*60+m+p.horas*60; return `${pad(Math.floor(t/60)%24)}:${pad(t%60)}`+(t>=1440?" (+1)":""); };
 const tStart = p => new Date(p.data+"T"+p.inicio).getTime();
 const tEnd = p => tStart(p)+p.horas*36e5;
@@ -666,6 +710,8 @@ function counts(){
     cand: Store.all("candidatos").filter(c=>["recebido","analise"].includes(c.status)).length,
     ctPend: Store.all("contratos").filter(c=>c.status==="pendente").length,
     sol: Store.all("solicitacoes").filter(s=>s.status==="novo").length,
+    alertas: Store.all("medicoes").filter(m=>m.alertaStatus==="aberto").length,
+    teleSol: Store.all("consultas").filter(c=>c.status==="solicitada").length,
     estBaixo: Store.all("produtos").filter(p=>saldo(p.id)<=(+p.minimo||0)).length,
     semEvo: Store.all("plantoes").filter(p=>p.status==="realizado" && !p.evolucao && p.data>=addDays(t,-7)).length
   };
@@ -673,23 +719,25 @@ function counts(){
 
 /* =================== ROTAS =================== */
 const ADMIN_NAV = [
-  ["sep","Operação"],["painel","Painel"],["escala","Agenda de plantões"],["ponto","Chegadas e saídas"],["pacientes","Pacientes"],["profissionais","Profissionais"],
+  ["sep","Operação"],["painel","Painel"],["escala","Agenda de plantões"],["ponto","Chegadas e saídas"],["teleconsultas","Teleconsultas"],["monitoramento","Monitoramento"],["pacientes","Pacientes"],["profissionais","Profissionais"],
   ["sep","Captação"],["recrutamento","Recrutamento"],["solicitacoes","Solicitações"],["operadoras","Operadoras"],
   ["sep","Gestão"],["faturamento","Faturamento de convênios"],["financeiro","Financeiro"],["folha","Folha de pagamento"],["estoque","Estoque"],["contratos","Contratos"],
   ["relatorios","Relatórios"],["auditoria","Auditoria"],["config","Configurações"]
 ];
 function route(){ const h=decodeURIComponent(location.hash.slice(1)); const m=h.match(/^([a-z]+)(?:-(.+))?$/); return m?{r:m[1],id:m[2]||null}:{r:"",id:null}; }
 const PUBLIC = {links:pgLinks, trabalhe:pgTrabalhe, acompanhar:pgAcompanhar, assinar:pgAssinar, solicitar:pgSolicitar};
-const ADMIN = {busca:pgBusca,estoque:pgEstoque,faturamento:pgFaturamento,relatorios:pgRelatorios,auditoria:pgAuditoria,folha:pgFolha,ponto:pgPonto,painel:pgPainel,pacientes:pgPacientes,paciente:pgPaciente,escala:pgEscala,profissionais:pgProfissionais,profissional:pgProfissional,recrutamento:pgRecrutamento,candidato:pgCandidato,contratos:pgContratos,solicitacoes:pgSolicitacoes,operadoras:pgOperadoras,financeiro:pgFinanceiro,config:pgConfig};
-const PROF = {meus:pgMeus, pagamentos:pgPagamentos};
+const ADMIN = {teleconsultas:pgTeleconsultas,monitoramento:pgMonitoramento,busca:pgBusca,estoque:pgEstoque,faturamento:pgFaturamento,relatorios:pgRelatorios,auditoria:pgAuditoria,folha:pgFolha,ponto:pgPonto,painel:pgPainel,pacientes:pgPacientes,paciente:pgPaciente,escala:pgEscala,profissionais:pgProfissionais,profissional:pgProfissional,recrutamento:pgRecrutamento,candidato:pgCandidato,contratos:pgContratos,solicitacoes:pgSolicitacoes,operadoras:pgOperadoras,financeiro:pgFinanceiro,config:pgConfig};
+const PROF = {meus:pgMeus, teleprof:pgTeleProf, pagamentos:pgPagamentos};
+const FAM = {inicio:pgFamInicio, servicos:pgFamServicos, teleconsulta:pgFamTele, agenda:pgFamAgenda, medicoes:pgFamMed, cuidado:pgFamCuidado};
+const FAM_NAV = [["inicio","Início"],["servicos","Serviços"],["teleconsulta","Teleconsultas"],["agenda","Agenda"],["medicoes","Minhas medições"],["cuidado","Plano e relatórios"]];
 
 async function render(){
   const {r,id} = route();
   const root = $("#root");
   if(PUBLIC[r]){ root.innerHTML = pubShell(await PUBLIC[r](id)); bindPublic(r,id); return; }
   if(!S){ root.innerHTML = pgLogin(); bindLogin(); return; }
-  const table = S.role==="admin" ? ADMIN : PROF;
-  const def = S.role==="admin" ? "painel" : "meus";
+  const table = {admin:ADMIN, prof:PROF, paciente:FAM}[S.role] || PROF;
+  const def = {admin:"painel", prof:"meus", paciente:"inicio"}[S.role] || "meus";
   const fn = table[r] || table[def];
   const cur = table[r] ? r : def;
   root.innerHTML = appShell(cur, fn(id));
@@ -699,8 +747,8 @@ window.addEventListener("hashchange", render);
 
 function appShell(cur, body){
   const c = counts();
-  const badge = {escala:c.semPro, recrutamento:c.cand, solicitacoes:c.sol, contratos:c.ctPend, estoque:c.estBaixo};
-  const navItems = S.role==="admin" ? ADMIN_NAV : [["meus","Meus plantões"],["pagamentos","Meus pagamentos"]];
+  const badge = {escala:c.semPro, recrutamento:c.cand, solicitacoes:c.sol, contratos:c.ctPend, estoque:c.estBaixo, monitoramento:c.alertas, teleconsultas:c.teleSol};
+  const navItems = S.role==="admin" ? ADMIN_NAV : S.role==="paciente" ? FAM_NAV : [["meus","Meus plantões"],["teleprof","Minhas teleconsultas"],["pagamentos","Meus pagamentos"]];
   const activeKey = {paciente:"pacientes",profissional:"profissionais",candidato:"recrutamento"}[cur] || cur;
   const nav = navItems.map(([k,l]) => k==="sep" ? `<div class="nav-sep">${l}</div>` :
     `<a href="#${k}" ${activeKey===k?'aria-current="page"':""}>${ICON[k]||ICON.escala}<span>${l}</span>${badge[k]?`<span class="badge">${badge[k]}</span>`:""}</a>`).join("");
@@ -710,7 +758,7 @@ function appShell(cur, body){
       <a class="brand" href="#"><img src="${LOGO}" alt=""><span><b>Viver Bem</b><small>Atendimento Domiciliar</small></span></a>
       ${S.role==="admin"?`<form class="busca-side" id="fBusca" role="search"><input id="buscaGeral" type="search" placeholder="Buscar paciente, profissional..." value="${esc(buscaTxt)}" aria-label="Busca geral"></form>`:""}
       <nav class="nav">${nav}</nav>
-      <div class="side-foot"><div>${esc(S.nome)}</div><div class="small" style="color:#7FA0B6">${S.role==="admin"?"Administração":"Profissional"}${Store.mode==="demo"?" · demonstração":""}</div>
+      <div class="side-foot"><div>${esc(S.nome)}</div><div class="small" style="color:#7FA0B6">${{admin:"Administração",prof:"Profissional",paciente:"Paciente e família"}[S.role]}${Store.mode==="demo"?" · demonstração":""}</div>
       <button class="btn btn-sm btn-ghost-light" data-act="logout">Sair</button></div>
     </aside>
     <main class="main"><div class="main-in">${body}</div></main>
@@ -725,7 +773,7 @@ function pgLogin(){
   const demo = Store.mode==="demo";
   return `<div class="login">
     <section class="login-art"><span class="brand" style="padding:0"><img src="${LOGO}" alt=""><span><b>Viver Bem</b><small>Atendimento Domiciliar</small></span></span>
-      <div><h1>Gestão do cuidado domiciliar em um só lugar.</h1><p>Administração e profissionais de saúde entram pelo mesmo endereço. Cada um vê só o que é seu.</p></div><span></span>${LINES}</section>
+      <div><h1>Gestão do cuidado domiciliar em um só lugar.</h1><p>Administração, profissionais de saúde, pacientes e famílias entram pelo mesmo endereço. Cada um vê só o que é seu.</p></div><span></span>${LINES}</section>
     <section class="login-form">
       <form id="fLogin" novalidate>
         <h2>Entrar no sistema</h2>
@@ -733,8 +781,8 @@ function pgLogin(){
         <label class="f">Senha<input id="lg_pass" type="password" autocomplete="current-password"></label>
         <p class="err" hidden></p>
         <button class="btn btn-primary btn-block">Entrar</button>
-        ${demo?`<div class="demo-strip">Demonstração · senha <b>123456</b><br>Administração: <b>admin@viverbem.com</b><br>Profissional: <b>maria@exemplo.com</b></div>
-          <div class="actions"><button type="button" class="btn btn-sm btn-line" data-act="demoAdmin">Entrar como administração</button><button type="button" class="btn btn-sm btn-line" data-act="demoProf">Entrar como profissional</button></div>`
+        ${demo?`<div class="demo-strip">Demonstração · senha <b>123456</b><br>Administração: <b>admin@viverbem.com</b><br>Profissional: <b>maria@exemplo.com</b><br>Família: <b>familia@exemplo.com</b></div>
+          <div class="actions"><button type="button" class="btn btn-sm btn-line" data-act="demoAdmin">Entrar como administração</button><button type="button" class="btn btn-sm btn-line" data-act="demoProf">Entrar como profissional</button><button type="button" class="btn btn-sm btn-line" data-act="demoFam">Entrar como família</button></div>`
         :`<button type="button" class="btn btn-line btn-block" data-act="reset">Esqueci minha senha</button>`}
         <p class="small muted">Quer trabalhar com a gente? <a href="#trabalhe">Trabalhe conosco</a> · <a href="#acompanhar">Acompanhar candidatura</a></p>
       </form>
@@ -745,12 +793,14 @@ function bindLogin(){
   f.onsubmit=async e=>{ e.preventDefault(); const email=$("#lg_email").value.trim().toLowerCase(), senha=$("#lg_pass").value;
     if(!email||!senha) return showErr(f,"Digite e-mail e senha.");
     if(Store.mode==="demo"){
+      const fam=Store.all("pacientes").find(x=>(x.acessoFamilia||"").toLowerCase()===email);
       if(email==="admin@viverbem.com"&&senha==="123456"){ S={role:"admin",nome:"Administração Viver Bem"}; }
+      else if(fam){ if((fam.senhaDemo||"123456")!==senha) return showErr(f,"E-mail ou senha incorretos."); S={role:"paciente",pacId:fam.id,nome:(fam.responsavel||fam.nome).replace(/\s*\(.*\)/,"")}; }
       else { const p=Store.all("profissionais").find(x=>(x.acesso||"").toLowerCase()===email); if(!p||(p.senhaDemo||"123456")!==senha) return showErr(f,"E-mail ou senha incorretos."); if(p.status!=="ativo") return showErr(f,"Seu acesso está desativado. Fale com a administração."); S={role:"prof",profId:p.id,nome:p.nome}; }
-      saveSession(); location.hash=S.role==="admin"?"painel":"meus"; return render();
+      saveSession(); location.hash={admin:"painel",prof:"meus",paciente:"inicio"}[S.role]; return render();
     }
     const b=$("button.btn-primary",f); b.disabled=true;
-    try{ await login(email, senha); saveSession(); location.hash=S.role==="admin"?"painel":"meus"; render(); }
+    try{ await login(email, senha); saveSession(); location.hash={admin:"painel",prof:"meus",paciente:"inicio"}[S.role]||""; render(); }
     catch(err){ showErr(f, /password|credential|user/i.test(err.code||"")?"E-mail ou senha incorretos.":err.message); b.disabled=false; } };
 }
 /* =================== PAINEL =================== */
@@ -771,6 +821,10 @@ function pgPainel(){
   hoje.filter(p=>statusDia(p)==="atrasado"&&p.profId).forEach(p=>alerts.push(`<li><b>${esc(proName(p.profId))} não registrou chegada</b> em ${esc(pacName(p.pacId))} (início ${p.inicio}).</li>`));
   if(c.semPro) alerts.push(`<li><b>${c.semPro} plantão(ões) sem profissional</b> nos próximos dias. <a href="#escala">Ver agenda</a></li>`);
   if(c.semEvo) alerts.push(`<li><b>${c.semEvo} plantão(ões) sem evolução</b> na última semana.</li>`);
+  if(c.alertas) alerts.push(`<li><b>${c.alertas} alerta(s) do monitoramento</b> aguardando conduta da equipe. <a href="#monitoramento">Ver alertas</a></li>`);
+  if(c.teleSol) alerts.push(`<li><b>${c.teleSol} teleconsulta(s)</b> pedidas pelas famílias aguardando confirmação. <a href="#teleconsultas">Confirmar</a></li>`);
+  Store.all("pacientes").filter(p=>p.status==="ativo"&&p.proxReavaliacao&&p.proxReavaliacao<=addDays(t,7)).forEach(p=>alerts.push(`<li><b>${esc(p.nome)}</b> tem reavaliação ${p.proxReavaliacao<t?"vencida desde":"marcada para"} ${fmtDay(p.proxReavaliacao)}. <a href="#paciente-${p.id}">Abrir</a></li>`));
+  Store.all("intercorrencias").filter(i=>Date.now()-new Date(i.em).getTime()<48*36e5).forEach(i=>alerts.push(`<li><b>Intercorrência: ${esc(i.tipo)}</b> com ${esc(pacName(i.pacId))} (${esc(i.gravidade)}). <a href="#paciente-${i.pacId}">Ver</a></li>`));
   if(c.estBaixo) alerts.push(`<li><b>${c.estBaixo} item(ns) de estoque</b> no mínimo ou abaixo. <a href="#estoque">Ver estoque</a></li>`);
   Store.all("pacientes").filter(p=>p.status==="avaliacao").forEach(p=>alerts.push(`<li><b>${esc(p.nome||p.responsavel)}</b> aguarda avaliação domiciliar. <a href="#paciente-${p.id}">Abrir</a></li>`));
   const lotesAbertos=Store.all("lotes").filter(l=>l.status!=="pago").length;
@@ -800,7 +854,9 @@ function pgPainel(){
         <a class="kpi" href="#recrutamento"><b>${c.cand}</b><span>Currículos para analisar</span></a>
         <a class="kpi" href="#solicitacoes"><b>${c.sol}</b><span>Solicitações novas</span></a>
         <a class="kpi" href="#contratos"><b>${c.ctPend}</b><span>Contratos pendentes</span></a>
-        <a class="kpi" href="#pacientes"><b>${c.pac}</b><span>Pacientes ativos</span></a></div></section>
+        <a class="kpi" href="#pacientes"><b>${c.pac}</b><span>Pacientes ativos</span></a>
+        <a class="kpi" href="#teleconsultas"><b>${Store.all("consultas").filter(x=>x.data===t&&["agendada","solicitada"].includes(x.status)).length}</b><span>Teleconsultas hoje</span></a>
+        <a class="kpi ${c.alertas?"alert":""}" href="#monitoramento"><b>${c.alertas}</b><span>Alertas do monitoramento</span></a></div></section>
   </div>
   <section class="card"><div class="card-h"><h2>Links para divulgar</h2></div>
     <div class="tablewrap"><table><tbody>${links.map(([l,h])=>`<tr><td><b>${l}</b></td><td class="small muted" style="word-break:break-all">${esc(baseURL()+"#"+h)}</td><td class="r"><button class="btn btn-sm btn-line" data-act="copy" data-v="${esc(baseURL()+"#"+h)}">${ICON.link}Copiar</button></td></tr>`).join("")}</tbody></table></div></section>`;
@@ -820,7 +876,7 @@ function shiftRow(p){
 /* =================== PACIENTES =================== */
 const PAC_SECTIONS = () => [
   ["Identificação",[{k:"nome",l:"Nome do paciente",req:1,full:1},{k:"nasc",l:"Data de nascimento",t:"date"},{k:"sexo",l:"Sexo",t:"select",o:[["",""],["F","Feminino"],["M","Masculino"]]},{k:"cpf",l:"CPF ou CNPJ",im:"numeric",ph:"CPF ou CNPJ"},{k:"status",l:"Situação",t:"select",o:[["avaliacao","Em avaliação"],["ativo","Ativo"],["alta","Alta"]]}]],
-  ["Endereço do atendimento",[...ADDR("",true),
+  ["Local e endereço do atendimento",[{k:"modalidade",l:"Local do atendimento",t:"select",o:MODALIDADES},{k:"instituicao",l:"Nome da clínica ou hospital",h:"Quando o atendimento não for na casa do paciente"},...ADDR("",true),
     {k:"exigeLocal",l:"Check-in e check-out",t:"select",o:[["sim","Só no endereço do paciente"],["nao","Liberado fora do endereço (casa sem internet)"]]},
     {k:"raio",l:"Distância permitida (metros)",t:"number",ph:"300",h:"Em branco usa o padrão das Configurações"},
     {k:"geo",l:"Localização da casa",full:1,h:"Latitude e longitude usadas para conferir o check-in. Use os botões abaixo ou cole do Google Maps.",ph:"-7.389200, -38.774500"}]],
@@ -835,6 +891,9 @@ const PAC_SECTIONS = () => [
     {k:"alergias",l:"Alergias",full:1,h:"Aparece em destaque para toda a equipe"},
     {k:"medicamentos",l:"Medicamentos em uso",t:"textarea",rows:4,full:1,h:"Um por linha: nome, dose e horário"},
     {k:"medico",l:"Médico responsável"},{k:"medicoTel",l:"Contato do médico",im:"tel"}]],
+  ["Monitoramento de crônicos",[{k:"programa",l:"Programa de monitoramento",t:"select",o:[["nao","Não participa"],["sim","Participa"]]},{k:"freqMed",l:"Frequência das medições",t:"select",o:[["1","1 vez por dia"],["2","2 vezes por dia"],["7","1 vez por semana"]]},{k:"proxReavaliacao",l:"Próxima reavaliação",t:"date"},
+    {k:"perfis",l:"Perfil assistencial",t:"checks",o:PERFIS,full:1},
+    {k:"paMax",l:"Alerta de pressão alta a partir de",ph:"140/90",h:"Faixas definidas pelo profissional responsável"},{k:"paMin",l:"Alerta de pressão baixa até",ph:"90/60"},{k:"glicMin",l:"Glicemia mínima",t:"number",ph:"70"},{k:"glicMax",l:"Glicemia máxima",t:"number",ph:"250"},{k:"fcMin",l:"Frequência cardíaca mínima",t:"number",ph:"50"},{k:"fcMax",l:"Frequência cardíaca máxima",t:"number",ph:"110"},{k:"satMin",l:"Saturação mínima (%)",t:"number",ph:"92"}]],
   ["Plano de cuidados",[{k:"plano",l:"O que a equipe deve fazer em cada plantão",t:"textarea",rows:4,full:1}]]
 ];
 const PAC_SPEC = () => PAC_SECTIONS().flatMap(x=>x[1]);
@@ -868,10 +927,11 @@ function pgPaciente(id){
   const cts=Store.all("contratos").filter(c=>c.tipo==="paciente"&&c.refId===id);
   const op=Store.get("operadoras",p.operadoraId);
   return `<div class="pagehead"><div><p class="small"><a href="#pacientes">Pacientes</a></p><h1>${esc(p.nome)}${ex(p)}</h1><p class="sub">${p.nasc?age(p.nasc)+" anos · ":""}${esc(loc(p))} · <span class="pill ${PAC_ST[p.status][1]}">${PAC_ST[p.status][0]}</span></p></div>
-    <div class="actions"><button class="btn btn-primary" data-act="novoPlantao" data-id="${p.id}">${ICON.plus}Plantão</button><button class="btn btn-line" data-act="editPaciente" data-id="${p.id}">Editar</button><button class="btn btn-line" data-act="novoContratoPac" data-id="${p.id}">${ICON.contratos}Contrato</button><a class="btn btn-line" target="_blank" rel="noopener" href="${wa(p.telResp,`Olá, ${first(p.responsavel)}! Aqui é da Viver Bem Atendimento Domiciliar.`)}">${ICON.wa}Família</a></div></div>
+    <div class="actions"><button class="btn btn-primary" data-act="novoPlantao" data-id="${p.id}">${ICON.plus}Plantão</button><button class="btn btn-line" data-act="editPaciente" data-id="${p.id}">Editar</button><button class="btn btn-line" data-act="novoContratoPac" data-id="${p.id}">${ICON.contratos}Contrato</button><button class="btn btn-line" data-act="acessoFam" data-id="${p.id}">${p.acessoFamilia?"Acesso da família":"Criar acesso da família"}</button><a class="btn btn-line" target="_blank" rel="noopener" href="${wa(p.telResp,`Olá, ${first(p.responsavel)}! Aqui é da Viver Bem Atendimento Domiciliar.`)}">${ICON.wa}Família</a></div></div>
   ${p.alergias?`<p class="note warn"><b>Alergias:</b> ${esc(p.alergias)}</p>`:""}
   <div class="grid2">
     <section class="card"><h2>Dados</h2><dl class="kv">
+      <dt>Local</dt><dd>${esc(MOD_LOCAL[p.modalidade||"domicilio"])}${p.instituicao?" · "+esc(p.instituicao):""}</dd>
       <dt>Endereço</dt><dd>${esc(p.endereco)}, ${esc(loc(p))}${p.cep?" · CEP "+esc(p.cep):""}</dd>
       <dt>Check-in</dt><dd>${(p.exigeLocal||"sim")==="nao"?'<span class="pill p-warn">Liberado fora do endereço</span>':`<span class="pill p-ok">Só no endereço · até ${raioDe(p)} m</span>`}</dd>
       <dt>Localização</dt><dd>${geoOf(p)?`<a href="${rotaURL(p)}" target="_blank" rel="noopener">Ver no mapa</a>`:'<span class="muted">Não definida. É preenchida na primeira chegada do profissional.</span>'}</dd>
@@ -884,6 +944,7 @@ function pgPaciente(id){
     ${prox.length?`<div class="day">${prox.map(x=>shiftRow(x).replace('<span class="t">',`<span class="t"><small>${fmtDay(x.data).slice(0,5)}</small>`)).join("")}</div>`:`<p class="empty">Nenhum plantão agendado.</p>`}</section>
   <section class="card"><div class="card-h"><h2>Evolução do paciente</h2><span class="small muted">${evos.length} registro(s)</span></div>
     ${evos.length?evos.slice(0,15).map(evoBlock).join(""):`<p class="empty">Ainda não há evoluções registradas.</p>`}</section>
+  ${pacExtras(p)}
   <section class="card"><div class="card-h"><h2>Contratos</h2><button class="btn btn-sm btn-line" data-act="novoContratoPac" data-id="${p.id}">${ICON.plus}Novo contrato</button></div>${ctTable(cts)}</section>`;
 }
 function evoBlock(x){
@@ -984,6 +1045,7 @@ function plantaoView(id){
     ${pac.plano?`<details class="note" ${admin?"":"open"}><summary style="cursor:pointer;font-weight:600">Plano de cuidados</summary><p style="white-space:pre-line;margin-top:6px">${esc(pac.plano)}</p></details>`:""}
     ${!admin&&pac.id?`<details class="card"><summary style="cursor:pointer;font-weight:600">Estado clínico e medicamentos</summary><div style="margin-top:10px">${estadoClinico(pac,true)}</div></details>`:""}
     ${mostraEvo?`<h3>Evolução</h3>${evoForm}`:""}
+    ${pac.id&&p.status!=="cancelado"?`<div class="actions"><button class="btn btn-sm btn-line" data-act="novaInter" data-id="${pac.id}">Registrar intercorrência</button></div>`:""}
     <div class="actions">${acoes}</div>`;
   modal("Plantão", body, {wide:1, nofocus:1});
 }
@@ -1000,6 +1062,7 @@ const PRO_SPEC = () => [
   ...ADDR("",false),{k:"areas",l:"Cidades que atende",full:1},{k:"status",l:"Situação",t:"select",o:[["ativo","Ativo"],["inativo","Inativo"]]},
   {k:"pix",l:"Chave Pix para pagamento"},
   {k:"exigeLocal",l:"Check-in e check-out",t:"select",o:[["sim","Só no endereço do paciente"],["nao","Liberado fora do endereço"]]},
+  {k:"teleEsp",l:"Teleconsulta",t:"select",o:[["","Não atende por teleconsulta"],...TELE]},{k:"teleIni",l:"Teleconsulta: início",t:"time"},{k:"teleFim",l:"Teleconsulta: fim",t:"time"},{k:"teleDur",l:"Duração da teleconsulta (min)",t:"number",ph:"30"},{k:"teleDias",l:"Dias de teleconsulta",t:"checks",o:DIAS,full:1},
   {k:"porHora",l:"Cálculo do pagamento",t:"select",o:[["nao","Valor cheio do plantão"],["sim","Computar por hora registrada"]],h:"Por hora: atraso e saída antecipada são descontados"},{k:"disp",l:"Disponibilidade",t:"checks",o:DISPON,full:1}
 ];
 let proBusca="";
@@ -1268,7 +1331,7 @@ function loteView(id){
 
 /* =================== RELATÓRIOS =================== */
 let rel={tipo:"atendimentos",de:null,ate:null,pac:"",pro:""};
-const REL_TIPOS=[["atendimentos","Atendimentos por período"],["presenca","Presença e pontualidade"],["produtividade","Produtividade por profissional"],["pacientes","Resumo por paciente"],["prontuario","Prontuário (evoluções do paciente)"],["estoque","Consumo de materiais"],["financeiro","Financeiro por mês"]];
+const REL_TIPOS=[["atendimentos","Atendimentos por período"],["presenca","Presença e pontualidade"],["produtividade","Produtividade por profissional"],["pacientes","Resumo por paciente"],["prontuario","Prontuário (evoluções do paciente)"],["estoque","Consumo de materiais"],["financeiro","Financeiro por mês"],["teleconsultas","Teleconsultas"],["monitoramento","Monitoramento de crônicos"],["intercorrencias","Intercorrências"]];
 function pgRelatorios(){
   if(!rel.de){ rel.de=today().slice(0,8)+"01"; rel.ate=today(); }
   const pls=Store.all("plantoes").filter(p=>p.data>=rel.de&&p.data<=rel.ate&&(!rel.pac||p.pacId===rel.pac)&&(!rel.pro||p.profId===rel.pro)).sort((a,b)=>tStart(a)-tStart(b));
@@ -1294,6 +1357,14 @@ function pgRelatorios(){
     const ms=Store.all("movEstoque").filter(m=>m.tipo==="saida"&&m.data>=rel.de&&m.data<=rel.ate&&(!rel.pac||m.pacId===rel.pac)).sort((a,b)=>a.data.localeCompare(b.data));
     rows=ms.map(m=>{ const pr=Store.get("produtos",m.prodId); return [fmtDay(m.data),pr?.nome||"-",`${m.qtd} ${pr?.unidade||""}`,m.pacId?pacName(m.pacId):"-",brl((+pr?.custo||0)*m.qtd)]; });
     foot=["Total","","","",brl(ms.reduce((a,m)=>a+(+Store.get("produtos",m.prodId)?.custo||0)*m.qtd,0))]; }
+  if(rel.tipo==="teleconsultas"){ head=["Data","Hora","Paciente","Especialidade","Profissional","Situação","Pagamento","Valor"];
+    const cs=Store.all("consultas").filter(c=>c.data>=rel.de&&c.data<=rel.ate&&(!rel.pac||c.pacId===rel.pac)&&(!rel.pro||c.profId===rel.pro)).sort((a,b)=>(a.data+a.hora).localeCompare(b.data+b.hora));
+    rows=cs.map(c=>[fmtDay(c.data),c.hora,pacName(c.pacId),TELE_NAME[c.esp],proName(c.profId),CONS_ST[c.status][0],c.pagamento==="pago"?"Pago":"Pendente",brl(c.valor)]);
+    foot=["Total",`${cs.length} consultas`,"","","","",`${cs.filter(c=>c.pagamento==="pago").length} pagas`,brl(cs.filter(c=>c.status!=="cancelada").reduce((a,c)=>a+(+c.valor||0),0))]; }
+  if(rel.tipo==="monitoramento"){ head=["Paciente","Perfil","Medições no período","Alertas","Alertas resolvidos","Adesão 7 dias","Última medição"];
+    rows=Store.all("pacientes").filter(p=>p.programa==="sim"&&(!rel.pac||p.id===rel.pac)).map(p=>{ const ms=medsDe(p.id).filter(m=>m.em.slice(0,10)>=rel.de&&m.em.slice(0,10)<=rel.ate), al=ms.filter(m=>(m.alertas||[]).length); return [p.nome,(p.perfis||[]).join(", "),ms.length,al.length,al.filter(m=>m.alertaStatus==="resolvido").length,adesao(p)+"%",ms.at(-1)?fmtDT(ms.at(-1).em)+" · "+resumoMed(ms.at(-1)):"-"]; }); }
+  if(rel.tipo==="intercorrencias"){ head=["Quando","Paciente","Tipo","Gravidade","Descrição","Conduta","Registrado por"];
+    rows=Store.all("intercorrencias").filter(i=>i.em.slice(0,10)>=rel.de&&i.em.slice(0,10)<=rel.ate&&(!rel.pac||i.pacId===rel.pac)).sort((a,b)=>a.em.localeCompare(b.em)).map(i=>[fmtDT(i.em),pacName(i.pacId),i.tipo,i.gravidade,i.descricao,i.conduta||"-",i.por||""]); }
   if(rel.tipo==="financeiro"){ head=["Mês","Plantões","Faturado","Recebido","Custo profissionais","Margem"];
     const by={}; pls.filter(p=>p.status==="realizado").forEach(p=>(by[p.data.slice(0,7)]=by[p.data.slice(0,7)]||[]).push(p));
     rows=Object.entries(by).sort().map(([m,l])=>{ const f=l.reduce((a,p)=>a+(+p.valorCobrado||0),0), c=l.reduce((a,p)=>a+valorProf(p),0); return [mesLabel(m),l.length,brl(f),brl(l.filter(p=>p.recebido).reduce((a,p)=>a+(+p.valorCobrado||0),0)),brl(c),brl(f-c)]; }); }
@@ -1322,12 +1393,215 @@ function pgAuditoria(){
   </tbody></table></div><p class="small muted">Mostra os 500 registros mais recentes.</p>`;
 }
 
+/* =================== MONITORAMENTO DE CRÔNICOS =================== */
+const parsePA = s => { const m=String(s||"").match(/(\d{2,3})\s*[\/x]\s*(\d{2,3})/); return m?[+m[1],+m[2]]:null; };
+function limites(p){ return {paMax:parsePA(p?.paMax)||[140,90], paMin:parsePA(p?.paMin)||[90,60], glicMin:+p?.glicMin||70, glicMax:+p?.glicMax||250, fcMin:+p?.fcMin||50, fcMax:+p?.fcMax||110, satMin:+p?.satMin||92}; }
+function avaliaMedicao(m,p){ const L=limites(p), a=[], pa=parsePA(m.pa);
+  if(pa){ if(pa[0]>=L.paMax[0]||pa[1]>=L.paMax[1]) a.push(`Pressão alta ${pa[0]}/${pa[1]}`); if(pa[0]<=L.paMin[0]||pa[1]<=L.paMin[1]) a.push(`Pressão baixa ${pa[0]}/${pa[1]}`); }
+  if(m.glic!==""&&m.glic!=null){ if(+m.glic<L.glicMin) a.push(`Glicemia baixa ${m.glic}`); if(+m.glic>L.glicMax) a.push(`Glicemia alta ${m.glic}`); }
+  if(m.fc!==""&&m.fc!=null){ if(+m.fc<L.fcMin) a.push(`FC baixa ${m.fc}`); if(+m.fc>L.fcMax) a.push(`FC alta ${m.fc}`); }
+  if(m.sat!==""&&m.sat!=null&&+m.sat<L.satMin) a.push(`Saturação ${m.sat}%`);
+  (m.sintomas||[]).filter(x=>SINT_ALERTA.includes(x)).forEach(x=>a.push(x));
+  return a; }
+const medsDe = id => Store.all("medicoes").filter(m=>m.pacId===id).sort((a,b)=>a.em.localeCompare(b.em));
+function adesao(p){ const f=p.freqMed||"1", n=medsDe(p.id).filter(m=>Date.now()-new Date(m.em).getTime()<7*864e5).length, esp=f==="2"?14:f==="7"?1:7; return Math.min(100,Math.round(n/esp*100)); }
+const resumoMed = m => [m.pa&&"PA "+m.pa, m.glic!==""&&m.glic!=null&&"Glic "+m.glic, m.fc!==""&&m.fc!=null&&"FC "+m.fc, m.sat!==""&&m.sat!=null&&"SpO₂ "+m.sat+"%", m.peso&&m.peso+" kg", m.temp&&m.temp+" °C"].filter(Boolean).join(" · ");
+function trendSVG(meds, get, titulo, refs=[]){
+  const pts=meds.map(m=>({t:new Date(m.em).getTime(),v:get(m)})).filter(x=>x.v!=null&&x.v!==""&&!(typeof x.v==="number"&&isNaN(x.v)));
+  if(pts.length<2) return "";
+  const W=320,H=128,L=34,R=8,T=14,B=22, t0=pts[0].t, t1=pts.at(-1).t;
+  const vals=pts.flatMap(x=>Array.isArray(x.v)?x.v:[x.v]).concat(refs); let lo=Math.min(...vals), hi=Math.max(...vals); const pd=(hi-lo)*.15||5; lo=Math.floor(lo-pd); hi=Math.ceil(hi+pd);
+  const X=t=>L+(t-t0)/((t1-t0)||1)*(W-L-R), Y=v=>T+(hi-v)/(hi-lo)*(H-T-B), multi=Array.isArray(pts[0].v);
+  const line=(i,cor)=>`<polyline fill="none" style="stroke:${cor}" stroke-width="2" stroke-linejoin="round" points="${pts.map(x=>`${X(x.t).toFixed(1)},${Y(multi?x.v[i]:x.v).toFixed(1)}`).join(" ")}"/><circle cx="${X(pts.at(-1).t)}" cy="${Y(multi?pts.at(-1).v[i]:pts.at(-1).v)}" r="3.5" style="fill:${cor}"/>`;
+  return `<figure class="trend"><figcaption>${esc(titulo)}</figcaption><svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${esc(titulo)}">
+    <line x1="${L}" x2="${W-R}" y1="${H-B}" y2="${H-B}" style="stroke:var(--line)"/>
+    <text x="${L-5}" y="${T+4}" text-anchor="end" style="fill:var(--muted);font-size:10px">${hi}</text><text x="${L-5}" y="${H-B}" text-anchor="end" style="fill:var(--muted);font-size:10px">${lo}</text>
+    ${refs.map(r=>`<line x1="${L}" x2="${W-R}" y1="${Y(r)}" y2="${Y(r)}" style="stroke:var(--bad)" stroke-dasharray="4 3"/><text x="${W-R}" y="${Y(r)-3}" text-anchor="end" style="fill:var(--bad);font-size:9.5px">limite ${r}</text>`).join("")}
+    ${multi?line(0,"var(--blue)")+line(1,"var(--copper)"):line(0,"var(--blue)")}
+    <text x="${L}" y="${H-6}" style="fill:var(--muted);font-size:10px">${fmtDay(isoDay(new Date(t0))).slice(0,5)}</text><text x="${W-R}" y="${H-6}" text-anchor="end" style="fill:var(--muted);font-size:10px">${fmtDay(isoDay(new Date(t1))).slice(0,5)}</text></svg>${multi?'<p class="small muted"><span style="color:var(--blue)">●</span> sistólica · <span style="color:var(--copper)">●</span> diastólica</p>':""}</figure>`;
+}
+function monGraficos(p, dias=30){ const ms=medsDe(p.id).filter(m=>Date.now()-new Date(m.em).getTime()<dias*864e5), L=limites(p);
+  const g=[trendSVG(ms,m=>parsePA(m.pa),"Pressão arterial (mmHg)",[L.paMax[0]]), trendSVG(ms,m=>m.glic===""?null:+m.glic,"Glicemia (mg/dL)",[L.glicMin,L.glicMax]), trendSVG(ms,m=>m.sat===""?null:+m.sat,"Saturação (%)",[L.satMin]), trendSVG(ms,m=>m.fc===""?null:+m.fc,"Frequência cardíaca (bpm)",[]), trendSVG(ms,m=>m.peso===""||m.peso==null?null:+m.peso,"Peso (kg)",[])].filter(Boolean);
+  return g.length?`<div class="trends">${g.join("")}</div>`:`<p class="empty">Ainda não há medições suficientes para os gráficos.</p>`; }
+function medTabela(ms){ return `<div class="tablewrap"><table><thead><tr><th>Quando</th><th>Medição</th><th>Sintomas</th><th>Por</th><th>Situação</th></tr></thead><tbody>${ms.slice().reverse().slice(0,40).map(m=>`<tr><td class="num">${fmtDT(m.em)}</td><td>${esc(resumoMed(m)||"-")}</td><td>${esc((m.sintomas||[]).join(", ")||"-")}${m.obs?`<div class="small muted">${esc(m.obs)}</div>`:""}</td><td class="small">${esc(m.por||"")}</td><td>${(m.alertas||[]).length?`<span class="pill ${m.alertaStatus==="aberto"?"p-bad":"p-ok"}">${m.alertaStatus==="aberto"?"Alerta":"Alerta resolvido"}</span>`:'<span class="pill p-mute">Normal</span>'}</td></tr>`).join("")||`<tr><td colspan="5" class="empty">Nenhuma medição.</td></tr>`}</tbody></table></div>`; }
+function pgMonitoramento(){
+  const t=today(), prog=Store.all("pacientes").filter(p=>p.programa==="sim"&&p.status!=="alta");
+  const abertos=Store.all("medicoes").filter(m=>m.alertaStatus==="aberto").sort((a,b)=>b.em.localeCompare(a.em));
+  const semMed=prog.filter(p=>{ const u=medsDe(p.id).at(-1); return !u||Date.now()-new Date(u.em).getTime()>3*864e5; });
+  const ad=prog.length?Math.round(prog.reduce((a,p)=>a+adesao(p),0)/prog.length):0;
+  return `<div class="pagehead"><div><h1>Monitoramento de crônicos</h1><p class="sub">Medições registradas por pacientes, famílias e equipe, com alertas pelas faixas de cada paciente</p></div><button class="btn btn-primary" data-act="novaMed">${ICON.plus}Registrar medição</button></div>
+  <div class="kpis"><div class="kpi"><b>${prog.length}</b><span>Pacientes no programa</span></div><div class="kpi ${abertos.length?"alert":""}"><b>${abertos.length}</b><span>Alertas aguardando conduta</span></div><div class="kpi"><b>${semMed.length}</b><span>Sem medição há 3 dias ou mais</span></div><div class="kpi"><b>${ad}%</b><span>Adesão média nos últimos 7 dias</span></div></div>
+  <section class="card"><h2>Alertas</h2><div class="tablewrap" style="margin-top:10px"><table><thead><tr><th>Quando</th><th>Paciente</th><th>Alerta</th><th>Medição</th><th></th></tr></thead><tbody>
+    ${abertos.map(m=>`<tr><td class="num">${fmtDT(m.em)}</td><td><a href="#paciente-${m.pacId}"><b>${esc(pacName(m.pacId))}</b></a></td><td><div class="chips">${m.alertas.map(a=>`<span class="pill p-bad">${esc(a)}</span>`).join("")}</div></td><td class="small">${esc(resumoMed(m))}${(m.sintomas||[]).length?`<div class="muted">Sintomas: ${esc(m.sintomas.join(", "))}</div>`:""}</td><td class="r"><button class="btn btn-sm btn-primary" data-act="conduta" data-id="${m.id}">Registrar conduta</button></td></tr>`).join("")||`<tr><td colspan="5" class="empty">Nenhum alerta aberto.</td></tr>`}</tbody></table></div></section>
+  <section class="card"><h2>Pacientes no programa</h2><div class="tablewrap" style="margin-top:10px"><table><thead><tr><th>Paciente</th><th>Perfil</th><th>Última medição</th><th class="r">Adesão 7 dias</th><th>Reavaliação</th></tr></thead><tbody>
+    ${prog.map(p=>{ const u=medsDe(p.id).at(-1), a=adesao(p); return `<tr class="click" data-act="go" data-id="paciente-${p.id}"><td><b>${esc(p.nome)}</b>${ex(p)}<div class="small muted">${esc(MOD_LOCAL[p.modalidade||"domicilio"])}</div></td><td><div class="chips">${(p.perfis||[]).map(x=>`<span class="pill p-blue">${esc(x)}</span>`).join("")||"-"}</div></td><td>${u?`${fmtDT(u.em)}<div class="small muted">${esc(resumoMed(u))}</div>`:'<span class="pill p-warn">Sem medições</span>'}</td><td class="r"><span class="pill ${a>=80?"p-ok":a>=50?"p-warn":"p-bad"}">${a}%</span></td><td class="num">${p.proxReavaliacao?`<span class="${p.proxReavaliacao<=t?"pill p-bad":""}">${fmtDay(p.proxReavaliacao)}</span>`:"-"}</td></tr>`; }).join("")||`<tr><td colspan="5" class="empty">Nenhum paciente no programa. Ative em Editar paciente → Monitoramento de crônicos.</td></tr>`}</tbody></table></div></section>
+  <p class="small muted">O monitoramento não substitui atendimento de emergência. As faixas de alerta são definidas pelo profissional responsável na ficha de cada paciente.</p>`;
+}
+function medForm(pacId){ const pacs=Store.all("pacientes").filter(p=>p.status!=="alta");
+  return `${S.role==="paciente"?"":`<label class="f">Paciente<select id="md_pac">${pacs.map(p=>`<option value="${p.id}" ${p.id===pacId?"selected":""}>${esc(p.nome||p.responsavel)}</option>`).join("")}</select></label>`}
+  <div class="fgrid"><label class="f">Pressão arterial<input id="md_pa" placeholder="120/80" inputmode="numeric"></label><label class="f">Glicemia (mg/dL)<input id="md_glic" inputmode="numeric"></label>
+  <label class="f">Frequência cardíaca (bpm)<input id="md_fc" inputmode="numeric"></label><label class="f">Saturação (%)<input id="md_sat" inputmode="numeric"></label>
+  <label class="f">Peso (kg)<input id="md_peso" inputmode="decimal"></label><label class="f">Temperatura (°C)<input id="md_temp" inputmode="decimal"></label></div>
+  <div class="f full"><span>Como está se sentindo? Marque se houver</span><div class="checks">${SINTOMAS.map(x=>`<label><input type="checkbox" name="md_sint" value="${x}">${x}</label>`).join("")}</div></div>
+  <label class="f">Observação<input id="md_obs" placeholder="Ex.: medido após o almoço"></label>${SAMU_NOTE}
+  <div class="actions"><button class="btn btn-primary" data-act="saveMed">Salvar medição</button></div>`; }
+function pacExtras(p){
+  const cons=Store.all("consultas").filter(c=>c.pacId===p.id).sort((a,b)=>(b.data+b.hora).localeCompare(a.data+a.hora)).slice(0,6);
+  const inter=Store.all("intercorrencias").filter(i=>i.pacId===p.id).sort((a,b)=>b.em.localeCompare(a.em));
+  return `${p.programa==="sim"?`<section class="card"><div class="card-h"><h2>Monitoramento de crônicos</h2><div class="actions"><span class="pill ${adesao(p)>=80?"p-ok":"p-warn"}">Adesão ${adesao(p)}%</span><button class="btn btn-sm btn-primary" data-act="novaMed" data-id="${p.id}">${ICON.plus}Medição</button></div></div>
+      <div class="chips" style="margin-bottom:10px">${(p.perfis||[]).map(x=>`<span class="pill p-blue">${esc(x)}</span>`).join("")}</div>${monGraficos(p)}
+      <details style="margin-top:10px"><summary style="cursor:pointer;font-weight:600">Todas as medições</summary><div style="margin-top:10px">${medTabela(medsDe(p.id))}</div></details></section>`:""}
+  <div class="grid2">
+    <section class="card"><div class="card-h"><h2>Teleconsultas</h2><button class="btn btn-sm btn-line" data-act="novaTele" data-id="${p.id}">${ICON.plus}Agendar</button></div>
+      ${cons.length?`<div class="list-links">${cons.map(c=>`<a href="#" data-act="verTele" data-id="${c.id}"><b>${fmtDay(c.data)} ${c.hora} · ${esc(TELE_NAME[c.esp])}</b><span>${esc(proName(c.profId))} · ${CONS_ST[c.status][0]}</span></a>`).join("")}</div>`:`<p class="empty">Nenhuma teleconsulta.</p>`}</section>
+    <section class="card"><div class="card-h"><h2>Intercorrências</h2><button class="btn btn-sm btn-line" data-act="novaInter" data-id="${p.id}">${ICON.plus}Registrar</button></div>
+      ${inter.length?inter.slice(0,6).map(i=>`<div class="evo" style="border-left-color:${i.gravidade==="grave"?"var(--bad)":i.gravidade==="moderada"?"var(--warn)":"var(--blue)"}"><div class="small muted">${fmtDT(i.em)} · ${esc(i.por||"")} · ${esc(i.gravidade)}</div><b>${esc(i.tipo)}</b><p>${esc(i.descricao)}</p>${i.conduta?`<p class="small"><b>Conduta:</b> ${esc(i.conduta)}</p>`:""}</div>`).join(""):`<p class="empty">Nenhuma intercorrência registrada.</p>`}</section>
+  </div>`;
+}
+
+/* =================== TELECONSULTAS =================== */
+let teleFiltro="proximas";
+const salaURL = c => (Store.cfg().videoBase||"https://meet.jit.si/")+encodeURIComponent(c.sala||("ViverBem-"+c.id));
+const valorTele = esp => +(Store.cfg().teleValores||{})[esp]||0;
+async function syncAgendaTele(p){
+  const old=Store.get("agendaTele",p.id);
+  if(!p.teleEsp&&!old) return;
+  await Store.put("agendaTele",{id:p.id,nome:p.nome,funcao:p.funcao,registro:p.registro||"",esp:p.teleEsp||"",dias:p.teleDias||[],ini:p.teleIni||"",fim:p.teleFim||"",dur:+p.teleDur||30,ativo:!!p.teleEsp&&p.status==="ativo",ocupados:old?.ocupados||[]});
+}
+async function syncOcupados(profId){ const a=Store.get("agendaTele",profId); if(!a) return;
+  a.ocupados=Store.all("consultas").filter(c=>c.profId===profId&&["solicitada","agendada"].includes(c.status)&&c.data>=today()).map(c=>`${c.data} ${c.hora}`); await Store.put("agendaTele",a); }
+function horarios(profId, dias=14){ const a=Store.get("agendaTele",profId); if(!a||!a.ativo||!a.ini||!a.fim) return [];
+  const occ=new Set([...(a.ocupados||[]), ...Store.all("consultas").filter(c=>c.profId===profId&&["solicitada","agendada"].includes(c.status)).map(c=>`${c.data} ${c.hora}`)]);
+  const toM=h=>{ const [x,y]=h.split(":").map(Number); return x*60+y; }, out=[], limite=Date.now()+2*36e5;
+  for(let i=0;i<dias;i++){ const d=addDays(today(),i), wd=new Date(d+"T12:00").getDay(); if(!(a.dias||[]).includes(DIAS.at(wd))) continue;
+    for(let m=toM(a.ini); m+(+a.dur||30)<=toM(a.fim); m+=(+a.dur||30)){ const h=`${pad(Math.floor(m/60))}:${pad(m%60)}`; if(occ.has(`${d} ${h}`)) continue; if(new Date(`${d}T${h}`).getTime()<limite) continue; out.push({data:d,hora:h}); } }
+  return out; }
+function teleRow(c){ return `<tr class="click" data-act="verTele" data-id="${c.id}"><td class="num"><b>${fmtDay(c.data)}</b> ${c.hora}</td><td>${esc(pacName(c.pacId))}${ex(c)}</td><td>${esc(TELE_NAME[c.esp]||"")}</td><td>${esc(proName(c.profId))}</td><td><span class="pill ${CONS_ST[c.status][1]}">${CONS_ST[c.status][0]}</span></td><td><span class="pill ${c.pagamento==="pago"?"p-ok":"p-warn"}">${c.pagamento==="pago"?"Pago":"Pagamento pendente"}</span></td></tr>`; }
+function pgTeleconsultas(){
+  const t=today(), all=Store.all("consultas").slice().sort((a,b)=>(a.data+a.hora).localeCompare(b.data+b.hora)), mes=t.slice(0,7);
+  const F={proximas:c=>c.data>=t&&["agendada","solicitada"].includes(c.status),solicitadas:c=>c.status==="solicitada",realizadas:c=>c.status==="realizada",todas:()=>true};
+  const l=all.filter(F[teleFiltro]); if(teleFiltro!=="proximas") l.reverse();
+  return `<div class="pagehead"><div><h1>Teleconsultas</h1><p class="sub">Consultas por vídeo com médicos, enfermagem, fisioterapia, fono, nutrição e psicologia</p></div><button class="btn btn-primary" data-act="novaTele">${ICON.plus}Agendar teleconsulta</button></div>
+  <div class="kpis"><div class="kpi"><b>${all.filter(c=>c.data===t&&c.status==="agendada").length}</b><span>Hoje</span></div><div class="kpi ${all.some(F.solicitadas)?"alert":""}"><b>${all.filter(F.solicitadas).length}</b><span>Pedidos para confirmar</span></div><div class="kpi"><b>${brl(all.filter(c=>c.pagamento!=="pago"&&!["cancelada","falta"].includes(c.status)).reduce((a,c)=>a+(+c.valor||0),0))}</b><span>Pagamentos pendentes</span></div><div class="kpi"><b>${all.filter(c=>c.status==="realizada"&&c.data.startsWith(mes)).length}</b><span>Realizadas no mês</span></div></div>
+  <div class="chips">${[["proximas","Próximas"],["solicitadas","Para confirmar"],["realizadas","Realizadas"],["todas","Todas"]].map(([k,n])=>`<button class="chipbtn" data-act="teleFiltro" data-id="${k}" aria-pressed="${teleFiltro===k}">${n} · ${all.filter(F[k]).length}</button>`).join("")}</div>
+  <div class="tablewrap"><table><thead><tr><th>Data</th><th>Paciente</th><th>Especialidade</th><th>Profissional</th><th>Situação</th><th>Pagamento</th></tr></thead><tbody>${l.map(teleRow).join("")||`<tr><td colspan="6" class="empty">Nenhuma teleconsulta.</td></tr>`}</tbody></table></div>
+  <p class="small muted">Profissionais entram na agenda de teleconsulta pelo cadastro (dias, horário e especialidade). Valores e sala de vídeo ficam em Configurações.</p>`;
+}
+function teleForm(pre={}){
+  const pacs=S.role==="paciente"?[]:Store.all("pacientes").filter(p=>p.status!=="alta");
+  const esp=pre.esp||"", profs=Store.all("agendaTele").filter(a=>a.ativo&&(!esp||a.esp===esp));
+  const prof=pre.prof&&profs.some(a=>a.id===pre.prof)?pre.prof:(profs[0]?.id||""), hs=prof?horarios(prof):[];
+  return `<div class="fgrid">${S.role==="paciente"?"":`<label class="f full">Paciente<select id="tc_pac">${pacs.map(p=>`<option value="${p.id}" ${pre.pac===p.id?"selected":""}>${esc(p.nome||p.responsavel)}</option>`).join("")}</select></label>`}
+    <label class="f">Especialidade<select id="tc_esp" data-tele-ref><option value="">Escolha</option>${TELE.filter(([k])=>Store.all("agendaTele").some(a=>a.ativo&&a.esp===k)).map(([k,n])=>`<option value="${k}" ${esp===k?"selected":""}>${n}</option>`).join("")}</select></label>
+    <label class="f">Profissional<select id="tc_prof" data-tele-ref>${profs.map(a=>`<option value="${a.id}" ${prof===a.id?"selected":""}>${esc(a.nome)}${a.registro?" · "+esc(a.registro):""}</option>`).join("")||"<option value=''>Escolha a especialidade</option>"}</select></label>
+    <label class="f full">Horário<select id="tc_slot">${hs.map(h=>`<option value="${h.data} ${h.hora}">${fmtDayW(h.data)} · ${h.hora}</option>`).join("")||"<option value=''>Sem horários livres nos próximos 14 dias</option>"}</select></label></div>
+  ${esp?`<p class="note small">Valor da consulta: <b>${brl(valorTele(esp))}</b>${S.role==="paciente"?" · pagamento pelo app depois da confirmação":""}</p>`:""}
+  ${S.role==="paciente"?`<label class="consent"><input type="checkbox" id="tc_ok"><span>Li e aceito o termo de teleatendimento: a consulta é feita por vídeo, com o meu consentimento; o profissional pode indicar atendimento presencial quando necessário; os dados ficam protegidos conforme a LGPD; teleconsulta não é atendimento de emergência.</span></label>`:""}
+  <label class="f">Motivo ou observação<input id="tc_obs" placeholder="Ex.: revisão da pressão, dúvida sobre curativo"></label>
+  <div class="actions"><button class="btn btn-primary" data-act="saveTele">${S.role==="paciente"?"Pedir teleconsulta":"Agendar"}</button></div>`;
+}
+function verTele(id){
+  const c=Store.get("consultas",id); if(!c) return; const pac=Store.get("pacientes",c.pacId)||{}, cfg=Store.cfg(), role=S.role, ativo=["agendada","solicitada"].includes(c.status);
+  const docs=(c.documentos||[]).map(d=>`<li><b>${esc(d.tipo)}</b>: ${esc(d.texto)}${d.link?` · <a href="${esc(d.link)}" target="_blank" rel="noopener">documento assinado</a>`:""}</li>`).join("");
+  const pagar = role==="paciente"&&c.pagamento!=="pago"&&c.status==="agendada" ? `<div class="note"><b>Pagamento da consulta: ${brl(c.valor)}</b>${cfg.linkPagamento?`<div class="actions" style="margin-top:8px"><a class="btn btn-primary btn-sm" href="${esc(cfg.linkPagamento)}" target="_blank" rel="noopener">Pagar agora</a></div>`:""}${cfg.pixChave?`<p style="margin-top:6px">Pix: <b>${esc(cfg.pixChave)}</b> <button class="btn btn-sm btn-line" data-act="copy" data-v="${esc(cfg.pixChave)}">Copiar</button></p>`:""}${!cfg.linkPagamento&&!cfg.pixChave?"<p>A central vai enviar os dados de pagamento pelo WhatsApp.</p>":""}<p class="small muted">Depois de pagar, mande o comprovante para a central.</p></div>` : "";
+  const podeEntrar = c.status==="agendada" && (role!=="paciente" || c.consentimento);
+  const body=`<dl class="kv"><dt>Paciente</dt><dd>${esc(pac.nome||pacName(c.pacId))}</dd><dt>Especialidade</dt><dd>${esc(TELE_NAME[c.esp])}</dd><dt>Profissional</dt><dd>${esc(proName(c.profId))}</dd><dt>Quando</dt><dd>${fmtDayW(c.data)} · ${c.hora} (${c.dur||30} min)</dd><dt>Situação</dt><dd><span class="pill ${CONS_ST[c.status][1]}">${CONS_ST[c.status][0]}</span> <span class="pill ${c.pagamento==="pago"?"p-ok":"p-warn"}">${c.pagamento==="pago"?"Pago":"Pagamento pendente"} · ${brl(c.valor)}</span></dd>${c.obs?`<dt>Motivo</dt><dd>${esc(c.obs)}</dd>`:""}<dt>Termo</dt><dd>${c.consentimento?`Aceito em ${fmtDT(c.consentimento.em)}`:"Ainda não aceito pelo paciente"}</dd></dl>
+    ${pagar}
+    ${role==="paciente"&&c.status==="agendada"&&!c.consentimento?`<label class="consent"><input type="checkbox" id="tc_ok2"><span>Li e aceito o termo de teleatendimento (consulta por vídeo com meu consentimento, possibilidade de indicação presencial, dados protegidos pela LGPD, não é atendimento de emergência).</span></label><div class="actions"><button class="btn btn-primary" data-act="aceitaTermo" data-id="${c.id}">Aceitar termo</button></div>`:""}
+    ${podeEntrar?`<div class="actions"><a class="btn btn-copper" href="${salaURL(c)}" target="_blank" rel="noopener">${ICON.teleconsultas}Entrar na videochamada</a></div><p class="small muted">Abra alguns minutos antes. Use fone de ouvido e um lugar silencioso.</p>`:""}
+    ${c.evolucao&&role!=="paciente"?`<div class="note"><b>Evolução</b><p style="white-space:pre-line;margin-top:4px">${esc(c.evolucao)}</p></div>`:""}
+    ${c.orientacoes?`<div class="note"><b>Orientações ao paciente</b><p style="white-space:pre-line;margin-top:4px">${esc(c.orientacoes)}</p></div>`:""}
+    ${docs?`<div class="note"><b>Documentos</b><ul style="margin:6px 0 0;padding-left:18px">${docs}</ul></div>`:""}
+    ${role==="prof"&&c.profId===S.profId&&c.status!=="cancelada"?`<h3>Registro do atendimento</h3><div class="fgrid"><label class="f full">Evolução <i class="req">*</i><textarea id="tc_evo" rows="4">${esc(c.evolucao||"")}</textarea></label><label class="f full">Orientações ao paciente<small>Aparecem para o paciente e a família</small><textarea id="tc_ori" rows="3">${esc(c.orientacoes||"")}</textarea></label>
+      <label class="f">Documento<select id="tc_dtipo"><option value="">Nenhum</option><option>Receita</option><option>Atestado</option><option>Solicitação de exame</option><option>Relatório</option><option>Orientação por escrito</option></select></label><label class="f">Link do documento assinado<small>Receitas e atestados médicos: assine com certificado ICP-Brasil (ex.: plataforma de prescrição digital) e cole o link</small><input id="tc_dlink" placeholder="https://"></label><label class="f full">Descrição do documento<input id="tc_dtxt"></label>
+      <label class="f">Retorno em<input id="tc_ret" type="date"></label></div><div class="actions"><button class="btn btn-primary" data-act="saveAtend" data-id="${c.id}">Salvar atendimento</button></div>`:""}
+    <div class="actions">${role==="admin"?`${c.status==="solicitada"?`<button class="btn btn-primary" data-act="teleSt" data-id="${c.id}" data-v="agendada">Confirmar</button>`:""}${c.pagamento!=="pago"?`<button class="btn btn-line" data-act="telePago" data-id="${c.id}">Marcar pago</button>`:""}${ativo?`<button class="btn btn-line" data-act="teleSt" data-id="${c.id}" data-v="falta">Paciente faltou</button><button class="btn btn-danger" data-act="teleSt" data-id="${c.id}" data-v="cancelada">Cancelar</button>`:""}${pac.telResp?`<a class="btn btn-line" target="_blank" rel="noopener" href="${wa(pac.telResp,`Olá, ${first(pac.responsavel)}! Lembrete da Viver Bem: teleconsulta de ${TELE_NAME[c.esp]} com ${proName(c.profId)} em ${fmtDay(c.data)} às ${c.hora}. Entre pelo app: ${baseURL()}`)}">${ICON.wa}Enviar lembrete</a>`:""}`:""}
+      ${role==="paciente"&&ativo&&new Date(`${c.data}T${c.hora}`).getTime()-Date.now()>24*36e5?`<button class="btn btn-danger" data-act="teleSt" data-id="${c.id}" data-v="cancelada">Cancelar consulta</button>`:""}</div>`;
+  modal("Teleconsulta", body, {wide:1,nofocus:1});
+}
+function pgTeleProf(){
+  const t=today(), mine=Store.all("consultas").filter(c=>c.profId===S.profId).sort((a,b)=>(a.data+a.hora).localeCompare(b.data+b.hora));
+  const prox=mine.filter(c=>c.data>=t&&c.status==="agendada"), pend=mine.filter(c=>c.status==="agendada"&&c.data<t||c.status==="realizada"&&!c.evolucao);
+  const lista=l=>l.length?`<div class="list-links">${l.map(c=>`<a href="#" data-act="verTele" data-id="${c.id}"><b>${fmtDay(c.data)} ${c.hora} · ${esc(pacName(c.pacId))}</b><span>${esc(TELE_NAME[c.esp])} · ${CONS_ST[c.status][0]}</span></a>`).join("")}</div>`:`<p class="empty">Nada por aqui.</p>`;
+  return `<div class="pagehead"><div><h1>Minhas teleconsultas</h1><p class="sub">Entre na sala pelo botão da consulta e registre o atendimento ao final</p></div></div>
+  <section class="card"><h2>Próximas</h2>${lista(prox)}</section>${pend.length?`<section class="card"><h2>Sem registro</h2>${lista(pend)}</section>`:""}
+  <section class="card"><h2>Realizadas</h2>${lista(mine.filter(c=>c.status==="realizada").reverse().slice(0,20))}</section>`;
+}
+
+/* =================== ÁREA DO PACIENTE E FAMÍLIA =================== */
+const meuPac = () => Store.get("pacientes", S.pacId) || {};
+function pgFamInicio(){
+  const p=meuPac(), t=today(), cfg=Store.cfg();
+  const pls=Store.all("plantoes").filter(x=>x.pacId===p.id&&x.data>=t&&["agendado","andamento"].includes(x.status)).sort((a,b)=>tStart(a)-tStart(b));
+  const cons=Store.all("consultas").filter(c=>c.pacId===p.id&&c.data>=t&&["agendada","solicitada"].includes(c.status)).sort((a,b)=>(a.data+a.hora).localeCompare(b.data+b.hora));
+  const hojeMed=medsDe(p.id).filter(m=>m.em.slice(0,10)===t).length, esp=p.freqMed==="2"?2:p.freqMed==="7"?0:1;
+  const lembretes=[];
+  if(p.programa==="sim"&&esp&&hojeMed<esp) lembretes.push(`Registrar ${esp-hojeMed===2?"as medições":"a medição"} de hoje (${hojeMed} de ${esp}). <a href="#medicoes">Registrar</a>`);
+  cons.filter(c=>c.data===t).forEach(c=>lembretes.push(`Teleconsulta hoje às ${c.hora} com ${esc(proName(c.profId))}. <a href="#" data-act="verTele" data-id="${c.id}">Abrir</a>`));
+  cons.filter(c=>c.status==="agendada"&&c.pagamento!=="pago").forEach(c=>lembretes.push(`Pagamento pendente da teleconsulta de ${fmtDay(c.data)}. <a href="#" data-act="verTele" data-id="${c.id}">Ver dados</a>`));
+  if(p.proxReavaliacao&&p.proxReavaliacao<=addDays(t,7)) lembretes.push(`Reavaliação marcada para ${fmtDay(p.proxReavaliacao)}.`);
+  const equipe=[...new Map(Store.all("plantoes").filter(x=>x.pacId===p.id&&x.profId&&x.data>=addDays(t,-30)).map(x=>[x.profId,{nome:proName(x.profId),f:x.profFuncao||""}])).values()];
+  return `<section class="welcome"><div><span class="eyebrow-pill">Área da família</span><h1>${esc(p.nome||"Paciente")}</h1><p>${esc(MOD_LOCAL[p.modalidade||"domicilio"])}${p.instituicao?" · "+esc(p.instituicao):""} · ${fmtDayW(t)}</p></div>
+    <div class="actions"><a class="btn btn-copper" href="#teleconsulta">Agendar teleconsulta</a><a class="btn btn-ghost-light" href="#servicos">Solicitar atendimento</a></div></section>
+  ${lembretes.length?`<section class="card"><h2>Lembretes</h2><ul style="margin:8px 0 0;padding-left:18px;display:grid;gap:6px">${lembretes.map(x=>`<li>${x}</li>`).join("")}</ul></section>`:""}
+  <div class="grid2">
+    <section class="card"><div class="card-h"><h2>Próximos atendimentos</h2><a class="small" href="#agenda">Agenda completa</a></div>
+      ${[...pls.slice(0,4).map(x=>`<div class="evo"><b>${fmtDayW(x.data)} · ${x.inicio}–${fim(x)}</b><div class="small muted">${esc(proName(x.profId))}${x.profFuncao?" · "+esc(x.profFuncao):""} · ${MOD_NAME[x.mod]}</div></div>`), ...cons.slice(0,3).map(c=>`<div class="evo" style="border-left-color:var(--copper)"><b>${fmtDayW(c.data)} · ${c.hora} · teleconsulta</b><div class="small muted">${esc(TELE_NAME[c.esp])} · ${esc(proName(c.profId))} · ${CONS_ST[c.status][0]}</div></div>`)].join("")||`<p class="empty">Nenhum atendimento agendado.</p>`}</section>
+    <section class="card"><h2>Equipe responsável</h2>${equipe.length?`<div class="list-links">${equipe.map(e=>`<div style="padding:10px 12px;border:1px solid var(--line);border-radius:10px"><b>${esc(e.nome)}</b><div class="small muted">${esc(e.f)}</div></div>`).join("")}</div>`:`<p class="empty">A equipe aparece aqui quando os plantões forem agendados.</p>`}</section>
+  </div>
+  <section class="card"><h2>Central de atendimento Viver Bem</h2><p class="muted" style="margin:6px 0 10px">Dúvidas, mudanças na agenda ou piora do quadro: fale com a central.</p>
+    <div class="actions">${cfg.whatsapp?`<a class="btn btn-primary" target="_blank" rel="noopener" href="${wa(cfg.whatsapp,`Olá, Viver Bem! Sou da família de ${p.nome}.`)}">${ICON.wa}WhatsApp da central</a>`:'<span class="small muted">O WhatsApp da central será informado pela Viver Bem.</span>'}</div>${SAMU_NOTE}</section>`;
+}
+const SERVICOS_MOD = [
+  ["domicilio","Atendimento domiciliar","Profissionais e cuidados na casa do paciente, conforme avaliação.",["Enfermagem","Técnicos de enfermagem","Fisioterapia","Fonoaudiologia","Nutrição","Psicologia","Atendimento médico","Curativos e tratamentos","Acompanhamento do paciente crônico"]],
+  ["ilpi","Clínicas de repouso e ILPI","Assistência multidisciplinar para quem mora em clínica de repouso ou instituição de longa permanência.",["Enfermagem","Fisioterapia","Fonoaudiologia","Nutrição","Avaliação médica","Monitoramento assistencial"]],
+  ["hospital","Acompanhamento hospitalar","Profissional para acompanhar e cuidar do paciente durante a internação.",["Acompanhante técnico de enfermagem","Cuidados individualizados","Plantões de 12h ou 24h"]]];
+function pgFamServicos(){
+  return `<div class="pagehead"><div><h1>Serviços Viver Bem</h1><p class="sub">Escolha o tipo de atendimento. A central entra em contato para avaliar e combinar os detalhes.</p></div></div>
+  <div class="grid2">${SERVICOS_MOD.map(([k,t,d,l])=>`<section class="card"><h2>${t}</h2><p class="muted" style="margin:6px 0 10px">${d}</p><div class="chips">${l.map(x=>`<span class="pill p-blue">${x}</span>`).join("")}</div><div class="actions" style="margin-top:12px"><button class="btn btn-primary" data-act="famSolicita" data-id="${k}">Solicitar</button></div></section>`).join("")}
+    <section class="card"><h2>Teleconsulta e teleatendimento</h2><p class="muted" style="margin:6px 0 10px">Consulta por vídeo pelo app, com agendamento e pagamento online.</p><div class="chips">${TELE.map(([,n])=>`<span class="pill p-cop">${n}</span>`).join("")}</div><div class="actions" style="margin-top:12px"><a class="btn btn-copper" href="#teleconsulta">Agendar teleconsulta</a></div></section></div>`;
+}
+let famTele={esp:"",prof:""};
+function pgFamTele(){
+  const p=meuPac(), cons=Store.all("consultas").filter(c=>c.pacId===p.id).sort((a,b)=>(b.data+b.hora).localeCompare(a.data+a.hora));
+  return `<div class="pagehead"><div><h1>Teleconsultas</h1><p class="sub">Escolha a especialidade, o profissional e o horário</p></div></div>
+  <section class="card" id="famTeleForm"><h2>Agendar</h2>${teleForm({esp:famTele.esp,prof:famTele.prof})}</section>
+  <section class="card"><h2>Minhas teleconsultas</h2>${cons.length?`<div class="list-links">${cons.map(c=>`<a href="#" data-act="verTele" data-id="${c.id}"><b>${fmtDay(c.data)} ${c.hora} · ${esc(TELE_NAME[c.esp])}</b><span>${esc(proName(c.profId))} · ${CONS_ST[c.status][0]}${c.status==="agendada"&&c.pagamento!=="pago"?" · pagamento pendente":""}</span></a>`).join("")}</div>`:`<p class="empty">Nenhuma teleconsulta ainda.</p>`}</section>${SAMU_NOTE}`;
+}
+function pgFamAgenda(){
+  const p=meuPac(), t=today();
+  const itens=[...Store.all("plantoes").filter(x=>x.pacId===p.id&&x.data>=t&&x.status!=="cancelado").map(x=>({d:x.data,h:x.inicio,html:`<b>${x.inicio}–${fim(x)}</b> · ${esc(proName(x.profId))}${x.profFuncao?` <span class="muted">(${esc(x.profFuncao)})</span>`:""} · ${MOD_NAME[x.mod]}`})),
+    ...Store.all("consultas").filter(c=>c.pacId===p.id&&c.data>=t&&["agendada","solicitada"].includes(c.status)).map(c=>({d:c.data,h:c.hora,html:`<b>${c.hora}</b> · Teleconsulta: ${esc(TELE_NAME[c.esp])} com ${esc(proName(c.profId))} · <a href="#" data-act="verTele" data-id="${c.id}">${CONS_ST[c.status][0]}</a>`}))].sort((a,b)=>(a.d+a.h).localeCompare(b.d+b.h));
+  const dias=[...new Set(itens.map(i=>i.d))];
+  return `<div class="pagehead"><div><h1>Agenda</h1><p class="sub">Plantões e teleconsultas dos próximos dias</p></div></div>
+  ${dias.length?dias.map(d=>`<section class="card"><h2 style="text-transform:capitalize">${fmtDayW(d)}</h2><div style="display:grid;gap:8px;margin-top:8px">${itens.filter(i=>i.d===d).map(i=>`<div>${i.html}</div>`).join("")}</div></section>`).join(""):`<p class="empty">Nenhum atendimento agendado.</p>`}`;
+}
+function pgFamMed(){
+  const p=meuPac();
+  return `<div class="pagehead"><div><h1>Minhas medições</h1><p class="sub">${p.programa==="sim"?`Programa de monitoramento · ${p.freqMed==="2"?"2 vezes por dia":p.freqMed==="7"?"1 vez por semana":"1 vez por dia"}`:"Registre as medições para a equipe acompanhar"}</p></div><button class="btn btn-primary" data-act="novaMed" data-id="${p.id}">${ICON.plus}Registrar medição</button></div>
+  ${SAMU_NOTE}<section class="card"><h2>Evolução dos últimos 30 dias</h2>${monGraficos(p)}</section><section class="card"><h2>Histórico</h2>${medTabela(medsDe(p.id))}</section>`;
+}
+function pgFamCuidado(){
+  const p=meuPac(), evos=Store.all("plantoes").filter(x=>x.pacId===p.id&&x.evolucao).sort((a,b)=>tStart(b)-tStart(a)).slice(0,10);
+  const ori=Store.all("consultas").filter(c=>c.pacId===p.id&&(c.orientacoes||(c.documentos||[]).length)).sort((a,b)=>(b.data).localeCompare(a.data));
+  return `<div class="pagehead"><div><h1>Plano de cuidados e relatórios</h1><p class="sub">O que a equipe faz, como o paciente está e as orientações recebidas</p></div></div>
+  <div class="grid2"><section class="card"><h2>Plano de cuidados</h2><p style="white-space:pre-line;margin-top:8px">${esc(p.plano||"A equipe vai registrar o plano após a avaliação.")}</p></section>
+    <section class="card"><h2>Estado clínico</h2>${estadoClinico(p,true)}</section></div>
+  <section class="card"><h2>Orientações e documentos das teleconsultas</h2>${ori.length?ori.map(c=>`<div class="evo"><div class="small muted">${fmtDay(c.data)} · ${esc(TELE_NAME[c.esp])} · ${esc(proName(c.profId))}</div>${c.orientacoes?`<p style="white-space:pre-line">${esc(c.orientacoes)}</p>`:""}${(c.documentos||[]).map(d=>`<p class="small"><b>${esc(d.tipo)}:</b> ${esc(d.texto)}${d.link?` · <a href="${esc(d.link)}" target="_blank" rel="noopener">abrir</a>`:""}</p>`).join("")}</div>`).join(""):`<p class="empty">Nenhuma orientação ainda.</p>`}</section>
+  <section class="card"><h2>Relatório dos últimos plantões</h2>${evos.length?evos.map(evoBlock).join(""):`<p class="empty">Os relatórios aparecem aqui após os plantões.</p>`}</section>`;
+}
+
 /* =================== CONFIGURAÇÕES =================== */
 function pgConfig(){
   const c=Store.cfg(), tb=c.tabela||{};
   return `<div class="pagehead"><div><h1>Configurações</h1><p class="sub">Dados da empresa usados nos contratos, nos links públicos e na escala</p></div></div>
   <section class="card"><h2>Dados da empresa</h2>${fields([{k:"nome",l:"Razão social / nome",full:1},{k:"cnpj",l:"CNPJ"},...ADDR("e_",false).filter(f=>f.k!=="e_referencia"),{k:"dpo",l:"Encarregado de dados (LGPD)",full:1,ph:"Nome e e-mail",h:"Pessoa que responde pedidos sobre dados pessoais. Aparece nos contratos."},{k:"whatsapp",l:"WhatsApp da empresa",im:"tel"},{k:"email",l:"E-mail",t:"email"},{k:"instagram",l:"Instagram",ph:"@viverbem"},{k:"diaPagamento",l:"Dia de pagamento dos profissionais",t:"number"}],c)}</section>
   <section class="card"><h2>Check-in, check-out e pagamento</h2>${fields([{k:"raio",l:"Distância padrão para check-in (metros)",t:"number",h:"Ex.: 300. Pode ser mudada em cada paciente."},{k:"tolerancia",l:"Tolerância no cálculo por hora (minutos)",t:"number",h:"Atrasos até esse limite não descontam"}],{raio:c.raio??300,tolerancia:c.tolerancia??15})}</section>
+  <section class="card"><h2>Teleconsulta</h2><p class="small muted" style="margin:-4px 0 12px">Valores por especialidade, sala de vídeo e dados de pagamento mostrados ao paciente.</p>
+    <div class="fgrid">${TELE.map(([k,n])=>`<label class="f">${n} (R$)<input id="tv_${k}" type="number" step="0.01" value="${(c.teleValores||{})[k]??""}"></label>`).join("")}</div>
+    <div class="fgrid" style="margin-top:12px"><label class="f full">Endereço base da sala de vídeo<small>Padrão: Jitsi Meet (gratuito). Ao contratar uma plataforma de vídeo, troque aqui.</small><input id="tv_video" value="${esc(c.videoBase||"https://meet.jit.si/")}"></label>
+    <label class="f">Chave Pix para teleconsultas<input id="tv_pix" value="${esc(c.pixChave||"")}"></label><label class="f">Link de pagamento (Asaas ou outro)<input id="tv_link" value="${esc(c.linkPagamento||"")}" placeholder="https://"></label></div>
+    <div class="actions" style="margin-top:12px"><button class="btn btn-line" data-act="saveTeleCfg">Salvar teleconsulta</button></div></section>
   <section class="card"><h2>Modelos de contrato</h2><p class="small muted" style="margin:-4px 0 12px">Cole aqui o contrato da Viver Bem. Em branco, o sistema usa o modelo padrão. Use as marcações abaixo para o sistema preencher sozinho. Linhas que começam com "CLÁUSULA" viram títulos.</p>
     <label class="f">Contrato do profissional autônomo<small>{{empresa}} {{cnpj}} {{endereco_empresa}} {{cidade_empresa}} {{nome}} {{cpf}} {{funcao}} {{registro}} {{cidade}} {{data}} {{dia_pagamento}}</small><textarea id="f_modeloAutonomo" rows="10">${esc(c.modeloAutonomo||"")}</textarea></label>
     <label class="f" style="margin-top:12px">Contrato do paciente<small>{{empresa}} {{cnpj}} {{endereco_empresa}} {{cidade_empresa}} {{responsavel}} {{cpf_responsavel}} {{endereco_responsavel}} {{paciente}} {{servicos}} {{valor}} {{vencimento}} {{materiais}} {{data}}</small><textarea id="f_modeloPaciente" rows="10">${esc(c.modeloPaciente||"")}</textarea></label>
@@ -1573,6 +1847,7 @@ const ACT = {
   async savePlantao(id){
     const b=$(".modal-b"), spec=PL_SPEC(), v=readFields(spec,b), m=missing(spec,v); if(m) return showErr(b,m);
     v.horas = v.mod==="hora" ? (+v.horas||1) : +v.mod; v.valorCobrado=+v.valorCobrado||0; v.valorPago=+v.valorPago||0;
+    { const pf=Store.get("profissionais",v.profId); v.profNome=pf?.nome||""; v.profFuncao=pf?.funcao||""; }
     if(id){ const p={...Store.get("plantoes",id),...v}; const c=conflito(p); if(c&&b.dataset.force!=="1"){ b.dataset.force="1"; return showErr(b,`${proName(p.profId)} já tem plantão em ${pacName(c.pacId)} nesse horário (${fmtDay(c.data)}, ${c.inicio}–${fim(c)}). Clique em Salvar de novo para manter assim.`); } await Store.put("plantoes",p); closeModal(); toast("Plantão atualizado"); return render(); }
     let dates=[v.data]; const rep=$("#f_rep",b).value;
     if(rep==="dias"){ const ds=$$('input[name="rep_dia"]:checked',b).map(i=>+i.value); if(!ds.length) return showErr(b,"Escolha os dias da semana."); dates=[...Array(28)].map((_,i)=>addDays(v.data,i)).filter(d=>ds.includes(new Date(d+"T12:00").getDay())); }
@@ -1651,6 +1926,65 @@ const ACT = {
     for(const i of l.itens){ const p=Store.get("plantoes",i.plantaoId); if(p&&!p.recebido){ p.recebido=true; await Store.put("plantoes",p); } }
     await Store.put("lotes",l); toast(`Pagamento de ${brl(l.recebido)} registrado`); render(); loteView(id); },
   async delLote(id,b){ if(b.dataset.ok!=="1"){ b.dataset.ok="1"; b.textContent="Confirmar exclusão"; return; } await Store.del("lotes",id); closeModal(); render(); },
+  demoFam(){ const p=Store.all("pacientes").find(x=>x.acessoFamilia); if(!p) return toast("Crie o acesso da família na ficha de um paciente"); S={role:"paciente",pacId:p.id,nome:(p.responsavel||p.nome).replace(/\s*\(.*\)/,"")}; saveSession(); location.hash="inicio"; render(); },
+  teleFiltro(id){ teleFiltro=id; render(); },
+  novaTele(id){ modal(S.role==="paciente"?"Pedir teleconsulta":"Agendar teleconsulta", teleForm({pac:id||""}), {wide:1}); },
+  verTele(id){ verTele(id); },
+  async saveTele(){ const bd=$("#famTeleForm")||$(".modal-b"), esp=$("#tc_esp").value, profId=$("#tc_prof").value, slot=$("#tc_slot").value, pacId=S.role==="paciente"?S.pacId:$("#tc_pac").value;
+    if(!pacId||!esp||!profId) return showErr(bd,"Escolha o paciente, a especialidade e o profissional."); if(!slot) return showErr(bd,"Não há horário livre com este profissional. Escolha outro.");
+    if(S.role==="paciente"&&!$("#tc_ok").checked) return showErr(bd,"Para pedir a teleconsulta, aceite o termo de teleatendimento.");
+    const [data,hora]=slot.split(" "), a=Store.get("agendaTele",profId);
+    const c={id:uid("tc"),pacId,profId,profNome:a?.nome||proName(profId),esp,data,hora,dur:+a?.dur||30,valor:valorTele(esp),status:S.role==="paciente"?"solicitada":"agendada",pagamento:"pendente",sala:"ViverBem-"+uid().toUpperCase(),obs:$("#tc_obs").value.trim(),consentimento:S.role==="paciente"?{em:new Date().toISOString()}:null};
+    await Store.put("consultas",c);
+    if(S.role==="paciente"){ if(a){ a.ocupados=[...(a.ocupados||[]),`${data} ${hora}`]; try{ if(Store.mode==="firebase") await Store.fs.collection("agendaTele").doc(a.id).update({ocupados:a.ocupados}); else Store._local(); }catch(e){} } }
+    else await syncOcupados(profId);
+    closeModal(); famTele={esp:"",prof:""}; toast(S.role==="paciente"?"Pedido enviado. A central vai confirmar.":"Teleconsulta agendada"); render(); verTele(c.id); },
+  async teleSt(id,b){ const c=Store.get("consultas",id), v=b.dataset.v; if(v==="cancelada"&&b.dataset.ok!=="1"){ b.dataset.ok="1"; b.textContent="Confirmar cancelamento"; return; }
+    c.status=v; if(S.role==="paciente"&&Store.mode==="firebase"){ await Store.fs.collection("consultas").doc(id).update({status:v,atualizado:new Date().toISOString()}); } else await Store.put("consultas",c);
+    if(S.role==="admin") await syncOcupados(c.profId); closeModal(); toast(CONS_ST[v][0]); render(); },
+  async telePago(id){ const c=Store.get("consultas",id); c.pagamento="pago"; c.pagoEm=new Date().toISOString(); await Store.put("consultas",c); closeModal(); toast("Pagamento registrado"); render(); },
+  async aceitaTermo(id){ if(!$("#tc_ok2").checked) return showErr($(".modal-b"),"Marque que leu e aceita o termo."); const c=Store.get("consultas",id); c.consentimento={em:new Date().toISOString()};
+    if(Store.mode==="firebase") await Store.fs.collection("consultas").doc(id).update({consentimento:c.consentimento,atualizado:new Date().toISOString()}); else Store._local(); closeModal(); verTele(id); },
+  async saveAtend(id){ const bd=$(".modal-b"), c=Store.get("consultas",id), evo=$("#tc_evo").value.trim(); if(evo.length<10) return showErr(bd,"Escreva a evolução do atendimento.");
+    c.evolucao=evo; c.orientacoes=$("#tc_ori").value.trim(); const dt=$("#tc_dtipo").value; if(dt) c.documentos=[...(c.documentos||[]),{tipo:dt,texto:$("#tc_dtxt").value.trim(),link:$("#tc_dlink").value.trim(),em:new Date().toISOString(),por:S.nome}];
+    c.status="realizada"; const ret=$("#tc_ret").value; if(ret) c.retornoEm=ret;
+    if(Store.mode==="firebase") await Store.fs.collection("consultas").doc(id).update({evolucao:c.evolucao,orientacoes:c.orientacoes,documentos:c.documentos||[],status:c.status,retornoEm:c.retornoEm||null,atualizado:new Date().toISOString()}); else await Store.put("consultas",c);
+    closeModal(); toast(ret?`Atendimento salvo. Retorno sugerido para ${fmtDay(ret)}: a central agenda.`:"Atendimento salvo"); render(); },
+  async saveTeleCfg(){ const c=Store.cfg(), tv={}; TELE.forEach(([k])=>{ tv[k]=+$("#tv_"+k).value||0; }); await Store.put("config",{...c,id:"empresa",teleValores:tv,videoBase:$("#tv_video").value.trim()||"https://meet.jit.si/",pixChave:$("#tv_pix").value.trim(),linkPagamento:$("#tv_link").value.trim()}); toast("Teleconsulta salva"); render(); },
+  novaMed(id){ modal("Registrar medição", medForm(id||S.pacId||""), {wide:1}); },
+  async saveMed(){ const bd=$(".modal-b"), pacId=S.role==="paciente"?S.pacId:$("#md_pac").value, g=k=>$("#md_"+k).value.trim();
+    const m={id:uid("md"),pacId,em:new Date().toISOString(),pa:g("pa"),glic:g("glic")===""?"":+g("glic"),fc:g("fc")===""?"":+g("fc"),sat:g("sat")===""?"":+g("sat"),peso:g("peso").replace(",","."),temp:g("temp").replace(",","."),sintomas:$$('input[name="md_sint"]:checked',bd).map(i=>i.value),obs:g("obs"),por:S.role==="paciente"?"Família":S.nome};
+    if(m.pa&&!parsePA(m.pa)) return showErr(bd,"Escreva a pressão no formato 120/80."); if(!m.pa&&m.glic===""&&m.fc===""&&m.sat===""&&!m.peso&&!m.temp&&!m.sintomas.length) return showErr(bd,"Preencha ao menos uma medida.");
+    m.alertas=avaliaMedicao(m,Store.get("pacientes",pacId)); m.alertaStatus=m.alertas.length?"aberto":null;
+    await Store.put("medicoes",m); closeModal(); render();
+    if(m.alertas.length&&S.role==="paciente") modal("Medição fora da faixa",`<p class="note warn"><b>${esc(m.alertas.join(" · "))}</b></p><p>A equipe da Viver Bem foi avisada e vai entrar em contato.</p>${SAMU_NOTE}<div class="actions"><button class="btn btn-primary" data-act="close">Entendi</button></div>`,{nofocus:1});
+    else toast(m.alertas.length?"Medição salva com alerta para a equipe":"Medição salva"); },
+  conduta(id){ const m=Store.get("medicoes",id);
+    modal("Registrar conduta",`<p class="muted">${esc(pacName(m.pacId))} · ${fmtDT(m.em)} · ${esc(resumoMed(m))}</p><div class="chips" style="margin:6px 0">${m.alertas.map(a=>`<span class="pill p-bad">${esc(a)}</span>`).join("")}</div>
+      <div class="fgrid"><label class="f full">Conduta<select id="cd_tipo"><option>Orientação por telefone ou WhatsApp</option><option>Teleconsulta agendada</option><option>Visita domiciliar</option><option>Ajuste de medicação pelo médico</option><option>Encaminhado ao pronto-socorro</option><option>Medição repetida, dentro da faixa</option><option>Sem necessidade de ação</option></select></label><label class="f full">Descrição<textarea id="cd_txt" rows="3"></textarea></label></div>
+      <div class="actions"><button class="btn btn-primary" data-act="saveConduta" data-id="${id}">Salvar e resolver alerta</button>${Store.get("pacientes",m.pacId)?.telResp?`<a class="btn btn-line" target="_blank" rel="noopener" href="${wa(Store.get("pacientes",m.pacId).telResp,`Olá! Aqui é da Viver Bem. Vimos a medição de ${pacName(m.pacId)} (${resumoMed(m)}). Como está agora?`)}">${ICON.wa}Falar com a família</a>`:""}</div>`); },
+  async saveConduta(id){ const m=Store.get("medicoes",id); m.alertaStatus="resolvido"; m.conduta={tipo:$("#cd_tipo").value,texto:$("#cd_txt").value.trim(),por:S.nome,em:new Date().toISOString()}; await Store.put("medicoes",m); closeModal(); toast("Alerta resolvido"); render(); },
+  novaInter(id){ modal("Registrar intercorrência",`<p class="muted">${esc(pacName(id))}</p><div class="fgrid"><label class="f">Tipo<select id="ic_tipo">${INTER_TIPOS.map(x=>`<option>${x}</option>`).join("")}</select></label><label class="f">Gravidade<select id="ic_grav"><option value="leve">Leve</option><option value="moderada">Moderada</option><option value="grave">Grave</option></select></label>
+      <label class="f full">O que aconteceu <i class="req">*</i><textarea id="ic_desc" rows="3"></textarea></label><label class="f full">Conduta tomada<textarea id="ic_cond" rows="2"></textarea></label></div>${SAMU_NOTE}<div class="actions"><button class="btn btn-primary" data-act="saveInter" data-id="${id}">Registrar</button></div>`); },
+  async saveInter(id){ const bd=$(".modal-b"), d=$("#ic_desc").value.trim(); if(d.length<5) return showErr(bd,"Descreva o que aconteceu.");
+    await Store.put("intercorrencias",{id:uid("ic"),pacId:id,em:new Date().toISOString(),tipo:$("#ic_tipo").value,gravidade:$("#ic_grav").value,descricao:d,conduta:$("#ic_cond").value.trim(),por:S.nome}); closeModal(); toast("Intercorrência registrada. A coordenação foi avisada no painel."); render(); },
+  famSolicita(k){ const p=meuPac(), sm=SERVICOS_MOD.find(x=>x[0]===k);
+    modal("Solicitar · "+sm[1],`<div class="fgrid"><label class="f full">Serviço<select id="fs_serv">${sm[3].map(x=>`<option>${x}</option>`).join("")}</select></label>${k!=="domicilio"?`<label class="f full">Nome da clínica ou hospital<input id="fs_inst" value="${esc(p.instituicao||"")}"></label>`:""}<label class="f full">Detalhes<textarea id="fs_msg" rows="3" placeholder="Dias, horários, o que o paciente precisa"></textarea></label></div><div class="actions"><button class="btn btn-primary" data-act="saveFamSol" data-id="${k}">Enviar pedido</button></div>`); },
+  async saveFamSol(k){ const p=meuPac(), sm=SERVICOS_MOD.find(x=>x[0]===k);
+    await Store.put("solicitacoes",{id:uid("s"),tipo:"familia",status:"novo",pacId:p.id,modalidade:k,nome:(p.responsavel||"").replace(/\s*\(.*\)/,"")||S.nome,tel:p.telResp||"",cidade:loc(p),paciente:p.nome,servico:`${sm[1]}: ${$("#fs_serv").value}`,msg:[$("#fs_inst")?.value?.trim()&&"Local: "+$("#fs_inst").value.trim(),$("#fs_msg").value.trim()].filter(Boolean).join(" · ")});
+    closeModal(); toast("Pedido enviado. A central vai entrar em contato."); },
+  acessoFam(id){ const p=Store.get("pacientes",id);
+    modal("Acesso da família", `<p>Com o acesso, a família de ${esc(p.nome)} vê a agenda, a equipe, o plano de cuidados e os relatórios, agenda teleconsultas e registra as medições.</p>
+      ${fields([{k:"fEmail",l:"E-mail de login",t:"email"},{k:"fSenha",l:"Senha inicial",h:"Mínimo de 6 caracteres"}],{fEmail:p.acessoFamilia||""})}
+      <div class="actions"><button class="btn btn-primary" data-act="saveAcessoFam" data-id="${id}">${p.acessoFamilia?"Atualizar":"Criar acesso"}</button></div>`); },
+  async saveAcessoFam(id){ const b=$(".modal-b"), p=Store.get("pacientes",id), email=$("#f_fEmail").value.trim().toLowerCase(), senha=$("#f_fSenha").value;
+    if(!/.+@.+\..+/.test(email)) return showErr(b,"Informe um e-mail válido."); if(senha.length<6) return showErr(b,"A senha precisa ter pelo menos 6 caracteres.");
+    const nome=(p.responsavel||p.nome).replace(/\s*\(.*\)/,"");
+    try{ if(Store.mode==="firebase"){ const sec=firebase.apps.find(a=>a.name==="sec")||firebase.initializeApp(FIREBASE_CONFIG,"sec"); const cr=await sec.auth().createUserWithEmailAndPassword(email,senha); await Store.put("usuarios",{id:cr.user.uid,role:"paciente",pacId:id,nome,email}); await sec.auth().signOut(); }
+      p.acessoFamilia=email; if(Store.mode==="demo") p.senhaDemo=senha; await Store.put("pacientes",p); closeModal(); render();
+      const msg=`Olá, ${first(nome)}! Seu acesso à área da família da Viver Bem: ${baseURL()} · login ${email} · senha ${senha}`;
+      modal("Envie o acesso",`<p class="note" style="word-break:break-all">${esc(msg)}</p><div class="actions"><a class="btn btn-primary" target="_blank" rel="noopener" href="${wa(p.telResp,msg)}">${ICON.wa}Enviar pelo WhatsApp</a></div>`,{nofocus:1});
+    }catch(err){ showErr(b, err.code==="auth/email-already-in-use"?"Este e-mail já tem acesso.":"Não foi possível criar o acesso: "+(err.message||err)); } },
   folhaMes(id){ const [y,m]=folhaMes.split("-").map(Number); const d=new Date(y,m-1+(+id),1); folhaMes=`${d.getFullYear()}-${pad(d.getMonth()+1)}`; render(); },
   verFolha(id){ const pro=Store.get("profissionais",id); modal("Folha · "+(pro?.nome||""), folhaTabela(id,folhaMes,true),{wide:1,nofocus:1}); },
   async folhaPag(id){ for(const p of folhaPlantoes(id,folhaMes).filter(p=>p.status==="realizado"&&!p.pago)){ p.pago=true; await Store.put("plantoes",p); } toast("Marcado como pago"); render(); },
@@ -1672,7 +2006,8 @@ const ACT = {
   novoProf(){ formProf(); }, editProf(id){ formProf(id); },
   async saveProf(id){ const b=$(".modal-b"), spec=PRO_SPEC(), v=readFields(spec,b), m=missing(spec,v); if(m) return showErr(b,m);
     if(v.cpf&&!validDoc(v.cpf)) return showErr(b,"CPF ou CNPJ inválido."); v.cpf=digits(v.cpf); v.endereco=montaEnd(v);
-    const p=id?{...Store.get("profissionais",id),...v}:{id:uid("pro"),...v}; await Store.put("profissionais",p); closeModal(); toast("Profissional salvo"); location.hash="profissional-"+p.id; render(); },
+    if(v.teleEsp&&(!v.teleIni||!v.teleFim||!v.teleDias.length)) return showErr(b,"Para teleconsulta, informe os dias e o horário de atendimento.");
+    const p=id?{...Store.get("profissionais",id),...v}:{id:uid("pro"),...v}; await Store.put("profissionais",p); await syncAgendaTele(p); closeModal(); toast("Profissional salvo"); location.hash="profissional-"+p.id; render(); },
   acessoProf(id){ const p=Store.get("profissionais",id);
     modal("Acesso ao app do profissional", `<p>Com o acesso, ${esc(first(p.nome))} entra no sistema pelo celular, vê os próprios plantões, o plano de cuidados de cada paciente e registra a evolução.</p>
       ${fields([{k:"aEmail",l:"E-mail de login",t:"email"},{k:"aSenha",l:"Senha inicial",h:"Mínimo de 6 caracteres. Peça para trocar depois."}],{aEmail:p.acesso||p.email})}
@@ -1775,6 +2110,9 @@ async function buscaCep(input){
     ($("#f_"+pre+"numero",root)||$("#f_"+pre+"numero"))?.focus(); }
   catch(_){ /* sem internet ou bloqueado: preenchimento manual */ }
 }
+document.addEventListener("change", e=>{ if(e.target.hasAttribute&&e.target.hasAttribute("data-tele-ref")){ const esp=$("#tc_esp").value, prof=e.target.id==="tc_prof"?$("#tc_prof").value:""; const pac=$("#tc_pac")?.value;
+  if(S.role==="paciente"&&location.hash==="#teleconsulta"&&$("#famTeleForm")){ famTele={esp,prof}; $("#famTeleForm").innerHTML="<h2>Agendar</h2>"+teleForm({esp,prof}); }
+  else { const bd=$(".modal-b"); if(bd) bd.innerHTML=teleForm({esp,prof,pac}); } } });
 document.addEventListener("submit", e=>{ if(e.target.id==="fBusca"){ e.preventDefault(); buscaTxt=$("#buscaGeral").value.trim(); if(location.hash==="#busca") render(); else location.hash="busca"; } });
 document.addEventListener("change", e=>{
   if(/^rel_/.test(e.target.id||"")){ rel={tipo:$("#rel_tipo").value,de:$("#rel_de").value||rel.de,ate:$("#rel_ate").value||rel.ate,pac:$("#rel_pac").value,pro:$("#rel_pro").value}; render(); }
@@ -1789,7 +2127,7 @@ document.addEventListener("change", e=>{
   try{
     await Store.init();
     if(Store.mode==="demo"){ try{ S=JSON.parse(sessionStorage.getItem(SS_KEY)); }catch(e){} }
-    else await new Promise(ok=>{ const off=Store.auth.onAuthStateChanged(async u=>{ off(); if(u){ const d=await Store.fetchOne("usuarios",u.uid); if(d){ S={role:d.role,profId:d.profId||null,nome:d.nome||u.email}; await Store.loadFor(S); } } ok(); }); });
+    else await new Promise(ok=>{ const off=Store.auth.onAuthStateChanged(async u=>{ off(); if(u){ const d=await Store.fetchOne("usuarios",u.uid); if(d){ S={role:d.role,profId:d.profId||null,pacId:d.pacId||null,nome:d.nome||u.email}; await Store.loadFor(S); } } ok(); }); });
   }catch(err){ $("#root").innerHTML=`<p class="empty" style="padding-top:30vh">${esc(err.message)}</p>`; return; }
   render();
 })();
