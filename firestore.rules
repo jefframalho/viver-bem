@@ -14,7 +14,15 @@ service cloud.firestore {
     match /usuarios/{uid}    { allow get: if signed() && (request.auth.uid == uid || isAdmin()); allow list, write: if isAdmin(); }
 
     // Candidatos: qualquer pessoa se cadastra; consulta do andamento só pelo protocolo
-    match /candidatos/{id}   { allow create: if request.resource.data.status == 'recebido'; allow get: if true; allow list, update, delete: if isAdmin(); }
+    match /candidatos/{id}   {
+      allow create: if request.resource.data.status == 'recebido';
+      allow get: if true;
+      allow list, delete: if isAdmin();
+      // o candidato só pode limpar a lista de reenvio depois de mandar os documentos pedidos
+      allow update: if isAdmin() || (only(['reenvio','atualizado']) && request.resource.data.reenvio.size() < resource.data.reenvio.size());
+    }
+    // Selfie, documento com foto, carteira do conselho, comprovante de endereço e currículo
+    match /documentos/{id}   { allow create, update: if request.resource.data.data.size() < 1000000; allow read, delete: if isAdmin(); }
     match /curriculos/{id}   { allow create: if request.resource.data.data.size() < 1000000; allow read, update, delete: if isAdmin(); }
     // Solicitações de atendimento vindas do link público
     match /solicitacoes/{id} { allow create: if request.resource.data.status == 'novo'; allow read, update, delete: if isAdmin(); }

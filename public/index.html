@@ -182,6 +182,32 @@ dl.kv dt{color:var(--muted);font-size:.88rem} dl.kv dd{margin:0;min-width:0;over
 
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(24px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;z-index:90;font-weight:600;max-width:90vw}
 
+/* documentos */
+.sr{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.docgrid{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr))}
+.docslot{position:relative;display:flex;gap:12px;align-items:center;padding:12px;border:1.5px dashed var(--line);border-radius:12px;background:var(--surface);cursor:pointer}
+.docslot:hover,.docslot:focus-within{border-color:var(--blue)}
+.docslot.ok{border-style:solid;border-color:var(--ok);background:var(--ok-bg)}
+.docthumb{flex:none;width:64px;height:64px;border-radius:10px;background:var(--surface-2);border:1px solid var(--line);display:grid;place-items:center;font-size:1.4rem;color:var(--muted);overflow:hidden;font-weight:700}
+.docthumb img{width:100%;height:100%;object-fit:cover}
+.doctext{display:flex;flex-direction:column;gap:2px;min-width:0}
+.doctext small{color:var(--muted);font-size:.84rem}
+.docslot.ok .docst{color:var(--ok);font-weight:600}
+.docview{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}
+.docview figure{margin:0;display:flex;flex-direction:column;gap:6px}
+.docview img{width:100%;border-radius:10px;border:1px solid var(--line);background:var(--surface-2)}
+/* página de links */
+.linkpage{display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px;max-width:460px;margin:0 auto;width:100%}
+.linklogo{width:96px;height:96px;border-radius:24px;object-fit:cover;box-shadow:0 8px 24px rgba(15,53,80,.25)}
+.linkpage h1{font-weight:400;font-size:1.6rem} .linkpage h1 small{font-size:.9rem;color:var(--copper);letter-spacing:.06em}
+.linklist{display:flex;flex-direction:column;gap:10px;width:100%}
+.linkbtn{display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);text-decoration:none;color:var(--ink)}
+.linkbtn span{font-size:.86rem;color:var(--muted)}
+.linkbtn:hover{border-color:var(--blue)}
+.linkbtn.primary{background:var(--blue);border-color:var(--blue);color:var(--on-blue)} .linkbtn.primary span{color:var(--on-blue);opacity:.85}
+.linkbtn.copper{background:var(--copper);border-color:var(--copper);color:#fff} .linkbtn.copper span{color:#fff;opacity:.9}
+.linkserv{list-style:none;padding:0;margin:6px 0 0;display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
+.linkserv li{font-size:.84rem;background:var(--info-bg);border-radius:999px;padding:4px 10px}
 /* telas públicas e login */
 .pub{min-height:100vh;display:flex;flex-direction:column}
 .pub-top{background:var(--side);color:#fff}
@@ -250,7 +276,9 @@ async function sha(t){ try{ const b=await crypto.subtle.digest("SHA-256",new Tex
 const wa = (tel, msg="") => { let d=digits(tel); if(d.length && !d.startsWith("55")) d="55"+d; return `https://wa.me/${d}${msg?"?text="+encodeURIComponent(msg):""}`; };
 const baseURL = () => location.href.split("#")[0];
 
-const FUNCOES = { "Enfermeiro(a)":"COREN","Técnico(a) de enfermagem":"COREN","Cuidador(a)":"","Fisioterapeuta":"CREFITO","Fonoaudiólogo(a)":"CRFa","Psicólogo(a)":"CRP","Nutricionista":"CRN","Terapeuta ocupacional":"CREFITO","Médico(a)":"CRM" };
+const FUNCOES = { "Enfermeiro(a)":"COREN","Técnico(a) de enfermagem":"COREN","Auxiliar de enfermagem":"COREN","Fisioterapeuta":"CREFITO","Fonoaudiólogo(a)":"CRFa","Psicólogo(a)":"CRP","Nutricionista":"CRN","Terapeuta ocupacional":"CREFITO","Médico(a)":"CRM" };
+const DOCS = [["selfie","Selfie","Foto do seu rosto, de frente, sem óculos escuros e com boa luz"],["identidade","Documento com foto","RG ou CNH, lado da foto"],["conselho","Carteira do conselho","Foto da sua carteira do conselho de classe (COREN, CREFITO, CRM...)"],["endereco","Comprovante de endereço","Conta de água, luz ou telefone dos últimos 3 meses"],["curriculo","Currículo","PDF, Word ou foto"]];
+const DOC_NAME = Object.fromEntries(DOCS.map(d=>[d[0],d[1]]));
 const EXPERIENCIAS = ["Idosos","Pós-operatório","Alzheimer / Parkinson","AVC","Traqueostomia","Sondas","Curativos","Cuidados paliativos","Medicação EV","Oxigenoterapia"];
 const DISPON = ["Plantão 6h","Plantão 8h","Plantão 12h","Plantão 24h","Atendimento por hora","Noturno","Fins de semana"];
 const MODS = [["6","Plantão 6h"],["8","Plantão 8h"],["12","Plantão 12h"],["24","Plantão 24h"],["hora","Por hora"]];
@@ -276,8 +304,8 @@ const podeChegar = p => !p.chegada && p.status==="agendado" && Date.now()>=tStar
 const PAC_ST = {avaliacao:["Em avaliação","p-warn"],ativo:["Ativo","p-ok"],alta:["Alta","p-mute"]};
 
 /* =================== DADOS =================== */
-const COLS = ["config","curriculos","pacientes","profissionais","candidatos","plantoes","solicitacoes","operadoras","contratos","usuarios"];
-const LS_KEY = "viverbem-sistema-v2";
+const COLS = ["config","curriculos","documentos","pacientes","profissionais","candidatos","plantoes","solicitacoes","operadoras","contratos","usuarios"];
+const LS_KEY = "viverbem-sistema-v3";
 const Store = {
   mode: FIREBASE_CONFIG ? "firebase" : "demo",
   data: {}, fs: null, auth: null,
@@ -316,7 +344,7 @@ const Store = {
   async loadFor(session){
     if(this.mode==="demo") return;
     const get = async (c,q) => { const s = await (q||this.fs.collection(c)).get(); this.data[c] = s.docs.map(d=>d.data()); };
-    if(session.role==="admin") await Promise.all(COLS.filter(c=>c!=="curriculos").map(c=>get(c)));
+    if(session.role==="admin") await Promise.all(COLS.filter(c=>!["curriculos","documentos"].includes(c)).map(c=>get(c)));
     else { await get("pacientes"); await get("plantoes", this.fs.collection("plantoes").where("profId","==",session.profId)); this.data.profissionais=[await this.fetchOne("profissionais",session.profId)].filter(Boolean); }
   }
 };
@@ -335,6 +363,7 @@ async function login(email, senha){
 async function logout(){ if(Store.mode==="firebase") await Store.auth.signOut(); S=null; saveSession(); location.hash=""; render(); }
 
 /* =================== DADOS DE EXEMPLO =================== */
+function fakeDoc(t,c){ return "data:image/svg+xml;utf8,"+encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='600' height='400'><rect width='600' height='400' fill='${c}'/><rect x='30' y='30' width='540' height='340' rx='16' fill='none' stroke='#fff' stroke-opacity='.5' stroke-width='3'/><text x='300' y='195' font-family='sans-serif' font-size='30' text-anchor='middle' fill='#fff'>${t}</text><text x='300' y='240' font-family='sans-serif' font-size='18' letter-spacing='4' text-anchor='middle' fill='#fff' fill-opacity='.8'>DOCUMENTO DE EXEMPLO</text></svg>`); }
 function seed(){
   const t=today(), D=n=>addDays(t,n), ts=n=>new Date(Date.now()+n*864e5).toISOString();
   const pac = [
@@ -379,15 +408,19 @@ function seed(){
     else { p.status="andamento"; p.evolucao=null; } });
   const cand=[
     {id:"VB-EX01A",exemplo:true,nome:"Rosângela Cruz",cpf:"11144477735",nasc:"1990-05-14",tel:"(88) 99999-2001",email:"rosangela@exemplo.com",cidade:"Mauriti/CE",funcao:"Técnico(a) de enfermagem",registro:"COREN-CE 000010",anos:"6",exp:["Idosos","Sondas","Curativos"],disp:["Plantão 12h","Fins de semana"],areas:"Mauriti, Milagres",resumo:"Trabalhou 4 anos em hospital regional.",cv:{nome:"curriculo-rosangela.pdf",kb:180},status:"recebido",hist:[{s:"recebido",em:ts(-1)}],notas:"",criado:ts(-1)},
-    {id:"VB-EX02B",exemplo:true,nome:"José Ribamar Lima",cpf:"52998224725",nasc:"1979-09-30",tel:"(88) 99999-2002",email:"jose@exemplo.com",cidade:"Brejo Santo/CE",funcao:"Cuidador(a)",registro:"",anos:"5",exp:["Idosos","Alzheimer / Parkinson"],disp:["Plantão 24h"],areas:"Brejo Santo",resumo:"Curso de cuidador de idosos (160h).",cv:{nome:"cv-jose.docx",kb:64},status:"entrevista",hist:[{s:"recebido",em:ts(-6)},{s:"analise",em:ts(-4)},{s:"entrevista",em:ts(-2)}],notas:"Entrevista marcada.",criado:ts(-6)},
+    {id:"VB-EX02B",exemplo:true,nome:"José Ribamar Lima",cpf:"52998224725",nasc:"1979-09-30",tel:"(88) 99999-2002",email:"jose@exemplo.com",cidade:"Brejo Santo/CE",funcao:"Auxiliar de enfermagem",registro:"COREN-CE 000011",anos:"5",exp:["Idosos","Alzheimer / Parkinson"],disp:["Plantão 24h"],areas:"Brejo Santo",resumo:"Curso de cuidador de idosos (160h).",cv:{nome:"cv-jose.docx",kb:64},status:"entrevista",hist:[{s:"recebido",em:ts(-6)},{s:"analise",em:ts(-4)},{s:"entrevista",em:ts(-2)}],notas:"Entrevista marcada.",criado:ts(-6)},
     {id:"VB-EX03C",exemplo:true,nome:"Carla Menezes",cpf:"39053344705",nasc:"1992-01-05",tel:"(83) 99999-2003",email:"carla@exemplo.com",cidade:"Cajazeiras/PB",funcao:"Fisioterapeuta",registro:"CREFITO-1 000020-F",anos:"6",exp:["AVC","Pós-operatório"],disp:["Atendimento por hora"],areas:"Cajazeiras e região",resumo:"Fisioterapia neurológica domiciliar.",cv:{nome:"carla-cv.pdf",kb:240},status:"aprovado",contratoId:"ct-ex1",hist:[{s:"recebido",em:ts(-10)},{s:"analise",em:ts(-8)},{s:"entrevista",em:ts(-5)},{s:"aprovado",em:ts(-1)}],notas:"",criado:ts(-10)}
   ];
+  cand.forEach(c=>{ c.docs=Object.fromEntries(DOCS.map(([k])=>[k,{nome:k+".jpg",kb:120,em:c.criado}])); delete c.cv; });
+  cand[2].docsOk=Object.fromEntries(DOCS.map(([k])=>[k,true]));
+  cand[1].docsOk={selfie:true,identidade:true,conselho:true,curriculo:true}; cand[1].reenvio=["endereco"];
   const cfg={id:"empresa",nome:"Viver Bem Atendimento Domiciliar",cnpj:"",endereco:"",cidade:"",whatsapp:"",email:"",tabela:tab,diaPagamento:"10",exemploValores:true};
   const ct=[];
   ct.push(makeContrato("autonomo",{refId:"VB-EX03C",exemplo:true,nome:cand[2].nome,cpf:cand[2].cpf,funcao:cand[2].funcao,registro:cand[2].registro,cidade:cand[2].cidade},cfg,"ct-ex1"));
   const cp=makeContrato("paciente",{refId:"pac1",exemplo:true,respNome:"Antônio Alves de Lima",respCpf:"52998224725",respEnd:"Rua São Pedro, 120, Centro, Mauriti/CE",pacNome:pac[0].nome,servicos:"Plantão noturno de 12h (19h às 7h), todos os dias, com técnico(a) de enfermagem, e supervisão de enfermagem semanal.",valor:"R$ 320,00 por plantão, faturado mensalmente",venc:"5"},cfg,"ct-ex2");
   cp.status="assinado"; cp.assinatura={nome:"Antônio Alves de Lima",cpf:"52998224725",em:ts(-29),hash:"A1B2C3D4E5F60718"}; ct.push(cp);
   return {
+    documentos: cand.flatMap(c=>DOCS.map(([k,l],i)=>({id:`${c.id}_${k}`,cand:c.id,tipo:k,nome:k+".jpg",exemplo:true,criado:c.criado,data:fakeDoc(l+" · "+first(c.nome),["#1F648D","#2C7A52","#B46E43","#5A7287","#0F3550"][i])}))),
     config:[cfg], pacientes:pac, profissionais:pro, candidatos:cand, plantoes:pl, contratos:ct, usuarios:[],
     operadoras:[{id:"op1",exemplo:true,nome:"Operadora Exemplo Saúde",cnpj:"00.000.000/0001-00",contato:"Ricardo Alves",tel:"(85) 3333-0000",email:"rede@exemplo.com",status:"credenciada",valores:"Plantão 6h: R$ 200 · Plantão 12h: R$ 350 · Visita de enfermagem: R$ 120",obs:"Faturamento mensal até o dia 5, com relatório de evoluções.",criado:ts(-90)}],
     solicitacoes:[
@@ -429,6 +462,15 @@ function makeContrato(tipo, d, cfg, id){
     <h4>Cláusula 6 – Dados de saúde</h4><p>O CONTRATANTE autoriza o tratamento dos dados de saúde do paciente para a execução dos serviços, conforme a Lei 13.709/2018 (LGPD). O acesso fica restrito à equipe envolvida no cuidado.</p>
     <h4>Cláusula 7 – Vigência e rescisão</h4><p>Prazo indeterminado, podendo ser encerrado por qualquer das partes com aviso prévio de 15 dias.</p>
     <h4>Cláusula 8 – Foro</h4><p>Fica eleito o foro da comarca de ${foro}.</p>`;
+  }
+  const modelo = (tipo==="autonomo"?E.modeloAutonomo:E.modeloPaciente)||"";
+  if(modelo.trim()){
+    const vars={empresa:E.nome||"Viver Bem Atendimento Domiciliar",cnpj:E.cnpj||"__.___.___/____-__",endereco_empresa:E.endereco||"________________",cidade_empresa:E.cidade||"________________",dia_pagamento:E.diaPagamento||"10",data:new Date().toLocaleDateString("pt-BR",{day:"2-digit",month:"long",year:"numeric"}),
+      nome:d.nome,cpf:fmtCPF(d.cpf),funcao:d.funcao,registro:d.registro,cidade:d.cidade,
+      responsavel:d.respNome,cpf_responsavel:fmtCPF(d.respCpf),endereco_responsavel:d.respEnd,paciente:d.pacNome,servicos:d.servicos,valor:d.valor,vencimento:d.venc,materiais:d.materiais};
+    const fill=t=>esc(t).replace(/\{\{\s*([a-z_]+)\s*\}\}/g,(m,k)=>vars[k]!=null&&vars[k]!==""?`<b>${esc(vars[k])}</b>`:m);
+    const lines=modelo.replace(/\r/g,"").split("\n"); let first=true;
+    html = lines.map(l=>{ const t=l.trim(); if(!t) return ""; if(first){ first=false; return `<p><b>${fill(t)}</b></p>`; } return /^(CL[ÁA]USULA|PAR[ÁA]GRAFO)/i.test(t)?`<h4>${fill(t)}</h4>`:`<p>${fill(t)}</p>`; }).join("");
   }
   return {id:id||uid("ct-"),tipo,refId:d.refId,titulo,html,dados:d,status:"pendente",assinatura:null,exemplo:!!d.exemplo,criado:new Date().toISOString()};
 }
@@ -512,7 +554,7 @@ const ADMIN_NAV = [
   ["sep","Gestão"],["contratos","Contratos"],["financeiro","Financeiro"],["config","Configurações"]
 ];
 function route(){ const h=decodeURIComponent(location.hash.slice(1)); const m=h.match(/^([a-z]+)(?:-(.+))?$/); return m?{r:m[1],id:m[2]||null}:{r:"",id:null}; }
-const PUBLIC = {trabalhe:pgTrabalhe, acompanhar:pgAcompanhar, assinar:pgAssinar, solicitar:pgSolicitar};
+const PUBLIC = {links:pgLinks, trabalhe:pgTrabalhe, acompanhar:pgAcompanhar, assinar:pgAssinar, solicitar:pgSolicitar};
 const ADMIN = {ponto:pgPonto,painel:pgPainel,pacientes:pgPacientes,paciente:pgPaciente,escala:pgEscala,profissionais:pgProfissionais,profissional:pgProfissional,recrutamento:pgRecrutamento,candidato:pgCandidato,contratos:pgContratos,solicitacoes:pgSolicitacoes,operadoras:pgOperadoras,financeiro:pgFinanceiro,config:pgConfig};
 const PROF = {meus:pgMeus};
 
@@ -600,7 +642,7 @@ function pgPainel(){
   if(faltas) alerts.push(`<li><b>${faltas} falta(s)</b> de profissional nos últimos 7 dias.</li>`);
   const aval = Store.all("pacientes").filter(p=>p.status==="avaliacao");
   aval.forEach(p=>alerts.push(`<li><b>${esc(p.nome)}</b> aguarda avaliação domiciliar. <a href="#paciente-${p.id}">Abrir</a></li>`));
-  const links = [["Trabalhe conosco","trabalhe","Envie para candidatos se cadastrarem"],["Solicitar atendimento","solicitar","Coloque no Instagram e no WhatsApp da empresa"],["Acompanhar candidatura","acompanhar","Candidatos consultam o andamento"]];
+  const links = [["Link da bio do Instagram","links","Página com todos os botões: atendimento, WhatsApp e trabalhe conosco"],["Trabalhe conosco","trabalhe","Envie para candidatos se cadastrarem"],["Solicitar atendimento","solicitar","Coloque no Instagram e no WhatsApp da empresa"],["Acompanhar candidatura","acompanhar","Candidatos consultam o andamento"]];
   return `<div class="pagehead"><div><h1>Bom dia, ${esc(first(S.nome))}</h1><p class="sub">${fmtDayW(t)}</p></div>
     <div class="actions"><button class="btn btn-primary" data-act="novoPlantao">${ICON.plus}Novo plantão</button><button class="btn btn-line" data-act="novoPaciente">${ICON.plus}Novo paciente</button></div></div>
   <div class="kpis">
@@ -831,7 +873,7 @@ function pgProfissional(id){
     <div class="actions"><button class="btn btn-line" data-act="editProf" data-id="${id}">Editar</button><button class="btn btn-line" data-act="acessoProf" data-id="${id}">${p.acesso?"Acesso ao app":"Criar acesso ao app"}</button><a class="btn btn-line" target="_blank" rel="noopener" href="${wa(p.tel)}">${ICON.wa}WhatsApp</a></div></div>
   <div class="kpis"><div class="kpi"><b>${mesPl.length}</b><span>Plantões realizados no mês</span></div><div class="kpi"><b>${brl(aPagar)}</b><span>A pagar</span></div><div class="kpi"><b>${faltas}</b><span>Faltas registradas</span></div></div>
   <div class="grid2">
-    <section class="card"><h2>Dados</h2><dl class="kv"><dt>WhatsApp</dt><dd>${esc(p.tel)}</dd><dt>E-mail</dt><dd>${esc(p.email||"-")}</dd><dt>CPF</dt><dd>${esc(fmtCPF(p.cpf)||"-")}</dd><dt>Atende em</dt><dd>${esc(p.areas||p.cidade||"-")}</dd><dt>Disponibilidade</dt><dd>${esc((p.disp||[]).join(", ")||"-")}</dd><dt>Pix</dt><dd>${esc(p.pix||"-")}</dd><dt>Acesso ao app</dt><dd>${p.acesso?esc(p.acesso):"Ainda não criado"}</dd><dt>Contrato</dt><dd>${ct?`<span class="pill ${ct.status==="assinado"?"p-ok":"p-warn"}">${ct.status==="assinado"?"Assinado":"Pendente"}</span>`:'<button class="btn btn-sm btn-line" data-act="ctProf" data-id="'+id+'">Gerar contrato de autônomo</button>'}</dd></dl></section>
+    <section class="card"><h2>Dados</h2><dl class="kv"><dt>WhatsApp</dt><dd>${esc(p.tel)}</dd><dt>E-mail</dt><dd>${esc(p.email||"-")}</dd><dt>CPF</dt><dd>${esc(fmtCPF(p.cpf)||"-")}</dd><dt>Atende em</dt><dd>${esc(p.areas||p.cidade||"-")}</dd><dt>Disponibilidade</dt><dd>${esc((p.disp||[]).join(", ")||"-")}</dd><dt>Pix</dt><dd>${esc(p.pix||"-")}</dd><dt>Documentos</dt><dd>${p.candId&&Store.get("candidatos",p.candId)?`<button class="btn btn-sm btn-line" data-act="verDocs" data-id="${p.candId}">Ver documentos</button>`:"Cadastrado sem candidatura"}</dd><dt>Acesso ao app</dt><dd>${p.acesso?esc(p.acesso):"Ainda não criado"}</dd><dt>Contrato</dt><dd>${ct?`<span class="pill ${ct.status==="assinado"?"p-ok":"p-warn"}">${ct.status==="assinado"?"Assinado":"Pendente"}</span>`:'<button class="btn btn-sm btn-line" data-act="ctProf" data-id="'+id+'">Gerar contrato de autônomo</button>'}</dd></dl></section>
     <section class="card"><h2>Próximos plantões</h2>${prox.length?`<div class="day">${prox.map(x=>shiftRow(x).replace('<span class="t">',`<span class="t"><small>${fmtDay(x.data).slice(0,5)}</small>`)).join("")}</div>`:`<p class="empty">Nenhum plantão agendado.</p>`}</section>
   </div>`;
 }
@@ -850,6 +892,15 @@ function pgRecrutamento(){
   ${list.map(c=>{const s=candStatus(c);return `<tr class="click" data-act="go" data-id="candidato-${c.id}"><td><b>${esc(c.nome)}</b>${ex(c)}<div class="small muted">${esc(c.id)}</div></td><td>${esc(c.funcao)}</td><td>${esc(c.cidade)}</td><td class="num">${esc(c.anos||0)} anos</td><td class="num">${fmtDay(c.criado.slice(0,10))}</td><td><span class="pill ${CAND_PILL[s]}">${CAND_NAME[s]}</span></td></tr>`}).join("")||`<tr><td colspan="6" class="empty">Nenhum candidato nesta etapa.</td></tr>`}
   </tbody></table></div>`;
 }
+function docsCard(c){
+  const ok=c.docsOk||{}, conf=DOCS.filter(([k])=>ok[k]).length;
+  return `<section class="card"><div class="card-h"><h2>Documentos</h2><div class="actions"><span class="pill ${conf===DOCS.length?"p-ok":"p-warn"}">${conf} de ${DOCS.length} conferidos</span><button class="btn btn-sm btn-primary" data-act="verDocs" data-id="${c.id}">Ver documentos</button></div></div>
+    <div class="tablewrap"><table><tbody>${DOCS.map(([k,l])=>{ const d=(c.docs||{})[k], re=(c.reenvio||[]).includes(k);
+      return `<tr><td><b>${l}</b><div class="small muted">${d?`Enviado ${fmtDT(d.em||c.criado)}`:(c.cv&&k==="curriculo"?esc(c.cv.nome):"Não enviado")}</div></td>
+      <td>${re?'<span class="pill p-warn">Reenvio pedido</span>':ok[k]?'<span class="pill p-ok">Conferido</span>':d?'<span class="pill p-blue">A conferir</span>':'<span class="pill p-bad">Faltando</span>'}</td>
+      <td class="r"><div class="actions" style="justify-content:flex-end">${d?`<button class="btn btn-sm btn-line" data-act="verDoc" data-id="${c.id}_${k}">Ver</button>`:""}${d&&!ok[k]?`<button class="btn btn-sm btn-line" data-act="docOk" data-id="${c.id}" data-v="${k}">Conferido</button>`:""}${!re?`<button class="btn btn-sm btn-line" data-act="docReenvio" data-id="${c.id}" data-v="${k}">Pedir reenvio</button>`:""}</div></td></tr>`; }).join("")}</tbody></table></div>
+    <p class="small muted" style="margin-top:8px">Confira o número de inscrição (${esc(c.registro||"-")}) no site do ${esc(FUNCOES[c.funcao]||"conselho")} da UF antes de aprovar.</p></section>`;
+}
 function pgCandidato(id){
   const c=Store.get("candidatos",id); if(!c) return `<p class="empty">Candidato não encontrado. <a href="#recrutamento">Voltar</a></p>`;
   const s=candStatus(c), ct=candContrato(c), idx=CAND_ST.findIndex(x=>x[0]===s);
@@ -860,13 +911,14 @@ function pgCandidato(id){
     ${["recebido","analise","entrevista"].includes(c.status)?`<button class="btn btn-line" data-act="candSt" data-id="${c.id}" data-v="reprovado">Não selecionar</button>`:""}
     ${s==="contrato"&&!jaPro?`<button class="btn btn-copper" data-act="ativarPro" data-id="${c.id}">Adicionar à equipe</button>`:""}
     <a class="btn btn-line" target="_blank" rel="noopener" href="${wa(c.tel,`Olá, ${first(c.nome)}! Aqui é da Viver Bem Atendimento Domiciliar, sobre sua candidatura ${c.id}.`)}">${ICON.wa}WhatsApp</a></div></div>
+  ${docsCard(c)}
   ${jaPro?`<p class="note">Já faz parte da equipe. <a href="#profissional-${jaPro.id}">Abrir cadastro do profissional</a></p>`:""}
   <div class="grid2">
     <section class="card"><h2>Dados do candidato</h2><dl class="kv">
       <dt>CPF</dt><dd>${esc(fmtCPF(c.cpf))}</dd><dt>Nascimento</dt><dd>${fmtDay(c.nasc)} (${age(c.nasc)} anos)</dd><dt>WhatsApp</dt><dd>${esc(c.tel)}</dd><dt>E-mail</dt><dd>${esc(c.email)}</dd><dt>Cidade</dt><dd>${esc(c.cidade)}</dd>
       <dt>Registro</dt><dd>${esc(c.registro||"Não se aplica")}</dd><dt>Experiência</dt><dd>${esc(c.anos||0)} anos · ${esc((c.exp||[]).join(", ")||"-")}</dd>
       <dt>Disponibilidade</dt><dd>${esc((c.disp||[]).join(", "))}</dd><dt>Atende em</dt><dd>${esc(c.areas||"-")}</dd>
-      <dt>Currículo</dt><dd>${c.cv?esc(c.cv.nome)+` (${c.cv.kb} KB)`+(c.cv.salvo?` <button class="btn btn-sm btn-line" data-act="verCv" data-id="${c.id}">Abrir</button>`:(Store.mode==="demo"?' <span class="small muted">(na demonstração o arquivo não é guardado)</span>':"")):"-"}</dd><dt>Resumo</dt><dd>${esc(c.resumo||"-")}</dd><dt>Aceites</dt><dd>${c.aceites?fmtDT(c.aceites):"-"}</dd></dl></section>
+<dt>Resumo</dt><dd>${esc(c.resumo||"-")}</dd><dt>Aceites</dt><dd>${c.aceites?fmtDT(c.aceites):"-"}</dd></dl></section>
     <section class="card stack" style="display:flex;flex-direction:column;gap:12px"><h2>Processo seletivo</h2>
       ${c.status==="reprovado"?`<span class="pill p-bad" style="align-self:flex-start">Não selecionado</span>`:`<ol class="timeline">${CAND_ST.map(([k,l],i)=>{const h=(c.hist||[]).find(x=>x.s===k); const em = k==="contrato"&&ct?.assinatura?ct.assinatura.em:h?.em; return `<li class="${i<idx?"done":i===idx?"now":""}"><div><b>${l}</b><span class="small muted">${em?fmtDT(em):""}</span></div></li>`}).join("")}</ol>`}
       ${ct?`<div class="note"><b>Contrato de autônomo:</b> ${ct.status==="assinado"?`assinado em ${fmtDT(ct.assinatura.em)}`:"aguardando assinatura"}
@@ -954,7 +1006,11 @@ function pgFinanceiro(){
 function pgConfig(){
   const c=Store.cfg(), tb=c.tabela||{};
   return `<div class="pagehead"><div><h1>Configurações</h1><p class="sub">Dados da empresa usados nos contratos, nos links públicos e na escala</p></div></div>
-  <section class="card"><h2>Dados da empresa</h2>${fields([{k:"nome",l:"Razão social / nome",full:1},{k:"cnpj",l:"CNPJ"},{k:"cidade",l:"Cidade/UF (foro dos contratos)"},{k:"endereco",l:"Endereço",full:1},{k:"whatsapp",l:"WhatsApp da empresa",im:"tel"},{k:"email",l:"E-mail",t:"email"},{k:"diaPagamento",l:"Dia de pagamento dos profissionais",t:"number"}],c)}</section>
+  <section class="card"><h2>Dados da empresa</h2>${fields([{k:"nome",l:"Razão social / nome",full:1},{k:"cnpj",l:"CNPJ"},{k:"cidade",l:"Cidade/UF (foro dos contratos)"},{k:"endereco",l:"Endereço",full:1},{k:"whatsapp",l:"WhatsApp da empresa",im:"tel"},{k:"email",l:"E-mail",t:"email"},{k:"instagram",l:"Instagram",ph:"@viverbem"},{k:"diaPagamento",l:"Dia de pagamento dos profissionais",t:"number"}],c)}</section>
+  <section class="card"><h2>Modelos de contrato</h2><p class="small muted" style="margin:-4px 0 12px">Cole aqui o contrato da Viver Bem. Em branco, o sistema usa o modelo padrão. Use as marcações abaixo para o sistema preencher sozinho. Linhas que começam com "CLÁUSULA" viram títulos.</p>
+    <label class="f">Contrato do profissional autônomo<small>{{empresa}} {{cnpj}} {{endereco_empresa}} {{cidade_empresa}} {{nome}} {{cpf}} {{funcao}} {{registro}} {{cidade}} {{data}} {{dia_pagamento}}</small><textarea id="f_modeloAutonomo" rows="10">${esc(c.modeloAutonomo||"")}</textarea></label>
+    <label class="f" style="margin-top:12px">Contrato do paciente<small>{{empresa}} {{cnpj}} {{endereco_empresa}} {{cidade_empresa}} {{responsavel}} {{cpf_responsavel}} {{endereco_responsavel}} {{paciente}} {{servicos}} {{valor}} {{vencimento}} {{materiais}} {{data}}</small><textarea id="f_modeloPaciente" rows="10">${esc(c.modeloPaciente||"")}</textarea></label>
+    <div class="actions" style="margin-top:10px"><button class="btn btn-sm btn-line" data-act="verModelo" data-id="autonomo">Ver como fica (profissional)</button><button class="btn btn-sm btn-line" data-act="verModelo" data-id="paciente">Ver como fica (paciente)</button></div></section>
   <section class="card"><h2>Tabela de valores padrão</h2>${c.exemploValores?`<p class="note warn small" style="margin-bottom:12px">Valores de exemplo. Troque pelos valores reais da Viver Bem.</p>`:""}
     <div class="tablewrap"><table><thead><tr><th>Modalidade</th><th>Cobrado do paciente (R$)</th><th>Pago ao profissional (R$)</th></tr></thead><tbody>
     ${MODS.map(([k,l])=>`<tr><td><b>${l}</b>${k==="hora"?'<div class="small muted">valor por hora</div>':""}</td><td><input id="tb_c_${k}" type="number" step="0.01" value="${tb[k]?.cobra??""}" aria-label="${l} cobrado"></td><td><input id="tb_p_${k}" type="number" step="0.01" value="${tb[k]?.paga??""}" aria-label="${l} pago"></td></tr>`).join("")}</tbody></table></div></section>
@@ -1022,7 +1078,7 @@ function pgPonto(){
 /* =================== PÚBLICO: TRABALHE CONOSCO =================== */
 let wz={step:1,d:{exp:[],disp:[]}};
 const W1=[{k:"nome",l:"Nome completo",req:1,full:1,ac:"name"},{k:"cpf",l:"CPF",req:1,im:"numeric",ph:"000.000.000-00"},{k:"nasc",l:"Data de nascimento",req:1,t:"date"},{k:"tel",l:"WhatsApp",req:1,im:"tel",ph:"(00) 00000-0000"},{k:"email",l:"E-mail",req:1,t:"email"},{k:"cidade",l:"Cidade onde mora",req:1,full:1,ph:"Cidade/UF"}];
-const W2=()=>[{k:"funcao",l:"Função",req:1,t:"select",o:[["","Selecione"],...Object.keys(FUNCOES)]},{k:"anos",l:"Anos de experiência",t:"number"},{k:"registro",l:"Registro no conselho",full:1,h:"COREN, CREFITO, CRP... com número e UF. Cuidadores deixam em branco.",ph:"COREN-UF 000000"},{k:"exp",l:"Experiência com",t:"checks",o:EXPERIENCIAS,full:1},{k:"disp",l:"Disponibilidade",t:"checks",o:DISPON,full:1,req:1},{k:"areas",l:"Cidades onde pode atender",full:1}];
+const W2=()=>[{k:"funcao",l:"Função",req:1,t:"select",o:[["","Selecione"],...Object.keys(FUNCOES)]},{k:"anos",l:"Anos de experiência",t:"number"},{k:"registro",l:"Número de inscrição no conselho",req:1,full:1,h:"Conselho, UF e número. Ex.: COREN-CE 123456",ph:"COREN-UF 000000"},{k:"exp",l:"Experiência com",t:"checks",o:EXPERIENCIAS,full:1},{k:"disp",l:"Disponibilidade",t:"checks",o:DISPON,full:1,req:1},{k:"areas",l:"Cidades onde pode atender",full:1}];
 function pgTrabalhe(){
   const s=wz.step, d=wz.d;
   if(s===5) return `<div class="okbox"><h2>Candidatura enviada</h2><p>Guarde seu protocolo. Com ele e seu CPF você acompanha o processo seletivo.</p><p class="code">${esc(wz.done)}</p><div class="actions"><a class="btn btn-primary" href="#acompanhar">Acompanhar candidatura</a></div></div>`;
@@ -1030,7 +1086,7 @@ function pgTrabalhe(){
   let body="";
   if(s===1) body=`<h2>Seus dados</h2>${fields(W1,d)}`;
   if(s===2) body=`<h2>Sua atuação</h2>${fields(W2(),d)}`;
-  if(s===3) body=`<h2>Currículo</h2><label class="f" style="padding:16px;border:1.5px dashed var(--line);border-radius:12px">Envie seu currículo <i class="req">*</i><small>PDF, Word ou foto, até 5 MB</small><input id="w_cv" type="file" accept=".pdf,.doc,.docx,image/*" style="border:0;padding:6px 0"></label><p class="small muted" id="w_cvname">${d.cv?`Arquivo escolhido: ${esc(d.cv.nome)} (${d.cv.kb} KB)`:""}</p>${fields([{k:"resumo",l:"Resumo profissional",t:"textarea",full:1,h:"Opcional: onde já trabalhou, cursos e especializações"}],d)}`;
+  if(s===3) body=`<h2>Documentos</h2><p class="small muted">Todos são obrigatórios. Pelo celular, toque em cada item para tirar a foto na hora ou escolher da galeria.</p><div class="docgrid">${DOCS.map(docSlot).join("")}</div>`;
   if(s===4) body=`<h2>Termos</h2>
     <label class="consent"><input type="checkbox" id="a1"><span>Declaro que as informações e documentos enviados são verdadeiros.</span></label>
     <label class="consent"><input type="checkbox" id="a2"><span>Autorizo a Viver Bem a guardar e usar meus dados para o processo seletivo, conforme a LGPD (Lei 13.709/2018). Posso pedir a exclusão a qualquer momento.</span></label>
@@ -1044,19 +1100,26 @@ function wzRead(){ const d=wz.d; if(wz.step===1) Object.assign(d,readFields(W1))
 function wzCheck(){
   const d=wz.d, s=wz.step;
   if(s===1){ const m=missing(W1,d); if(m) return m; if(d.nome.split(" ").filter(Boolean).length<2) return "Informe seu nome completo."; if(!validCPF(d.cpf)) return "CPF inválido. Confira os 11 números."; d.cpf=digits(d.cpf); if(digits(d.tel).length<10) return "Informe o WhatsApp com DDD."; if(!/.+@.+\..+/.test(d.email)) return "Informe um e-mail válido."; }
-  if(s===2){ const m=missing(W2(),d); if(m) return m; if(FUNCOES[d.funcao]&&!d.registro) return `Informe seu registro no ${FUNCOES[d.funcao]}.`; }
-  if(s===3&&!d.cv) return "Envie seu currículo para continuar.";
+  if(s===2){ const m=missing(W2(),d); if(m) return m; if(!/\d{3,}/.test(d.registro)) return `Informe o número de inscrição no ${FUNCOES[d.funcao]||"conselho"}.`; }
+  if(s===3){ const f=DOCS.find(([k])=>!(d.docs||{})[k]); if(f) return `Envie: ${f[1]}.`; }
   return "";
 }
 
+function docSlot([k,l,h]){ const d=(wz.d.docs||{})[k], img=wz._docs?.[k];
+  return `<label class="docslot ${d?"ok":""}" for="doc_${k}"><span class="docthumb">${img&&img.startsWith("data:image")?`<img src="${img}" alt="">`:d?"PDF":k==="selfie"?"🙂":"+"}</span><span class="doctext"><b>${l} <i class="req">*</i></b><small>${h}</small><small class="docst">${d?`Enviado: ${esc(d.nome)} (${d.kb} KB) · toque para trocar`:"Toque para enviar"}</small></span>
+    <input id="doc_${k}" data-doc="${k}" type="file" accept="${k==="curriculo"?".pdf,.doc,.docx,image/*":k==="endereco"?"image/*,.pdf":"image/*"}" ${k==="selfie"?'capture="user"':""} class="sr"></label>`; }
+async function docInput(input, store, onDone){ const file=input.files[0]; if(!file) return; const k=input.dataset.doc;
+  try{ const data=await prepFile(file); store.data[k]=data; store.meta[k]={nome:file.name,kb:Math.max(1,Math.round(data.length*0.75/1024)),em:new Date().toISOString()}; onDone(); }
+  catch(err){ input.value=""; toast(err.message); } }
 /* currículo: fotos são reduzidas; PDF/Word até 700 KB (cabe num documento do banco) */
-function prepCV(file){
+function prepFile(file){
   return new Promise((ok,ko)=>{
     const rd=new FileReader(); rd.onerror=()=>ko(new Error("Não foi possível ler o arquivo."));
     if(file.type.startsWith("image/")){
-      rd.onload=()=>{ const img=new Image(); img.onload=()=>{ const k=Math.min(1,1600/Math.max(img.width,img.height)); const c=document.createElement("canvas"); c.width=Math.round(img.width*k); c.height=Math.round(img.height*k); c.getContext("2d").drawImage(img,0,0,c.width,c.height); ok(c.toDataURL("image/jpeg",0.72)); }; img.onerror=()=>ko(new Error("Imagem inválida.")); img.src=rd.result; };
+      rd.onload=()=>{ const img=new Image(); img.onload=()=>{ const k=Math.min(1,1400/Math.max(img.width,img.height)); const c=document.createElement("canvas"); c.width=Math.round(img.width*k); c.height=Math.round(img.height*k); c.getContext("2d").drawImage(img,0,0,c.width,c.height); ok(c.toDataURL("image/jpeg",0.72)); }; img.onerror=()=>ko(new Error("Imagem inválida.")); img.src=rd.result; };
     } else {
-      if(file.size>700*1024) return ko(new Error("Arquivo maior que 700 KB. Envie um PDF menor ou uma foto do currículo."));
+      if(!/pdf|word|document|msword/.test(file.type)&&!/\.(pdf|docx?)$/i.test(file.name)) return ko(new Error("Formato não aceito. Envie foto, PDF ou Word."));
+      if(file.size>700*1024) return ko(new Error("Arquivo maior que 700 KB. Envie um PDF menor ou uma foto."));
       rd.onload=()=>ok(rd.result);
     }
     rd.readAsDataURL(file);
@@ -1064,7 +1127,7 @@ function prepCV(file){
 }
 
 /* =================== PÚBLICO: ACOMPANHAR =================== */
-let acomp=null;
+let acomp=null, acompDocs={data:{},meta:{}};
 function pgAcompanhar(){
   if(!acomp) return `<div><h1>Acompanhar candidatura</h1><p class="muted" style="margin-top:6px">Informe o CPF e o protocolo que você recebeu ao se cadastrar.</p></div>
     <form id="fAc" class="card" style="display:flex;flex-direction:column;gap:12px" novalidate>${fields([{k:"cpf",l:"CPF",im:"numeric"},{k:"proto",l:"Protocolo",ph:"VB-XXXXXX"}])}<p class="err" hidden></p><div class="actions"><button class="btn btn-primary">Consultar</button></div>
@@ -1073,6 +1136,7 @@ function pgAcompanhar(){
   const msg={recebido:"Recebemos seu cadastro. Em breve nossa equipe analisa seu perfil.",analise:"Seu perfil está em análise.",entrevista:"Vamos entrar em contato pelo WhatsApp para agendar a entrevista.",aprovado:"Parabéns, você foi aprovado(a)! Leia e assine seu contrato.",contrato:"Contrato assinado. Em breve você recebe seus primeiros plantões.",reprovado:"Agradecemos seu interesse. Seu cadastro fica no nosso banco de talentos."}[s];
   return `<div class="card" style="display:flex;flex-direction:column;gap:12px"><div><h1>${esc(c.nome)}</h1><p class="muted">${esc(c.funcao)} · protocolo ${esc(c.id)}</p></div><p class="note">${msg}</p>
     ${s!=="reprovado"?`<ol class="timeline">${CAND_ST.map(([k,l],i)=>`<li class="${i<idx?"done":i===idx?"now":""}"><div><b>${l}</b></div></li>`).join("")}</ol>`:""}
+    ${(c.reenvio||[]).length?`<form id="fRe" class="card" style="display:flex;flex-direction:column;gap:10px;border-color:var(--copper)" novalidate><h2>Precisamos que você reenvie</h2><div class="docgrid">${c.reenvio.map(k=>{ const dd=DOCS.find(x=>x[0]===k); const m=acompDocs.meta[k]; return `<label class="docslot ${m?"ok":""}" for="re_${k}"><span class="docthumb">${acompDocs.data[k]?.startsWith("data:image")?`<img src="${acompDocs.data[k]}" alt="">`:m?"PDF":"+"}</span><span class="doctext"><b>${dd[1]}</b><small>${dd[2]}</small><small class="docst">${m?"Pronto para enviar":"Toque para enviar"}</small></span><input id="re_${k}" data-doc="${k}" type="file" accept="image/*,.pdf" ${k==="selfie"?'capture="user"':""} class="sr"></label>`; }).join("")}</div><p class="err" hidden></p><button type="button" class="btn btn-primary" data-act="enviarReenvio">Enviar documentos</button></form>`:""}
     ${s==="aprovado"&&ct?`<a class="btn btn-copper" href="#assinar-${ct.id}">Ler e assinar contrato</a>`:""}
     <button class="btn btn-line" data-act="acOut">Consultar outro CPF</button></div>`;
 }
@@ -1095,7 +1159,25 @@ async function pgAssinar(id){
 let solPub="familia";
 const SF=[{k:"nome",l:"Seu nome",req:1,ac:"name"},{k:"tel",l:"WhatsApp",req:1,im:"tel"},{k:"cidade",l:"Cidade/UF",req:1},{k:"servico",l:"Tipo de atendimento",t:"select",o:["Ainda não sei","Atendimento por hora","Plantão 6h","Plantão 8h","Plantão 12h","Atendimento 24h","Internação domiciliar","Fisioterapia / terapias","Exame em casa"]},{k:"paciente",l:"Sobre o paciente",full:1,ph:"Ex.: meu pai, 78 anos, pós-cirúrgico"},{k:"msg",l:"Mensagem",t:"textarea",full:1}];
 const SO=[{k:"empresa",l:"Operadora / empresa",req:1},{k:"cnpj",l:"CNPJ"},{k:"nome",l:"Responsável",req:1},{k:"cargo",l:"Cargo"},{k:"tel",l:"Telefone",req:1,im:"tel"},{k:"email",l:"E-mail",req:1,t:"email"},{k:"regiao",l:"Região de interesse",full:1},{k:"msg",l:"Como podemos ajudar?",t:"textarea",full:1}];
-function pgSolicitar(){
+function pgLinks(){
+  const c=Store.cfg(), ig=(c.instagram||"").replace(/^@/,"");
+  const btn=(href,l,sub,cls="",ext=0)=>`<a class="linkbtn ${cls}" href="${href}" ${ext?'target="_blank" rel="noopener"':""}><b>${l}</b><span>${sub}</span></a>`;
+  return `<div class="linkpage">
+    <img class="linklogo" src="${LOGO}" alt="Viver Bem Atendimento Domiciliar">
+    <h1>Viver Bem<br><small>Atendimento Domiciliar</small></h1>
+    <p class="muted">Cuidado especializado no conforto do seu lar. Enfermagem, fisioterapia, médicos e equipe multidisciplinar na sua casa.</p>
+    <div class="linklist">
+      ${btn("#solicitar","Solicitar atendimento","Para pacientes e famílias. Avaliação personalizada","primary")}
+      ${c.whatsapp?btn(wa(c.whatsapp,"Olá, Viver Bem! Vim pelo Instagram e gostaria de informações."),"Falar no WhatsApp","Atendimento direto com a equipe","",1):""}
+      ${btn("#trabalhe","Trabalhe conosco","Profissionais de saúde: cadastro, documentos e contrato pelo celular","copper")}
+      ${btn("#solicitar-operadora","Sou operadora de saúde","Credenciamento e parcerias")}
+      ${btn("#acompanhar","Acompanhar candidatura","Com seu CPF e protocolo")}
+      ${ig?btn("https://instagram.com/"+encodeURIComponent(ig),"Instagram","@"+esc(ig),"",1):""}
+    </div>
+    <ul class="linkserv">${["Plantões de 6h, 8h, 12h e 24h","Internação domiciliar","Curativos, sondas e medicação","Fisioterapia, fono, nutrição e psicologia","Coleta de exames e eletrocardiograma em casa"].map(x=>`<li>${x}</li>`).join("")}</ul>
+  </div>`;
+}
+function pgSolicitar(id){ if(id==="operadora") solPub="operadora";
   return `<div><h1>Solicitar atendimento</h1><p class="muted" style="margin-top:6px">Atendimento domiciliar com equipe de saúde completa. Conte o que você precisa e retornamos para uma avaliação.</p></div>
   <div class="chips"><button class="chipbtn" data-act="solPub" data-id="familia" aria-pressed="${solPub==="familia"}">Sou paciente ou familiar</button><button class="chipbtn" data-act="solPub" data-id="operadora" aria-pressed="${solPub==="operadora"}">Sou operadora de saúde</button></div>
   <form id="fSol" class="card" style="display:flex;flex-direction:column;gap:12px" novalidate>${fields(solPub==="familia"?SF:SO)}
@@ -1104,9 +1186,8 @@ function pgSolicitar(){
 
 function bindPublic(r){
   if(r==="trabalhe"){ const f=$("#fWz"); if(!f) return;
-    const cv=$("#w_cv"); if(cv) cv.onchange=async()=>{ const file=cv.files[0]; if(!file) return; showErr(f,"");
-      try{ const dataUrl=await prepCV(file); wz._cv=dataUrl; wz.d.cv={nome:file.name,kb:Math.max(1,Math.round(dataUrl.length*0.75/1024))}; $("#w_cvname").textContent=`Arquivo escolhido: ${file.name} (${wz.d.cv.kb} KB)`; }
-      catch(err){ cv.value=""; showErr(f,err.message); } };
+    $$("input[data-doc]",f).forEach(inp=>inp.onchange=()=>{ wz._docs=wz._docs||{}; wz.d.docs=wz.d.docs||{};
+      docInput(inp,{data:wz._docs,meta:wz.d.docs},()=>{ const sl=inp.closest(".docslot"); sl.outerHTML=docSlot(DOCS.find(x=>x[0]===inp.dataset.doc)); bindPublic("trabalhe"); }); });
     f.onsubmit=async e=>{ e.preventDefault(); wzRead(); const m=wzCheck(); if(m) return showErr(f,m);
       if(wz.step<4){ wz.step++; render(); return; }
       if(!["a1","a2","a3"].every(id=>$("#"+id).checked)) return showErr(f,"Marque os três termos para enviar.");
@@ -1114,12 +1195,14 @@ function bindPublic(r){
       try{
         if(Store.mode==="demo" && Store.all("candidatos").some(c=>c.cpf===wz.d.cpf&&!c.exemplo)) { btn.disabled=false; return showErr(f,"Já existe uma candidatura com este CPF. Use Acompanhar candidatura."); }
         const now=new Date().toISOString(), id="VB-"+Math.random().toString(36).slice(2,8).toUpperCase();
-        if(Store.mode==="firebase" && wz._cv){ await Store.put("curriculos",{id,nome:wz.d.cv.nome,data:wz._cv}); wz.d.cv.salvo=true; }
+        btn.textContent="Enviando documentos...";
+        for(const [k] of DOCS){ await Store.put("documentos",{id:`${id}_${k}`,cand:id,tipo:k,nome:wz.d.docs[k].nome,data:wz._docs[k]}); }
         await Store.put("candidatos",{...wz.d,id,status:"recebido",hist:[{s:"recebido",em:now}],aceites:now,notas:""});
-        wz={step:5,d:{exp:[],disp:[]},done:id}; render();
+        wz={step:5,d:{exp:[],disp:[]},done:id}; render(); window.scrollTo(0,0);
       }catch(err){ btn.disabled=false; showErr(f,"Não foi possível enviar agora. Verifique a internet e tente de novo."); }
     };
   }
+  if(r==="acompanhar"){ $$("#fRe input[data-doc]").forEach(inp=>inp.onchange=()=>docInput(inp,acompDocs,render)); }
   if(r==="acompanhar"){ const f=$("#fAc"); if(f) f.onsubmit=async e=>{ e.preventDefault(); const cpf=digits($("#f_cpf").value), id=$("#f_proto").value.trim().toUpperCase();
     const c=id?await Store.fetchOne("candidatos",id):null; if(!c||c.cpf!==cpf) return showErr(f,"Não encontramos candidatura com esse CPF e protocolo. Confira os dados.");
     acomp={c, ct:c.contratoId?await Store.fetchOne("contratos",c.contratoId):null}; render(); }; }
@@ -1213,8 +1296,30 @@ const ACT = {
   async ctProf(id){ const p=Store.get("profissionais",id); if(!p.cpf) return toast("Cadastre o CPF do profissional antes");
     const c=makeContrato("autonomo",{refId:p.candId||id,profId:id,nome:p.nome,cpf:p.cpf,funcao:p.funcao,registro:p.registro,cidade:p.cidade}); await Store.put("contratos",c); render(); verContrato(c.id); },
   async candSt(id,b){ const c=Store.get("candidatos",id); c.notas=$("#candNotas")?.value||c.notas; c.status=b.dataset.v; (c.hist=c.hist||[]).push({s:c.status,em:new Date().toISOString()});
+    if(c.status==="aprovado"){ const falta=DOCS.filter(([k])=>!(c.docsOk||{})[k]); if(falta.length){ c.status=c.hist.pop()&&c.hist[c.hist.length-1].s; return toast("Confira todos os documentos antes de aprovar. Falta: "+falta.map(x=>x[1]).join(", ")); } }
     if(c.status==="aprovado"&&!c.contratoId){ const ct=makeContrato("autonomo",{refId:c.id,nome:c.nome,cpf:c.cpf,funcao:c.funcao,registro:c.registro,cidade:c.cidade}); await Store.put("contratos",ct); c.contratoId=ct.id; }
     await Store.put("candidatos",c); toast(CAND_NAME[c.status]); render(); },
+  async verDocs(id){ const c=Store.get("candidatos",id);
+    const b=modal("Documentos · "+c.nome, `<p class="muted">Carregando...</p>`,{wide:1,nofocus:1});
+    const items=await Promise.all(DOCS.map(async([k,l])=>[k,l,await Store.fetchOne("documentos",`${id}_${k}`)]));
+    b.innerHTML=`<div class="docview">${items.map(([k,l,d])=>`<figure><figcaption><b>${l}</b>${(c.docsOk||{})[k]?' <span class="pill p-ok">Conferido</span>':""}</figcaption>${!d?'<p class="empty">Não enviado</p>':d.data.startsWith("data:image")?`<img src="${d.data}" alt="${esc(l)}">`:`<p class="empty">Arquivo ${esc(d.nome)}<br><button class="btn btn-sm btn-line" data-act="abrirArq" data-id="${id}_${k}">Abrir arquivo</button></p>`}</figure>`).join("")}</div>
+      <div class="actions"><button class="btn btn-primary" data-act="docTodos" data-id="${id}">Marcar todos como conferidos</button></div>`; },
+  async verDoc(key){ const d=await Store.fetchOne("documentos",key); if(!d) return toast("Documento não encontrado");
+    modal(DOC_NAME[d.tipo]||"Documento", d.data.startsWith("data:image")?`<img src="${d.data}" alt="" style="width:100%;border-radius:10px">`:`<p>Arquivo ${esc(d.nome)}</p><div class="actions"><button class="btn btn-primary" data-act="abrirArq" data-id="${key}">Abrir arquivo</button></div>`,{wide:1,nofocus:1}); },
+  async abrirArq(key){ const d=await Store.fetchOne("documentos",key)||await Store.fetchOne("curriculos",key.split("_")[0]); if(!d) return;
+    const blob=await (await fetch(d.data)).blob(); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.target="_blank"; a.rel="noopener"; a.download=d.nome; document.body.appendChild(a); a.click(); a.remove(); },
+  async docOk(id,b){ const c=Store.get("candidatos",id); c.docsOk={...(c.docsOk||{}),[b.dataset.v]:true}; c.reenvio=(c.reenvio||[]).filter(x=>x!==b.dataset.v); await Store.put("candidatos",c); toast("Documento conferido"); render(); },
+  async docTodos(id){ const c=Store.get("candidatos",id); c.docsOk=Object.fromEntries(DOCS.filter(([k])=>(c.docs||{})[k]).map(([k])=>[k,true])); c.reenvio=[]; await Store.put("candidatos",c); closeModal(); toast("Documentos conferidos"); render(); },
+  async docReenvio(id,b){ const c=Store.get("candidatos",id), k=b.dataset.v; c.reenvio=[...new Set([...(c.reenvio||[]),k])]; c.docsOk={...(c.docsOk||{})}; delete c.docsOk[k]; await Store.put("candidatos",c); render();
+    const link=baseURL()+"#acompanhar";
+    modal("Pedir reenvio", `<p>Avise ${esc(first(c.nome))} para reenviar <b>${esc(DOC_NAME[k])}</b> em Acompanhar candidatura, com o CPF e o protocolo ${esc(c.id)}.</p><div class="actions"><a class="btn btn-primary" target="_blank" rel="noopener" href="${wa(c.tel,`Olá, ${first(c.nome)}! Aqui é da Viver Bem. Precisamos que você reenvie: ${DOC_NAME[k]}. Acesse ${link} com seu CPF e o protocolo ${c.id}.`)}">${ICON.wa}Avisar pelo WhatsApp</a></div>`,{nofocus:1}); },
+  async enviarReenvio(){ const {c}=acomp, f=$("#fRe"); const pend=(c.reenvio||[]).filter(k=>!acompDocs.meta[k]); if(pend.length) return showErr(f,"Envie: "+pend.map(k=>DOC_NAME[k]).join(", "));
+    const b=$("button.btn-primary",f); b.disabled=true;
+    try{ for(const k of c.reenvio){ await Store.put("documentos",{id:`${c.id}_${k}`,cand:c.id,tipo:k,nome:acompDocs.meta[k].nome,data:acompDocs.data[k]}); }
+      const enviados=[...c.reenvio]; c.reenvio=[]; c.docs={...(c.docs||{}),...Object.fromEntries(enviados.map(k=>[k,acompDocs.meta[k]]))};
+      if(Store.mode==="demo") await Store.put("candidatos",c); else { await Store.fs.collection("candidatos").doc(c.id).update({reenvio:[],atualizado:new Date().toISOString()}); }
+      acompDocs={data:{},meta:{}}; toast("Documentos enviados"); render(); }
+    catch(e){ b.disabled=false; showErr(f,"Não foi possível enviar agora. Tente de novo."); } },
   async candNotas(id){ const c=Store.get("candidatos",id); c.notas=$("#candNotas").value; await Store.put("candidatos",c); toast("Anotações salvas"); },
   async ativarPro(id){ const c=Store.get("candidatos",id); const p={id:uid("pro"),candId:c.id,nome:c.nome,cpf:c.cpf,funcao:c.funcao,registro:c.registro,tel:c.tel,email:c.email,cidade:c.cidade,areas:c.areas,disp:c.disp,status:"ativo"};
     await Store.put("profissionais",p); toast("Adicionado à equipe"); location.hash="profissional-"+p.id; },
@@ -1239,9 +1344,12 @@ const ACT = {
   async delOp(id,b){ if(b.dataset.ok!=="1"){ b.dataset.ok="1"; b.textContent="Confirmar exclusão"; return; } if(Store.all("pacientes").some(p=>p.operadoraId===id)) return showErr($(".modal-b"),"Há pacientes ligados a esta operadora. Marque como Inativa."); await Store.del("operadoras",id); closeModal(); render(); },
   async finRec(k){ const [t,id]=k.split(":"); for(const p of Store.all("plantoes").filter(p=>p.data.startsWith(finMes)&&p.status==="realizado"&&!p.recebido)){ const pac=Store.get("pacientes",p.pacId); const key=pac?.tipo==="operadora"&&pac.operadoraId?"op:"+pac.operadoraId:"pac:"+p.pacId; if(key===k){ p.recebido=true; await Store.put("plantoes",p); } } toast("Marcado como recebido"); render(); },
   async finPag(id){ for(const p of Store.all("plantoes").filter(p=>p.data.startsWith(finMes)&&p.status==="realizado"&&!p.pago&&p.profId===id)){ p.pago=true; await Store.put("plantoes",p); } toast("Marcado como pago"); render(); },
-  async saveCfg(){ const c=Store.cfg(); const v=readFields([{k:"nome"},{k:"cnpj"},{k:"cidade"},{k:"endereco"},{k:"whatsapp"},{k:"email"},{k:"diaPagamento"}]);
+  async saveCfg(){ const c=Store.cfg(); const v=readFields([{k:"nome"},{k:"cnpj"},{k:"cidade"},{k:"endereco"},{k:"whatsapp"},{k:"email"},{k:"instagram"},{k:"diaPagamento"},{k:"modeloAutonomo"},{k:"modeloPaciente"}]); v.modeloAutonomo=$("#f_modeloAutonomo").value; v.modeloPaciente=$("#f_modeloPaciente").value;
     const tabela={}; MODS.forEach(([k])=>{ tabela[k]={cobra:+$("#tb_c_"+k).value||0,paga:+$("#tb_p_"+k).value||0}; });
     await Store.put("config",{...c,...v,id:"empresa",tabela,exemploValores:false}); toast("Configurações salvas"); render(); },
+  verModelo(tipo){ const c={...Store.cfg(),modeloAutonomo:$("#f_modeloAutonomo").value,modeloPaciente:$("#f_modeloPaciente").value};
+    const d=tipo==="autonomo"?{nome:"Maria Exemplo da Silva",cpf:"52998224725",funcao:"Técnico(a) de enfermagem",registro:"COREN-CE 000000",cidade:"Mauriti/CE"}:{respNome:"José Exemplo",respCpf:"52998224725",respEnd:"Rua Exemplo, 10, Mauriti/CE",pacNome:"Ana Exemplo",servicos:"Plantão de 12h noturno",valor:"R$ 320,00 por plantão",venc:"5",materiais:"não inclusos"};
+    modal("Prévia do contrato", `<div class="contract">${makeContrato(tipo,d,c).html}</div>`,{wide:1,nofocus:1}); },
   resetDemo(_,b){ if(b.dataset.ok!=="1"){ b.dataset.ok="1"; b.textContent="Confirmar: apagar tudo e restaurar exemplos"; return; } Store.data=seed(); Store._local(); toast("Dados de exemplo restaurados"); render(); }
 };
 document.addEventListener("click", e=>{
