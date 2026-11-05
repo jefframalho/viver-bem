@@ -6,6 +6,11 @@
 <title>Sistema Viver Bem</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="theme-color" content="#0F3550">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Viver Bem">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600&family=Source+Sans+3:wght@400;600;700&display=swap">
 <style>
 /* Layout: sistema de gestão com barra lateral fixa (desktop) que vira gaveta no celular; telas públicas centralizadas sem barra */
@@ -3347,6 +3352,7 @@ document.addEventListener("change", async e=>{
   render();
   if(Store.bloqueadas&&Store.bloqueadas.length) toast("Algumas áreas não carregaram por falta de permissão no banco ("+Store.bloqueadas.join(", ")+"). Atualize as regras do Firestore no console do Firebase.");
 })();
+try{ if("serviceWorker" in navigator && location.protocol==="https:") navigator.serviceWorker.register("sw.js").catch(()=>{}); }catch(e){}
 </script>
 
 </body>
