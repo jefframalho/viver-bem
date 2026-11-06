@@ -605,7 +605,9 @@ const Store = {
     if(this.mode==="demo") return;
     this.bloqueadas=[]; const get = async (c,q) => { try{ const s = await (q||this.fs.collection(c)).get(); this.data[c] = s.docs.map(d=>d.data()); }catch(e){ this.data[c]=[]; this.bloqueadas.push(c); console.warn("Sem permissão para ler",c,e.message); } };
     if(session.role==="admin") await Promise.all([...COLS.filter(c=>!["curriculos","documentos","auditoria"].includes(c)).map(c=>get(c)), get("auditoria", this.fs.collection("auditoria").orderBy("em","desc").limit(500))]);
-    else if(session.role==="paciente"){ const q=(c,k,v)=>get(c,this.fs.collection(c).where(k,"==",v)); this.data.pacientes=[await this.fetchOne("pacientes",session.pacId)].filter(Boolean);
+    else if(session.role==="paciente"){ const q=(c,k,v)=>get(c,this.fs.collection(c).where(k,"==",v)); const paciente=session.pacId ? await this.fetchOne("pacientes",session.pacId) : null;
+      this.data.pacientes=paciente ? [{...paciente,id:session.pacId}] : [];
+      if(!paciente) return;
       await Promise.all([q("plantoes","pacId",session.pacId),q("consultas","pacId",session.pacId),q("medicoes","pacId",session.pacId),get("agendaTele")]); this.data.profissionais=[]; }
     else { const q=(c,k,v)=>get(c,this.fs.collection(c).where(k,"==",v));
       await Promise.all([get("pacientes"),q("consultas","profId",session.profId),q("mensagens","profId",session.profId),q("indisponibilidades","profId",session.profId),q("adiantamentos","profId",session.profId),get("rotas"),get("avisos"),get("produtos"),get("medicoes"),get("intercorrencias")]);
@@ -949,6 +951,10 @@ async function render(){
   const root = $("#root");
   if(!portalProfissional && PUBLIC[r]){ root.innerHTML = pubShell(await PUBLIC[r](id)); bindPublic(r,id); return; }
   if(!S || (portalProfissional && (S.role!=="prof" || !S.profId))){ root.innerHTML = pgLogin(); bindLogin(); return; }
+  if(S.role==="paciente" && !Store.get("pacientes",S.pacId)){
+    root.innerHTML = appShell("inicio", `<section class="card"><h1>Vínculo com o paciente indisponível</h1><p>Peça à administração da Viver Bem para conferir o paciente associado a esta conta. Depois, saia e entre novamente para carregar a agenda e os avisos.</p></section>`);
+    return;
+  }
   const table = {admin:ADMIN, prof:PROF, paciente:FAM}[S.role] || PROF;
   const def = {admin:"painel", prof:"meus", paciente:"inicio"}[S.role] || "meus";
   const fn = table[r] || table[def];
@@ -1808,7 +1814,7 @@ function pgFamInicio(){
   const equipe=[...new Map(Store.all("plantoes").filter(x=>x.pacId===p.id&&x.profId&&x.data>=addDays(t,-30)).map(x=>[x.profId,{nome:proName(x.profId),f:x.profFuncao||""}])).values()];
   return `<section class="welcome"><div><span class="eyebrow-pill">Área da família</span><h1>${esc(p.nome||"Paciente")}</h1><p>${esc(MOD_LOCAL[p.modalidade||"domicilio"])}${p.instituicao?" · "+esc(p.instituicao):""} · ${fmtDayW(t)}</p></div>
     <div class="actions"><a class="btn btn-copper" href="#teleconsulta">Agendar teleconsulta</a><a class="btn btn-ghost-light" href="#servicos">Solicitar atendimento</a></div></section>
-  <section class="card"><h2>Avisos de chegada e saída</h2><div id="avisosFamilia" aria-live="polite">${avisosFamilia(Store.all("plantoes"), p.id)}</div></section>
+  <section class="card"><h2>Avisos de chegada e saída</h2><div id="avisosFamilia" aria-live="polite">${avisosFamilia(Store.all("plantoes"), S.pacId)}</div></section>
   ${lembretes.length?`<section class="card"><h2>Lembretes</h2><ul style="margin:8px 0 0;padding-left:18px;display:grid;gap:6px">${lembretes.map(x=>`<li>${x}</li>`).join("")}</ul></section>`:""}
   <div class="grid2">
     <section class="card"><div class="card-h"><h2>Próximos atendimentos</h2><a class="small" href="#agenda">Agenda completa</a></div>
