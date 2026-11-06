@@ -971,6 +971,7 @@ function appShell(cur, body){
       ${S.role==="admin"?`<form class="busca-side" id="fBusca" role="search"><input id="buscaGeral" type="search" placeholder="Buscar paciente, profissional..." value="${esc(buscaTxt)}" aria-label="Busca geral"></form>`:""}
       <nav class="nav">${nav}</nav>
       <div class="side-foot"><div>${esc(S.nome)}</div><div class="small" style="color:#7FA0B6">${{admin:"Administração",prof:"Profissional",paciente:"Paciente e família"}[S.role]}${Store.mode==="demo"?" · demonstração":""}</div>
+      ${botaoInstalar("btn-sm btn-ghost-light")}
       <button class="btn btn-sm btn-ghost-light" data-act="logout">Sair</button></div>
     </aside>
     <main class="main"><div class="main-in">${body}</div></main>
@@ -978,6 +979,22 @@ function appShell(cur, body){
 }
 function pubShell(body){
   return `<div class="pub"><header class="pub-top"><div class="in"><span class="brand" style="padding:0"><img class="logo-wide" src="${LOGO}" alt="Viver Bem Atendimento Domiciliar"></span></div></header><main class="pub-main">${body}</main></div>`;
+}
+
+/* =================== INSTALAÇÃO DO APP =================== */
+let pedidoInstalacao;
+const appInstalado = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+window.addEventListener("beforeinstallprompt", e => {
+  e.preventDefault();
+  pedidoInstalacao = e;
+});
+window.addEventListener("appinstalled", () => {
+  pedidoInstalacao = null;
+  document.querySelectorAll('[data-act="instalarApp"]').forEach(botao => botao.remove());
+});
+
+function botaoInstalar(classes){
+  return appInstalado() ? "" : `<button type="button" class="btn ${classes}" data-act="instalarApp">Instalar app no celular</button>`;
 }
 
 /* =================== LOGIN =================== */
@@ -993,6 +1010,7 @@ function pgLogin(){
         <label class="f">Senha<input id="lg_pass" type="password" autocomplete="current-password"></label>
         <p class="err" hidden></p>
         <button class="btn btn-primary btn-block">Entrar</button>
+        ${botaoInstalar("btn-line btn-block")}
         ${demo?`<div class="demo-strip">Demonstração · senha <b>123456</b><br>Administração: <b>admin@viverbem.com</b><br>Profissional: <b>maria@exemplo.com</b><br>Família: <b>familia@exemplo.com</b></div>
           <div class="actions"><button type="button" class="btn btn-sm btn-line" data-act="demoAdmin">Entrar como administração</button><button type="button" class="btn btn-sm btn-line" data-act="demoProf">Entrar como profissional</button><button type="button" class="btn btn-sm btn-line" data-act="demoFam">Entrar como família</button></div>`
         :`<button type="button" class="btn btn-line btn-block" data-act="reset">Esqueci minha senha</button>`}
@@ -2068,6 +2086,17 @@ function bindPublic(r){
 
 /* =================== AÇÕES =================== */
 const ACT = {
+  async instalarApp(){
+    if(appInstalado()) return;
+    if(pedidoInstalacao){
+      const pedido = pedidoInstalacao;
+      pedidoInstalacao = null;
+      try{ await pedido.prompt(); return; }catch(e){}
+    }
+    modal("Instalar o Viver Bem", `<p><b>Android:</b> abra esta página no Chrome. No menu ⋮, toque em <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>.</p>
+      <p><b>iPhone:</b> abra esta página no Safari. Toque em <b>Compartilhar</b> e depois em <b>Adicionar à Tela de Início</b>.</p>
+      <div class="actions"><button class="btn btn-primary" data-act="close">Entendi</button></div>`);
+  },
   close: closeModal,
   menu(){ const s=$("#shell"); if(s.classList.contains("open")) return; s.classList.add("open"); const sc=document.createElement("div"); sc.className="scrim"; sc.onclick=()=>{s.classList.remove("open");sc.remove();}; s.appendChild(sc); },
   go(id){ location.hash=id; },
