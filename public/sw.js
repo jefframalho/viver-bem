@@ -1,7 +1,7 @@
 // Service worker do Sistema Viver Bem — só cuida de deixar o app instalável
 // e funcionar um pouco melhor com internet ruim. Não guarda dados do paciente:
 // esses sempre vêm direto do Firebase.
-const CACHE = "viverbem-shell-v1";
+const CACHE = "viverbem-shell-v2";
 const SHELL = ["./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", (e) => {
