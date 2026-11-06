@@ -1,0 +1,39 @@
+{
+  "name": "Portal do Profissional Viver Bem",
+  "short_name": "Viver Bem Equipe",
+  "description": "Sistema de gestão do home care Viver Bem: cadastros, agenda, plantões, financeiro e app do profissional.",
+  "start_url": "./index.html?portal=profissional",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0F3550",
+  "theme_color": "#0F3550",
+  "orientation": "portrait-primary",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "id": "./index.html?portal=profissional"
+}
