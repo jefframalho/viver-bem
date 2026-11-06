@@ -943,6 +943,8 @@ const FAM = {inicio:pgFamInicio, servicos:pgFamServicos, teleconsulta:pgFamTele,
 const FAM_NAV = [["inicio","Início"],["servicos","Serviços"],["teleconsulta","Teleconsultas"],["agenda","Agenda"],["medicoes","Minhas medições"],["cuidado","Plano e relatórios"]];
 
 async function render(){
+  pararAvisosFamilia?.();
+  pararAvisosFamilia = null;
   const {r,id} = route();
   const root = $("#root");
   if(!portalProfissional && PUBLIC[r]){ root.innerHTML = pubShell(await PUBLIC[r](id)); bindPublic(r,id); return; }
@@ -952,6 +954,7 @@ async function render(){
   const fn = table[r] || table[def];
   const cur = table[r] ? r : def;
   root.innerHTML = appShell(cur, fn(id));
+  if(S.role==="paciente" && cur==="inicio" && Store.mode==="firebase") acompanharAvisosFamilia(S.pacId);
   if(cur==="perfil") carregaContrato();
   window.scrollTo(0,0);
 }
@@ -1772,6 +1775,26 @@ function pgTeleProf(){
 
 /* =================== ÁREA DO PACIENTE E FAMÍLIA =================== */
 const meuPac = () => Store.get("pacientes", S.pacId) || {};
+let pararAvisosFamilia;
+function avisosFamilia(plantoes, pacId){
+  const avisos = plantoes.filter(p => p.pacId === pacId).flatMap(p => [
+    {em:p.chegada?.em, acao:"registrou a chegada", nome:p.profNome || proName(p.profId)},
+    {em:p.saida?.em, acao:"registrou a saída", nome:p.profNome || proName(p.profId)}
+  ]).filter(a => a.em).sort((a,b) => b.em.localeCompare(a.em)).slice(0,8);
+  return avisos.map(a => `<div class="evo"><b>${esc(a.nome)} ${a.acao}.</b><div class="small muted">${fmtDT(a.em)}</div></div>`).join("") ||
+    '<p class="empty">Ainda não há registros de chegada ou saída.</p>';
+}
+function acompanharAvisosFamilia(pacId){
+  const painel = $("#avisosFamilia");
+  if(!painel || !pacId) return;
+  pararAvisosFamilia = Store.fs.collection("plantoes").where("pacId","==",pacId).onSnapshot(snap => {
+    if(!painel.isConnected || S?.role !== "paciente" || S.pacId !== pacId) return;
+    const html = avisosFamilia(snap.docs.map(doc => doc.data()), pacId);
+    if(painel.innerHTML !== html) painel.innerHTML = html;
+  }, () => {
+    if(painel.isConnected) painel.insertAdjacentHTML("beforeend", '<p class="note small">Não foi possível atualizar os avisos ao vivo. Recarregue a página para tentar novamente.</p>');
+  });
+}
 function pgFamInicio(){
   const p=meuPac(), t=today(), cfg=Store.cfg();
   const pls=Store.all("plantoes").filter(x=>x.pacId===p.id&&x.data>=t&&["agendado","andamento"].includes(x.status)).sort((a,b)=>tStart(a)-tStart(b));
@@ -1785,6 +1808,7 @@ function pgFamInicio(){
   const equipe=[...new Map(Store.all("plantoes").filter(x=>x.pacId===p.id&&x.profId&&x.data>=addDays(t,-30)).map(x=>[x.profId,{nome:proName(x.profId),f:x.profFuncao||""}])).values()];
   return `<section class="welcome"><div><span class="eyebrow-pill">Área da família</span><h1>${esc(p.nome||"Paciente")}</h1><p>${esc(MOD_LOCAL[p.modalidade||"domicilio"])}${p.instituicao?" · "+esc(p.instituicao):""} · ${fmtDayW(t)}</p></div>
     <div class="actions"><a class="btn btn-copper" href="#teleconsulta">Agendar teleconsulta</a><a class="btn btn-ghost-light" href="#servicos">Solicitar atendimento</a></div></section>
+  <section class="card"><h2>Avisos de chegada e saída</h2><div id="avisosFamilia" aria-live="polite">${avisosFamilia(Store.all("plantoes"), p.id)}</div></section>
   ${lembretes.length?`<section class="card"><h2>Lembretes</h2><ul style="margin:8px 0 0;padding-left:18px;display:grid;gap:6px">${lembretes.map(x=>`<li>${x}</li>`).join("")}</ul></section>`:""}
   <div class="grid2">
     <section class="card"><div class="card-h"><h2>Próximos atendimentos</h2><a class="small" href="#agenda">Agenda completa</a></div>
