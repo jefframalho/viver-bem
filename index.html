@@ -60,7 +60,7 @@ p{margin:0}
 .nav a:hover{background:rgba(255,255,255,.1);color:#fff}
 .top .btn{min-height:42px;padding:9px 18px;font-size:.92rem}
 @media (max-width:1000px){.nav{display:none}}
-@media (max-width:440px){.top .b-glass{display:none}}
+@media (max-width:440px){.top .btn{padding-inline:12px}}
 
 /* herói */
 .hero{position:relative;background:var(--navy);color:#fff;overflow:hidden;isolation:isolate}
@@ -245,7 +245,7 @@ footer .links{display:flex;gap:18px;flex-wrap:wrap}
 <header class="top" id="top"><div class="in">
   <a class="brand" href="#inicio"><img class="logo-wide" src="logo-viverbem.png" width="900" height="457" alt="Viver Bem Atendimento Domiciliar"></a>
   <nav class="nav" aria-label="Seções"><a href="#servicos">Serviços</a><a href="#tecnologia">Como cuidamos</a><a href="#operadoras">Operadoras</a><a href="#trabalhe">Trabalhe conosco</a><a href="#duvidas">Dúvidas</a></nav>
-  <a class="btn b-glass" data-sis="" href="#">Área da equipe</a>
+  <a class="btn b-main" href="public/index.html">Entrar no sistema</a>
 </div></header>
 
 <main id="inicio">
@@ -363,6 +363,7 @@ footer .links{display:flex;gap:18px;flex-wrap:wrap}
 <section class="s" id="trabalhe" style="padding-top:0"><div class="in join">
   <div class="join-a"><span class="tag">Trabalhe conosco</span><h2>É profissional de saúde? Venha cuidar com a gente.</h2>
     <p>Cadastro, processo seletivo e contrato de prestação de serviço, tudo pelo celular. Você escolhe os plantões conforme a sua disponibilidade e recebe a escala no aplicativo.</p>
+    <p>Já faz parte da equipe? <a href="public/index.html">Acesse a área do profissional</a> com o e-mail cadastrado pela administração.</p>
     <div class="ctas" style="margin-top:auto"><a class="btn b-dark" data-sis="trabalhe" href="#">Quero me cadastrar <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a><a class="btn b-outline" data-sis="acompanhar" href="#" style="background:rgba(255,255,255,.5);border-color:transparent;color:#2A1408">Acompanhar candidatura</a></div></div>
   <div class="join-b"><b style="font-family:var(--f-d);font-size:1.2rem">Tenha em mãos</b>
     <div class="doc"><i>1</i><div><b>Inscrição no conselho</b><span>COREN, CREFITO, CRM, CRFa, CRP, CRN</span></div></div>
@@ -396,7 +397,7 @@ footer .links{display:flex;gap:18px;flex-wrap:wrap}
 
 <footer><div class="in">
   <span>© <span id="ano"></span> Viver Bem Atendimento Domiciliar<span id="fCnpj"></span></span>
-  <span class="links"><a href="#servicos">Serviços</a><a href="#operadoras">Operadoras</a><a data-sis="trabalhe" href="#">Trabalhe conosco</a><a href="/privacidade.html">Privacidade</a><a data-sis="" href="#">Área da equipe</a></span>
+  <span class="links"><a href="#servicos">Serviços</a><a href="#operadoras">Operadoras</a><a data-sis="trabalhe" href="#">Trabalhe conosco</a><a href="/privacidade.html">Privacidade</a><a href="public/index.html">Entrar no sistema</a></span>
 </div></footer>
 <div id="cookieBanner" class="cookiebar" hidden>
   <p>Usamos cookies essenciais para o site funcionar bem. Veja nossa <a href="/privacidade.html">Política de Privacidade</a>.</p>
