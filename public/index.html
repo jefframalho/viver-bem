@@ -1840,7 +1840,8 @@ function pgFamInicio(){
     <div class="actions">${cfg.whatsapp?`<a class="btn btn-primary" target="_blank" rel="noopener" href="${wa(cfg.whatsapp,`Olá, Viver Bem! Sou da família de ${p.nome}.`)}">${ICON.wa}WhatsApp da central</a>`:'<span class="small muted">O WhatsApp da central será informado pela Viver Bem.</span>'}</div>${SAMU_NOTE}</section>`;
 }
 const SERV_ENFERMAGEM = ["Enfermagem domiciliar (enfermeiro, técnico e auxiliar)","Curativos e manejo de feridas","Administração de medicamentos","Antibiótico endovenoso em casa","Acompanhamento pós-operatório","Assistência ao paciente acamado","Monitoramento de sinais vitais","Inserção, troca e manejo de sonda (SNE)","Sonda vesical, traqueostomia e oxigênio","Gerenciamento de paciente crônico","Suporte na reabilitação"];
-const SERV_EXAMES = ["Coleta de exames de sangue","Eletrocardiograma","Ecocardiograma","Holter 24h","MAPA (pressão 24h)","Ultrassonografia e doppler","Radiografia domiciliar (AP, perfil, OBL e especialidades)"];
+const ECOCARDIOGRAMA = "Ecocardiograma";
+const SERV_EXAMES = ["Coleta de exames de sangue","Eletrocardiograma",ECOCARDIOGRAMA,"Holter 24h","MAPA (pressão 24h)","Ultrassonografia e doppler","Radiografia domiciliar (AP, perfil, OBL e especialidades)"];
 const SERV_EQUIPE = ["Fisioterapia motora e respiratória","Fonoaudiologia","Nutrição","Psicologia","Terapia ocupacional","Atendimento médico"];
 const SERV_PADRAO = `Atendimento domiciliar | domicilio
 Enfermagem, equipe multidisciplinar e cuidados na casa do paciente, conforme a avaliação.
@@ -1892,7 +1893,15 @@ function parseServicos(txt){
       itens:L.slice(1).filter(x=>x.startsWith("-")).map(x=>x.replace(/^-\s*/,"").trim()).filter(Boolean)};
   }).filter(Boolean);
 }
-const servicos = () => { const l=parseServicos(Store.cfg().servicosTxt||SERV_PADRAO); return l.length?l:parseServicos(SERV_PADRAO); };
+const servicos = () => {
+  const catalogo = parseServicos(Store.cfg().servicosTxt);
+  if (!catalogo.length) return parseServicos(SERV_PADRAO);
+  const exames = catalogo.find(bloco => bloco.t === "Exames em casa");
+  if (exames && !exames.itens.some(item => item.toLowerCase() === ECOCARDIOGRAMA.toLowerCase())) {
+    exames.itens.push(ECOCARDIOGRAMA);
+  }
+  return catalogo;
+};
 const servicoBloco = t => servicos().find(x=>x.t===t);
 const SERVICOS_MOD = []; // substituído pelo catálogo editável acima
 function pgFamServicos(){
