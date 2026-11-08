@@ -416,7 +416,7 @@ const LOGO = "../logo-viverbem-nova.jpeg";
 const $ = (s, el=document) => el.querySelector(s);
 const $$ = (s, el=document) => [...el.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const uid = (p="") => p + Date.now().toString(36).slice(-4) + Math.random().toString(36).slice(2,6);
+const uid = (p="") => p + crypto.randomUUID().replaceAll("-", "");
 const digits = s => String(s||"").replace(/\D/g,"");
 const pad = n => String(n).padStart(2,"0");
 const isoDay = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
@@ -576,9 +576,10 @@ const Store = {
     const nomes={avisos:"Aviso",pacientes:"Paciente",profissionais:"Profissional",candidatos:"Candidato",plantoes:"Plantão",solicitacoes:"Solicitação",operadoras:"Operadora",contratos:"Contrato",config:"Configurações",produtos:"Produto",movEstoque:"Estoque",lotes:"Faturamento",documentos:"Documento",curriculos:"Currículo",usuarios:"Acesso",funcionarios:"Funcionário",coordenadores:"Coordenador",organizacoes:"Organização",rotas:"Rota",mensagens:"Mensagem",indisponibilidades:"Folga",despesas:"Despesa",adiantamentos:"Adiantamento",lancamentos:"Lançamento",extratoBanco:"Extrato bancário",tuss:"TUSS",mapTuss:"Mapeamento TUSS",inventarios:"Inventário",conferencias:"Conferência"};
     const item = obj ? (c==="plantoes" ? `${pacName(obj.pacId)} · ${fmtDay(obj.data)} ${obj.inicio}` : c==="movEstoque" ? `${obj.tipo==="entrada"?"Entrada":"Saída"} de ${obj.qtd} · ${Store.get("produtos",obj.prodId)?.nome||""}` : (obj.nome||obj.titulo||obj.empresa||obj.numero||obj.id)) : "";
     const det = obj?.status ? "Situação: "+obj.status : "";
-    const a={id:uid("au"),em:new Date().toISOString(),usuario:S?.nome||"Link público",perfil:S?.role||"publico",acao,colecao:nomes[c]||c,docId:obj?.id||"",item:String(item).slice(0,140),detalhe:det};
+    if(this.mode === "firebase" && (!S || !this.auth.currentUser)) return;
+    const a={id:uid("au"),em:new Date().toISOString(),uid:this.auth?.currentUser?.uid||"demo",usuario:S?.nome||"Demonstração",perfil:S?.role||"publico",acao,colecao:nomes[c]||c,docId:obj?.id||"",item:String(item).slice(0,140),detalhe:det};
     const arr=this.data.auditoria||(this.data.auditoria=[]); arr.unshift(a); if(arr.length>600) arr.length=600;
-    try{ if(this.mode==="firebase") await this.fs.collection("auditoria").doc(a.id).set(a); else this._local(); }catch(e){}
+    try{ if(this.mode==="firebase") await this.fs.collection("auditoria").doc(a.id).set({...a,em:firebase.firestore.FieldValue.serverTimestamp()}); else this._local(); }catch(e){}
   },
   async del(c,id){
     const old=this.get(c,id); if(c!=="auditoria") this._audit("Excluiu", c, old||{id});
@@ -599,20 +600,25 @@ const Store = {
     for(const f of ["app","auth","firestore"]) await new Promise((ok,ko)=>{ const s=document.createElement("script"); s.src=`https://cdn.jsdelivr.net/npm/firebase@${v}/firebase-${f}-compat.js`; s.onload=ok; s.onerror=()=>ko(new Error("Não foi possível carregar o Firebase.")); document.head.appendChild(s); });
     firebase.initializeApp(FIREBASE_CONFIG);
     this.fs = firebase.firestore(); this.auth = firebase.auth();
+    await new Promise((ok,ko)=>{ const off=this.auth.onAuthStateChanged(()=>{off();ok();},ko); });
     const c = await this.fetchOne("config","empresa"); this.data.config = c ? [c] : [];
   },
   async loadFor(session){
     if(this.mode==="demo") return;
-    this.bloqueadas=[]; const get = async (c,q) => { try{ const s = await (q||this.fs.collection(c)).get(); this.data[c] = s.docs.map(d=>d.data()); }catch(e){ this.data[c]=[]; this.bloqueadas.push(c); console.warn("Sem permissão para ler",c,e.message); } };
+    this.bloqueadas=[]; const get = async (c,q) => { try{ const s = await (q||this.fs.collection(c)).get(); this.data[c] = s.docs.map(d=>{ const v=d.data(); return {...v,em:v.em?.toDate?v.em.toDate().toISOString():v.em}; }); }catch(e){ this.data[c]=[]; this.bloqueadas.push(c); console.warn("Sem permissão para ler",c,e.message); } };
     if(session.role==="admin") await Promise.all([...COLS.filter(c=>!["curriculos","documentos","auditoria"].includes(c)).map(c=>get(c)), get("auditoria", this.fs.collection("auditoria").orderBy("em","desc").limit(500))]);
     else if(session.role==="paciente"){ const q=(c,k,v)=>get(c,this.fs.collection(c).where(k,"==",v)); const paciente=session.pacId ? await this.fetchOne("pacientes",session.pacId) : null;
       this.data.pacientes=paciente ? [{...paciente,id:session.pacId}] : [];
       if(!paciente) return;
       await Promise.all([q("plantoes","pacId",session.pacId),q("consultas","pacId",session.pacId),q("medicoes","pacId",session.pacId),get("agendaTele")]); this.data.profissionais=[]; }
     else { const q=(c,k,v)=>get(c,this.fs.collection(c).where(k,"==",v));
-      await Promise.all([get("pacientes"),q("consultas","profId",session.profId),q("mensagens","profId",session.profId),q("indisponibilidades","profId",session.profId),q("adiantamentos","profId",session.profId),get("rotas"),get("avisos"),get("produtos"),get("medicoes"),get("intercorrencias")]);
-      try{ const [a,b]=await Promise.all([this.fs.collection("plantoes").where("profId","==",session.profId).get(), this.fs.collection("plantoes").where("profId","==","").get()]);
-        this.data.plantoes=[...a.docs.map(d=>d.data()),...b.docs.map(d=>d.data())];
+      await Promise.all([get("pacientes",this.fs.collection("pacientes").where("profIds","array-contains",session.profId)),q("consultas","profId",session.profId),q("mensagens","profId",session.profId),q("indisponibilidades","profId",session.profId),q("adiantamentos","profId",session.profId),get("rotas"),get("avisos"),get("produtos")]);
+      for(const c of ["medicoes","intercorrencias"]){
+        const snapshots=await Promise.all(this.data.pacientes.map(p=>this.fs.collection(c).where("pacId","==",p.id).get()));
+        this.data[c]=snapshots.flatMap(x=>x.docs.map(d=>d.data()));
+      }
+      try{ const a=await this.fs.collection("plantoes").where("profId","==",session.profId).get();
+        this.data.plantoes=a.docs.map(d=>d.data());
       }catch(e){ this.data.plantoes=[]; this.bloqueadas.push("plantoes"); }
       this.data.profissionais=[await this.fetchOne("profissionais",session.profId)].filter(Boolean); }
   }
@@ -634,7 +640,7 @@ async function login(email, senha){
   await Store.loadFor(S);
   if(Store.bloqueadas&&Store.bloqueadas.length) setTimeout(()=>toast("Algumas áreas não carregaram por falta de permissão no banco ("+Store.bloqueadas.join(", ")+"). Atualize as regras do Firestore no console do Firebase."),600);
 }
-async function logout(){ if(Store.mode==="firebase") await Store.auth.signOut(); S=null; saveSession(); location.hash=""; render(); }
+async function logout(){ if(Store.mode==="firebase") { await Store.auth.signOut(); clearUserState(); } else {S=null;saveSession();} location.hash=""; render(); }
 
 /* =================== DADOS DE EXEMPLO =================== */
 function fakeDoc(t,c){ return "data:image/svg+xml;utf8,"+encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='600' height='400'><rect width='600' height='400' fill='${c}'/><rect x='30' y='30' width='540' height='340' rx='16' fill='none' stroke='#fff' stroke-opacity='.5' stroke-width='3'/><text x='300' y='195' font-family='sans-serif' font-size='30' text-anchor='middle' fill='#fff'>${t}</text><text x='300' y='240' font-family='sans-serif' font-size='18' letter-spacing='4' text-anchor='middle' fill='#fff' fill-opacity='.8'>DOCUMENTO DE EXEMPLO</text></svg>`); }
@@ -798,7 +804,9 @@ function makeContrato(tipo, d, cfg, id){
     html = lines.map(l=>{ const t=l.trim(); if(!t) return ""; if(first){ first=false; return `<p><b>${fill(t)}</b></p>`; } return /^(CL[ÁA]USULA|PAR[ÁA]GRAFO)/i.test(t)?`<h4>${fill(t)}</h4>`:`<p>${fill(t)}</p>`; }).join("");
     if(!/13\.709/.test(modelo)) html += lgpdHTML(tipo, E, "Anexo – Proteção de dados pessoais (LGPD)");
   }
-  return {id:id||uid("ct-"),tipo,refId:d.refId,titulo,html,dados:d,status:"pendente",assinatura:null,exemplo:!!d.exemplo,criado:new Date().toISOString()};
+  const candidate=Store.get("candidatos",d.refId);
+  const signer=Store.all("usuarios").find(u=>tipo==="paciente" ? u.role==="paciente" && !!u.pacId && u.pacId===d.refId : !!d.profId && u.role==="prof" && u.profId===d.profId);
+  return {id:id||uid("ct-"),tipo,refId:d.refId,signerUid:candidate?.ownerUid||signer?.id||"",titulo,html,dados:d,status:"pendente",assinatura:null,exemplo:!!d.exemplo,criado:new Date().toISOString()};
 }
 const contratoLink = c => baseURL()+"#assinar-"+c.id;
 
@@ -938,6 +946,31 @@ const ADMIN_NAV = [
 ];
 const PROF_NAV = [["meus","Início"],["pacientes","Meus pacientes"],["minhaagenda","Minha agenda"],["rotas","Minhas rotas"],["disponiveis","Plantões disponíveis"],["teleprof","Teleconsultas"],["mensagens","Mensagens"],["pagamentos","Meus pagamentos"],["perfil","Meus dados"]];
 function route(){ const h=decodeURIComponent(location.hash.slice(1)); const m=h.match(/^([a-z]+)(?:-(.+))?$/); return m?{r:m[1],id:m[2]||null}:{r:"",id:null}; }
+function clearUserState(){
+  S=null; saveSession(); acomp=null; window._ct=null;
+  Store.data=Object.fromEntries(COLS.map(c=>[c,c==="config"?Store.data.config:[]]));
+}
+function publicVerified(){ return Store.mode === "demo" || !!(Store.auth?.currentUser?.emailVerified); }
+function publicAccount(){
+  if(Store.mode === "demo") return "";
+  const u=Store.auth?.currentUser;
+  if(u?.emailVerified) return "";
+  if(u) return `<section class="card"><h1>Confirme seu e-mail</h1><p>Enviamos uma confirmação para ${esc(u.email)}. Abra o link recebido e volte aqui.</p><p class="small">Código da conta (UID), para vincular um cadastro antigo: <b>${esc(u.uid)}</b>. A administração deve conferir sua identidade antes de liberar o acesso.</p><div class="actions"><button class="btn btn-primary" data-act="publicReload">Já confirmei</button><button class="btn btn-line" data-act="publicVerify">Reenviar confirmação</button><button class="btn btn-line" data-act="publicLogout">Trocar conta</button></div></section>`;
+  return `<form id="fPublicAuth" class="card"><h1>Acesso seguro</h1><p>Entre ou crie sua conta para enviar documentos, acompanhar sua candidatura e assinar contratos.</p><label class="f">E-mail<input id="publicEmail" type="email" required autocomplete="email"></label><label class="f">Senha<input id="publicPassword" type="password" minlength="6" required autocomplete="current-password"></label><p class="err" hidden></p><div class="actions"><button class="btn btn-primary" type="submit">Entrar</button><button class="btn btn-line" type="submit" value="create">Criar conta</button><button class="btn btn-line" type="button" data-act="publicReset">Esqueci minha senha</button></div></form>`;
+}
+function accountInfo(){ const u=Store.auth?.currentUser; return u ? `<p class="note">Conta: ${esc(u.email)} · UID: <b>${esc(u.uid)}</b> <button class="btn btn-sm btn-line" data-act="publicLogout">Trocar conta</button></p>` : ""; }
+function bindPublicAuth(){
+  const f=$("#fPublicAuth"); if(!f) return;
+  f.onsubmit=async e=>{ e.preventDefault(); const email=$("#publicEmail").value.trim(), password=$("#publicPassword").value;
+    try{
+      clearUserState();
+      if(e.submitter?.value === "create") { const cr=await Store.auth.createUserWithEmailAndPassword(email,password); await cr.user.sendEmailVerification(); }
+      else await Store.auth.signInWithEmailAndPassword(email,password);
+      // Authentication here does not create an operational role in /usuarios.
+      clearUserState(); await render();
+    }catch(err){ showErr(f,"Não foi possível entrar ou criar a conta. Confira e-mail e senha; se já tem cadastro, use Entrar ou recupere a senha."); }
+  };
+}
 const PUBLIC = {links:pgLinks, trabalhe:pgTrabalhe, acompanhar:pgAcompanhar, assinar:pgAssinar, solicitar:pgSolicitar};
 const ADMIN = {funcionarios:pgFuncionarios,coordenadores:pgCoordenadores,organizacoes:pgOrganizacoes,rotas:pgRotas,chat:pgChat,agendapro:pgAgendaProf,conferencia:pgConferencia,frequencia:pgFrequencia,centros:pgCentros,teleconsultas:pgTeleconsultas,monitoramento:pgMonitoramento,busca:pgBusca,estoque:pgEstoque,faturamento:pgFaturamento,relatorios:pgRelatorios,auditoria:pgAuditoria,folha:pgFolha,ponto:pgPonto,painel:pgPainel,pacientes:pgPacientes,paciente:pgPaciente,escala:pgEscala,profissionais:pgProfissionais,profissional:pgProfissional,recrutamento:pgRecrutamento,candidato:pgCandidato,contratos:pgContratos,solicitacoes:pgSolicitacoes,operadoras:pgOperadoras,financeiro:pgFinanceiro,config:pgConfig};
 const PROF = {meus:pgMeus, teleprof:pgTeleProf, pagamentos:pgPagamentos, minhaagenda:pgDisponibilidade, rotas:pgRotasProf, mensagens:pgMensagens, pacientes:pgMeusPacientes, paciente:pgPacienteProf, disponiveis:pgDisponiveis, perfil:pgPerfil};
@@ -949,7 +982,12 @@ async function render(){
   pararAvisosFamilia = null;
   const {r,id} = route();
   const root = $("#root");
-  if(!portalProfissional && PUBLIC[r]){ root.innerHTML = pubShell(await PUBLIC[r](id)); bindPublic(r,id); return; }
+  if(!portalProfissional && PUBLIC[r]){
+    if(["trabalhe","acompanhar","assinar"].includes(r) && !publicVerified()) { root.innerHTML=pubShell(publicAccount()); bindPublicAuth(); return; }
+    try { root.innerHTML = pubShell(accountInfo()+await PUBLIC[r](id)); bindPublic(r,id); }
+    catch(e){ acomp=null; window._ct=null; root.innerHTML=pubShell(accountInfo()+`<section class="card"><h1>Acesso não autorizado</h1><p>Este cadastro ou contrato não está vinculado à sua conta. Informe seu UID à administração, que deverá conferir sua identidade e liberar o acesso.</p></section>`); }
+    return;
+  }
   if(!S || (portalProfissional && (S.role!=="prof" || !S.profId))){ root.innerHTML = pgLogin(); bindLogin(); return; }
   if(S.role==="paciente" && !Store.get("pacientes",S.pacId)){
     root.innerHTML = appShell("inicio", `<section class="card"><h1>Vínculo com o paciente indisponível</h1><p>Peça à administração da Viver Bem para conferir o paciente associado a esta conta. Depois, saia e entre novamente para carregar a agenda e os avisos.</p></section>`);
@@ -1178,7 +1216,7 @@ function pgPaciente(id){
   const cts=Store.all("contratos").filter(c=>c.tipo==="paciente"&&c.refId===id);
   const op=Store.get("operadoras",p.operadoraId);
   return `<div class="pagehead"><div><p class="small"><a href="#pacientes">Pacientes</a></p><h1>${esc(p.nome)}${ex(p)}</h1><p class="sub">${p.nasc?age(p.nasc)+" anos · ":""}${esc(loc(p))} · <span class="pill ${PAC_ST[p.status][1]}">${PAC_ST[p.status][0]}</span></p></div>
-    <div class="actions"><button class="btn btn-primary" data-act="novoPlantao" data-id="${p.id}">${ICON.plus}Plantão</button><button class="btn btn-line" data-act="editPaciente" data-id="${p.id}">Editar</button><button class="btn btn-line" data-act="novoContratoPac" data-id="${p.id}">${ICON.contratos}Contrato</button><button class="btn btn-line" data-act="acessoFam" data-id="${p.id}">${p.acessoFamilia?"Acesso da família":"Criar acesso da família"}</button><a class="btn btn-line" target="_blank" rel="noopener" href="${wa(p.telResp,`Olá, ${first(p.responsavel)}! Aqui é da Viver Bem Atendimento Domiciliar.`)}">${ICON.wa}Família</a></div></div>
+    <div class="actions"><button class="btn btn-primary" data-act="novoPlantao" data-id="${p.id}">${ICON.plus}Plantão</button><button class="btn btn-line" data-act="editPaciente" data-id="${p.id}">Editar</button><button class="btn btn-line" data-act="patientTeam" data-id="${p.id}">Equipe autorizada</button><button class="btn btn-line" data-act="novoContratoPac" data-id="${p.id}">${ICON.contratos}Contrato</button><button class="btn btn-line" data-act="acessoFam" data-id="${p.id}">${p.acessoFamilia?"Acesso da família":"Criar acesso da família"}</button><a class="btn btn-line" target="_blank" rel="noopener" href="${wa(p.telResp,`Olá, ${first(p.responsavel)}! Aqui é da Viver Bem Atendimento Domiciliar.`)}">${ICON.wa}Família</a></div></div>
   ${p.alergias?`<p class="note warn"><b>Alergias:</b> ${esc(p.alergias)}</p>`:""}
   <div class="grid2">
     <section class="card"><h2>Dados</h2><dl class="kv">
@@ -1374,7 +1412,7 @@ function pgCandidato(id){
   const next={recebido:["analise","Iniciar análise"],analise:["entrevista","Chamar para entrevista"],entrevista:["aprovado","Aprovar e gerar contrato"]}[c.status];
   const jaPro = Store.all("profissionais").find(p=>p.candId===c.id);
   return `<div class="pagehead"><div><p class="small"><a href="#recrutamento">Recrutamento</a></p><h1>${esc(c.nome)}${ex(c)}</h1><p class="sub">${esc(c.funcao)} · protocolo ${esc(c.id)}</p></div>
-    <div class="actions">${next?`<button class="btn btn-primary" data-act="candSt" data-id="${c.id}" data-v="${next[0]}">${next[1]}</button>`:""}
+    <div class="actions"><button class="btn btn-line" data-act="bindAccount" data-id="${c.id}" data-v="candidatos">Vincular conta</button>${next?`<button class="btn btn-primary" data-act="candSt" data-id="${c.id}" data-v="${next[0]}">${next[1]}</button>`:""}
     ${["recebido","analise","entrevista"].includes(c.status)?`<button class="btn btn-line" data-act="candSt" data-id="${c.id}" data-v="reprovado">Não selecionar</button>`:""}
     ${s==="contrato"&&!jaPro?`<button class="btn btn-copper" data-act="ativarPro" data-id="${c.id}">Adicionar à equipe</button>`:""}
     <a class="btn btn-line" target="_blank" rel="noopener" href="${wa(c.tel,`Olá, ${first(c.nome)}! Aqui é da Viver Bem Atendimento Domiciliar, sobre sua candidatura ${c.id}.`)}">${ICON.wa}WhatsApp</a></div></div>
@@ -1412,7 +1450,7 @@ function pgContratos(){
 function verContrato(id){
   const c=Store.get("contratos",id); if(!c) return;
   modal(c.titulo, `<div class="contract">${c.html}${c.assinatura?`<hr><p><b>Assinado eletronicamente</b> por ${esc(c.assinatura.nome)}, ${docLabel(c.assinatura.cpf)} ${esc(fmtCPF(c.assinatura.cpf))}, em ${fmtDT(c.assinatura.em)}.<br>Código de verificação: <b>${esc(c.assinatura.hash)}</b></p>`:""}</div>
-    <div class="actions">${c.status!=="assinado"?`<button class="btn btn-primary" data-act="copy" data-v="${esc(contratoLink(c))}">${ICON.link}Copiar link de assinatura</button>`:""}${c.status!=="assinado"?`<button class="btn btn-danger" data-act="delContrato" data-id="${c.id}">Excluir</button>`:""}</div>`,{wide:1,nofocus:1});
+    <div class="actions"><button class="btn btn-line" data-act="bindAccount" data-id="${c.id}" data-v="contratos">Vincular assinante</button>${c.status!=="assinado"?`<button class="btn btn-primary" data-act="copy" data-v="${esc(contratoLink(c))}">${ICON.link}Copiar link de assinatura</button>`:""}${c.status!=="assinado"?`<button class="btn btn-danger" data-act="delContrato" data-id="${c.id}">Excluir</button>`:""}</div>`,{wide:1,nofocus:1});
 }
 
 /* =================== SOLICITAÇÕES =================== */
@@ -1998,6 +2036,7 @@ const W1=[{k:"nome",l:"Nome completo",req:1,full:1,ac:"name"},{k:"cpf",l:"CPF ou
 const W2=()=>[{k:"funcao",l:"Função",req:1,t:"select",o:[["","Selecione"],...Object.keys(FUNCOES)]},{k:"anos",l:"Anos de experiência",t:"number"},{k:"registro",l:"Número de inscrição no conselho",req:1,full:1,h:"Conselho, UF e número. Ex.: COREN-CE 123456",ph:"COREN-UF 000000"},{k:"exp",l:"Experiência com",t:"checks",o:EXPERIENCIAS,full:1},{k:"disp",l:"Disponibilidade",t:"checks",o:DISPON,full:1,req:1},{k:"areas",l:"Cidades onde pode atender",full:1}];
 function pgTrabalhe(){
   const s=wz.step, d=wz.d;
+  if(Store.mode==="firebase" && Store.auth.currentUser) d.email=Store.auth.currentUser.email;
   if(s===5) return `<div class="okbox"><h2>Candidatura enviada</h2><p>Guarde seu protocolo. Com ele e seu CPF você acompanha o processo seletivo.</p><p class="code">${esc(wz.done)}</p><div class="actions"><a class="btn btn-primary" href="#acompanhar">Acompanhar candidatura</a></div></div>`;
   const bar=`<div class="wbar">${[1,2,3,4].map(i=>`<i class="${i<=s?"on":""}"></i>`).join("")}</div>`;
   let body="";
@@ -2111,18 +2150,30 @@ function bindPublic(r){
       const btn=$("button:last-of-type",f); btn.disabled=true;
       try{
         if(Store.mode==="demo" && Store.all("candidatos").some(c=>c.cpf===wz.d.cpf&&!c.exemplo)) { btn.disabled=false; return showErr(f,"Já existe uma candidatura com este CPF. Use Acompanhar candidatura."); }
-        const now=new Date().toISOString(), id="VB-"+Math.random().toString(36).slice(2,8).toUpperCase();
+        const now=new Date().toISOString(), id="VB-"+crypto.randomUUID().replaceAll("-", "").toUpperCase();
         btn.textContent="Enviando documentos...";
-        for(const [k] of DOCS){ await Store.put("documentos",{id:`${id}_${k}`,cand:id,tipo:k,nome:wz.d.docs[k].nome,data:wz._docs[k]}); }
-        await Store.put("candidatos",{...wz.d,id,status:"recebido",hist:[{s:"recebido",em:now}],aceites:now,notas:""});
+        if(Store.mode === "firebase") {
+          const u=Store.auth.currentUser;
+          if(!u?.emailVerified) throw new Error("Confirme seu e-mail primeiro.");
+          const candidate={...wz.d,email:u.email,ownerUid:u.uid,id,status:"recebido",hist:[{s:"recebido",em:now}],aceites:now,notas:"",criado:now,atualizado:now};
+          const batch=Store.fs.batch(); batch.set(Store.fs.collection("candidatos").doc(id),candidate);
+          for(const [k] of DOCS) batch.set(Store.fs.collection("documentos").doc(`${id}_${k}`),{id:`${id}_${k}`,cand:id,tipo:k,nome:wz.d.docs[k].nome,data:wz._docs[k],criado:now,atualizado:now});
+          await batch.commit();
+        } else {
+          for(const [k] of DOCS) await Store.put("documentos",{id:`${id}_${k}`,cand:id,tipo:k,nome:wz.d.docs[k].nome,data:wz._docs[k]});
+          await Store.put("candidatos",{...wz.d,id,status:"recebido",hist:[{s:"recebido",em:now}],aceites:now,notas:""});
+        }
         wz={step:5,d:{exp:[],disp:[]},done:id}; render(); window.scrollTo(0,0);
       }catch(err){ btn.disabled=false; showErr(f,"Não foi possível enviar agora. Verifique a internet e tente de novo."); }
     };
   }
   if(r==="acompanhar"){ $$("#fRe input[data-doc]").forEach(inp=>inp.onchange=()=>docInput(inp,acompDocs,render)); }
   if(r==="acompanhar"){ const f=$("#fAc"); if(f) f.onsubmit=async e=>{ e.preventDefault(); const cpf=digits($("#f_cpf").value), id=$("#f_proto").value.trim().toUpperCase();
-    const c=id?await Store.fetchOne("candidatos",id):null; if(!c||c.cpf!==cpf) return showErr(f,"Não encontramos candidatura com esse CPF e protocolo. Confira os dados.");
-    acomp={c, ct:c.contratoId?await Store.fetchOne("contratos",c.contratoId):null}; render(); }; }
+    try {
+      const c=id?await Store.fetchOne("candidatos",id):null; if(!c||c.cpf!==cpf) return showErr(f,"Cadastro não encontrado ou não vinculado à sua conta. Confira com a administração.");
+      acomp={c, ct:c.contratoId?await Store.fetchOne("contratos",c.contratoId):null}; render();
+    }catch(err){ showErr(f,"Cadastro não encontrado ou não vinculado à sua conta. Informe seu UID à administração para conferir o vínculo."); }
+  }; }
   if(r==="assinar"){ const f=$("#fSign"); if(f) f.onsubmit=async e=>{ e.preventDefault(); const c=window._ct, nome=$("#f_sNome").value.trim(), cpf=digits($("#f_sCpf").value);
     const espNome=c.tipo==="autonomo"?c.dados.nome:c.dados.respNome, espCpf=digits(c.tipo==="autonomo"?c.dados.cpf:c.dados.respCpf);
     if(norm(nome)!==norm(espNome)) return showErr(f,`O nome precisa ser igual ao do contrato: ${espNome}.`);
@@ -2130,7 +2181,7 @@ function bindPublic(r){
     if(!validDoc(cpf)) return showErr(f,"CPF ou CNPJ inválido.");
     if(!$("#sOk").checked) return showErr(f,"Marque que leu e concorda com o contrato.");
     const em=new Date().toISOString();
-    c.status="assinado"; c.assinatura={nome,cpf,em,hash:await sha(c.id+cpf+em+c.html.length),disp:navigator.userAgent.slice(0,140)};
+    c.status="assinado"; c.assinatura={uid:Store.auth?.currentUser?.uid||"demo",nome:espNome,cpf,em,hash:await sha(c.id+cpf+em+c.html.length),disp:navigator.userAgent.slice(0,140)};
     try{ await Store.put("contratos",c); toast("Contrato assinado"); render(); }catch(err){ showErr(f,"Não foi possível assinar agora. Tente de novo."); } }; }
   if(r==="solicitar"){ const f=$("#fSol"); if(f) f.onsubmit=async e=>{ e.preventDefault(); const spec=solPub==="familia"?SF():SO; const v=readFields(spec,f); const m=missing(spec,v); if(m) return showErr(f,m);
     if(digits(v.tel).length<10) return showErr(f,"Informe o telefone com DDD."); if(!$("#solOk").checked) return showErr(f,"Marque a autorização de contato.");
@@ -2141,6 +2192,23 @@ function bindPublic(r){
 
 /* =================== AÇÕES =================== */
 const ACT = {
+  async publicReload(){ await Store.auth.currentUser.reload(); await Store.auth.currentUser.getIdToken(true); acomp=null; window._ct=null; render(); },
+  async publicVerify(){ try{ await Store.auth.currentUser.sendEmailVerification(); toast("Confirmação enviada. Confira também o spam."); }catch(e){ toast("Aguarde um pouco antes de reenviar."); } },
+  async publicLogout(){ await Store.auth.signOut(); S=null; saveSession(); acomp=null; window._ct=null; Store.data=Object.fromEntries(COLS.map(c=>[c,c==="config"?Store.data.config:[]])); render(); },
+  async publicReset(){ const email=$("#publicEmail")?.value.trim(); if(!email) return showErr($("#fPublicAuth"),"Informe o e-mail."); try{ await Store.auth.sendPasswordResetEmail(email); toast("Se a conta existir, você receberá as instruções por e-mail."); }catch(e){ toast("Confira o e-mail e tente novamente."); } },
+  bindAccount(id,b){ if(S?.role!=="admin") return; const c=b.dataset.v; if(!["candidatos","contratos"].includes(c)) return;
+    const record=Store.get(c,id), key=c==="candidatos"?"ownerUid":"signerUid";
+    modal("Vincular conta verificada",`<p>Confira a identidade e o e-mail da pessoa por um canal de confiança antes de liberar este registro. Peça o UID que aparece na página de acesso seguro.</p><label class="f">UID da conta<input id="bindUid" value="${esc(record[key]||"")}" autocomplete="off"></label><div class="actions"><button class="btn btn-primary" data-act="saveBindAccount" data-id="${esc(id)}" data-v="${c}">Salvar vínculo</button></div>`);
+  },
+  async saveBindAccount(id,b){ if(S?.role!=="admin") return; const col=b.dataset.v; if(!["candidatos","contratos"].includes(col)) return;
+    const value=$("#bindUid").value.trim(); if(!/^[A-Za-z0-9_-]{1,128}$/.test(value)) return showErr($(".modal-b"),"Informe o UID fornecido pelo titular.");
+    const record=Store.get(col,id),key=col==="candidatos"?"ownerUid":"signerUid";
+    await Store.put(col,{...record,[key]:value}); closeModal(); toast("Vínculo salvo. O titular precisa confirmar o e-mail para acessar."); render();
+  },
+  patientTeam(id){ if(S?.role!=="admin") return; const p=Store.get("pacientes",id);
+    modal("Equipe autorizada do paciente",`<p>Somente estes profissionais poderão consultar o cadastro e o monitoramento deste paciente. Revise também os plantões e as consultas atribuídos.</p>${Store.all("profissionais").map(pro=>`<label class="consent"><input class="teamPro" type="checkbox" value="${esc(pro.id)}" ${(p.profIds||[]).includes(pro.id)?"checked":""}>${esc(pro.nome)}</label>`).join("")}<div class="actions"><button class="btn btn-primary" data-act="savePatientTeam" data-id="${esc(id)}">Salvar equipe</button></div>`);
+  },
+  async savePatientTeam(id){ if(S?.role!=="admin") return; const p=Store.get("pacientes",id); await Store.put("pacientes",{...p,profIds:$$('.teamPro:checked').map(x=>x.value)}); closeModal(); toast("Equipe autorizada atualizada"); render(); },
   async instalarApp(){
     if(appInstalado()) return;
     if(pedidoInstalacao){
@@ -2269,8 +2337,8 @@ const ACT = {
     const [data,hora]=slot.split(" "), a=Store.get("agendaTele",profId);
     const c={id:uid("tc"),pacId,profId,profNome:a?.nome||proName(profId),esp,data,hora,dur:+a?.dur||30,valor:valorTele(esp),status:S.role==="paciente"?"solicitada":"agendada",pagamento:"pendente",sala:"ViverBem-"+uid().toUpperCase(),obs:$("#tc_obs").value.trim(),consentimento:S.role==="paciente"?{em:new Date().toISOString()}:null};
     await Store.put("consultas",c);
-    if(S.role==="paciente"){ if(a){ a.ocupados=[...(a.ocupados||[]),`${data} ${hora}`]; try{ if(Store.mode==="firebase") await Store.fs.collection("agendaTele").doc(a.id).update({ocupados:a.ocupados}); else Store._local(); }catch(e){} } }
-    else await syncOcupados(profId);
+    // A solicitação não reserva um horário: somente a central confirma e atualiza a agenda.
+    if(S.role!=="paciente") await syncOcupados(profId);
     closeModal(); famTele={esp:"",prof:""}; toast(S.role==="paciente"?"Pedido enviado. A central vai confirmar.":"Teleconsulta agendada"); render(); verTele(c.id); },
   async teleSt(id,b){ const c=Store.get("consultas",id), v=b.dataset.v; if(v==="cancelada"&&b.dataset.ok!=="1"){ b.dataset.ok="1"; b.textContent="Confirmar cancelamento"; return; }
     c.status=v; if(S.role==="paciente"&&Store.mode==="firebase"){ await Store.fs.collection("consultas").doc(id).update({status:v,atualizado:new Date().toISOString()}); } else await Store.put("consultas",c);
@@ -3479,7 +3547,7 @@ document.addEventListener("change", async e=>{
   try{
     await Store.init();
     if(Store.mode==="demo"){ try{ S=JSON.parse(sessionStorage.getItem(SS_KEY)); }catch(e){} }
-    else await new Promise(ok=>{ const off=Store.auth.onAuthStateChanged(async u=>{ off(); try{ if(u){ const d=await Store.fetchOne("usuarios",u.uid); if(d&&(!portalProfissional||(d.role==="prof"&&d.profId))){ S={role:d.role,profId:d.profId||null,pacId:d.pacId||null,nome:d.nome||u.email}; await Store.loadFor(S); } } }catch(e){ console.error(e); S=null; try{ await Store.auth.signOut(); }catch(_){} } ok(); }); });
+    else { const u=Store.auth.currentUser; if(u){ const d=await Store.fetchOne("usuarios",u.uid); if(d&&(!portalProfissional||(d.role==="prof"&&d.profId))){ S={role:d.role,profId:d.profId||null,pacId:d.pacId||null,nome:d.nome||u.email}; await Store.loadFor(S); } } }
   }catch(err){ $("#root").innerHTML=`<p class="empty" style="padding-top:30vh">${esc(err.message)}</p>`; return; }
   render();
   if(Store.bloqueadas&&Store.bloqueadas.length) toast("Algumas áreas não carregaram por falta de permissão no banco ("+Store.bloqueadas.join(", ")+"). Atualize as regras do Firestore no console do Firebase.");
@@ -3489,3 +3557,4 @@ try{ if("serviceWorker" in navigator && location.protocol==="https:") navigator.
 
 </body>
 </html>
+
