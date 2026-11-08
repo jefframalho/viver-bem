@@ -1,0 +1,8 @@
+{
+  "firestore": { "rules": "firestore.rules" },
+  "hosting": {
+    "public": ".",
+    "ignore": ["firebase.json", "firebase.test.json", "firestore.rules", "README.md", "SECURITY-MIGRATION.md", "package*.json", "tests/**", "**/node_modules/**", "**/*.log", "**/.*"],
+    "headers": [{ "source": "**", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] }]
+  }
+}
