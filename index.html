@@ -12,228 +12,210 @@
 <meta property="og:image" content="https://www.viverbemhomecare.com.br/logo-viverbem-nova.jpeg">
 <meta property="og:url" content="https://www.viverbemhomecare.com.br/">
 <link rel="canonical" href="https://www.viverbemhomecare.com.br/">
-<meta name="theme-color" content="#063559">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&display=swap">
+<meta name="theme-color" content="#FFFFFF">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Jost:wght@400;500;600&display=swap">
 <style>
-/* Layout: herói escuro em tela larga com celular do app e cartões flutuantes; faixas alternadas claras/escuras; serviços em grade bento; 1200px */
-:root{
-  --navy:#063559; --navy-2:#0A4470; --ocean:#236292; --aqua:#A9D4F5; --copper:#D38B59; --sand:#F2C6A4;
-  --bg:#FDFAF4; --surface:#FFFFFF; --ink:#102334; --muted:#556574; --line:#D6E0E7; --tint:#DCF0FF;
-  --f-d:"Fraunces","Segoe UI",system-ui,sans-serif; --f-b:"Manrope","Segoe UI",system-ui,sans-serif;
-  --r:22px;
-}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#081722;--surface:#0F2333;--ink:#E4EEF4;--muted:#93ABBA;--line:#1D3647;--tint:#123247;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#081722;--surface:#0F2333;--ink:#E4EEF4;--muted:#93ABBA;--line:#1D3647;--tint:#123247;color-scheme:dark}
-*{box-sizing:border-box}
+/* Estilo editorial: fundo claro, títulos em serifa, filetes dourados, foto em arco, listas em linhas */
+:root{--ink:#0E2236;--navy:#0A3D6B;--blue:#1565A8;--gold:#8A6A25;--gold-l:#E0C27D;--sand:#EEF3F8;--soft:#F7F9FC;--taupe:#53657A;--line:#DCE5EE;--display:"Cormorant Garamond",Georgia,serif;--body:"Jost",system-ui,sans-serif}
+*{box-sizing:border-box;margin:0}
 html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--ink);font-family:var(--f-b);font-size:16.5px;line-height:1.6;overflow-x:hidden}
-body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:40;background:var(--navy)}
-h1,h2,h3{font-family:var(--f-d);margin:0;line-height:1.05;letter-spacing:-.02em;text-wrap:balance}
-h2{font-size:clamp(2rem,4.4vw,3.2rem);font-weight:600}
-h3{font-size:1.25rem;font-weight:600;letter-spacing:-.01em}
-p{margin:0}
-.in{max-width:1200px;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
-.tag{display:inline-flex;align-items:center;gap:8px;font-size:.8rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--copper)}
-.tag::before{content:"";width:22px;height:2px;background:currentColor;border-radius:2px}
-.muted{color:var(--muted)}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;font:700 1rem var(--f-b);padding:15px 24px;border-radius:999px;text-decoration:none;border:1.5px solid transparent;min-height:52px;white-space:nowrap;transition:transform .2s,box-shadow .2s,background .2s}
-.btn svg{width:18px;height:18px;transition:transform .2s}
-.btn:hover{transform:translateY(-2px)} .btn:hover svg{transform:translateX(3px)}
-.b-main{background:linear-gradient(135deg,#F2C6A4,#D38B59);color:#2A1408;box-shadow:0 10px 30px -10px rgba(211,139,89,.7)}
-.b-glass{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.22);color:#fff;backdrop-filter:blur(8px)}
-.b-dark{background:var(--navy);color:#fff}
-.b-outline{border-color:var(--line);color:var(--ink);background:var(--surface)}
-:focus-visible{outline:3px solid var(--aqua);outline-offset:3px}
+body{font-family:var(--body);background:#fff;color:var(--ink);line-height:1.7;font-size:17px;overflow-x:hidden}
+img{max-width:100%;display:block}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.wrap{width:min(1160px,92%);margin-inline:auto}
+h1,h2,h3{font-family:var(--display);font-weight:500;line-height:1.02;letter-spacing:-.01em}
+h2{font-size:clamp(2.4rem,5vw,3.8rem);margin-bottom:1rem}
+h2 em,h1 em{font-style:italic;color:var(--navy)}
+.eyebrow{display:block;font-size:.78rem;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:1rem}
+.sub{color:var(--taupe);max-width:54ch}
+section{padding:clamp(4rem,9vw,7.5rem) 0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.6rem;padding:1rem 1.9rem;border-radius:999px;background:var(--navy);color:#fff;text-decoration:none;border:1.5px solid var(--navy);transition:background .25s,color .25s,border-color .25s;cursor:pointer;font:600 1rem var(--body);min-height:52px}
+.btn:hover{background:var(--ink);border-color:var(--ink)}
+.btn.line{background:transparent;color:var(--ink);border-color:var(--gold)}
+.btn.line:hover{background:var(--sand);border-color:var(--ink)}
+.btn.gold{background:var(--gold);border-color:var(--gold)}
+.btn.gold:hover{background:var(--ink);border-color:var(--ink)}
+.btn.on-dark{background:var(--gold-l);border-color:var(--gold-l);color:var(--ink)}
+.btn.on-dark:hover{background:#fff;border-color:#fff}
+.btn.line-dark{background:transparent;color:#fff;border-color:rgba(255,255,255,.45)}
+.btn.line-dark:hover{background:rgba(255,255,255,.12);border-color:#fff}
+.btn svg{width:18px;height:18px}
 
 /* topo */
-.top{position:fixed;left:0;right:0;top:env(safe-area-inset-top,0px);z-index:30;transition:background .3s,box-shadow .3s}
-.top.solid{background:rgba(7,30,46,.88);backdrop-filter:blur(14px);box-shadow:0 1px 0 rgba(255,255,255,.08)}
-.top .in{display:flex;align-items:center;gap:16px;padding-block:14px}
-.brand{display:flex;align-items:center;gap:11px;color:#fff;text-decoration:none;margin-right:auto}
-.brand img{width:44px;height:44px;border-radius:13px;object-fit:cover;box-shadow:0 0 0 1px rgba(255,255,255,.15)}
-.brand img.logo-wide{width:auto;height:70px;border-radius:12px;object-fit:contain;background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.25)}
-@media (max-width:520px){.brand img.logo-wide{height:54px}}
-.brand b{display:block;font-family:var(--f-d);font-weight:600;font-size:1.2rem;line-height:1}
-.brand small{font-size:.72rem;color:var(--sand);letter-spacing:.06em}
-.nav{display:flex;gap:4px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:999px;padding:4px}
-.nav a{color:#CFE0EA;text-decoration:none;padding:8px 14px;border-radius:999px;font-size:.92rem;font-weight:600}
-.nav a:hover{background:rgba(255,255,255,.1);color:#fff}
-.top .btn{min-height:42px;padding:9px 18px;font-size:.92rem}
-@media (max-width:1000px){.nav{display:none}}
-@media (max-width:440px){.top .btn{padding-inline:12px}}
+header{position:fixed;inset:0 0 auto;z-index:50;transition:background .3s,box-shadow .3s}
+header.solid{background:rgba(255,255,255,.94);backdrop-filter:blur(12px);box-shadow:0 1px 0 var(--line)}
+.bar{display:flex;justify-content:space-between;align-items:center;padding:1.1rem 0;gap:1rem}
+.brand{display:flex;flex-direction:column;text-decoration:none;line-height:1}
+.brand b{font-family:var(--display);font-size:1.9rem;font-style:italic;font-weight:600;color:var(--navy)}
+.brand small{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-top:3px;font-weight:600}
+nav{display:flex;gap:1.8rem;align-items:center;font-size:.95rem}
+nav a{text-decoration:none;opacity:.88}
+nav a:hover{color:var(--navy);opacity:1}
+nav .btn{padding:.65rem 1.3rem;min-height:44px;opacity:1;color:#fff}
+@media (max-width:900px){nav a:not(.btn){display:none}}
+@media (max-width:820px){nav .btn{display:none}}
 
 /* herói */
-.hero{position:relative;background:var(--navy);color:#fff;overflow:hidden;isolation:isolate}
-.hero::before{content:"";position:absolute;inset:-20%;z-index:-1;background:
-  radial-gradient(40% 50% at 15% 20%,rgba(35,98,146,.75),transparent 70%),
-  radial-gradient(35% 45% at 85% 30%,rgba(169,212,245,.28),transparent 70%),
-  radial-gradient(30% 40% at 70% 90%,rgba(211,139,89,.35),transparent 70%)}
-.hero::after{content:"";position:absolute;inset:0;z-index:-1;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:56px 56px;mask-image:radial-gradient(70% 70% at 50% 40%,#000,transparent)}
-.hero .in{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:40px;align-items:center;padding-block:calc(120px + env(safe-area-inset-top,0px)) 90px}
-.pill-top{display:inline-flex;align-items:center;gap:10px;padding:7px 14px 7px 8px;border-radius:999px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);font-size:.88rem;color:#D8E8F1}
-.pill-top i{width:22px;height:22px;border-radius:50%;background:#2EC27E;display:grid;place-items:center;font-style:normal;box-shadow:0 0 0 4px rgba(46,194,126,.2)}
-.hero h1{font-size:clamp(2.6rem,6.4vw,5rem);font-weight:600;margin-top:22px;color:#fff}
-.hero h1 em{font-style:normal;background:linear-gradient(100deg,#F2C6A4 10%,#A9D4F5 90%);-webkit-background-clip:text;background-clip:text;color:transparent}
-.hero .sub{font-size:1.15rem;color:#C2D6E2;max-width:50ch;margin-top:20px}
-.ctas{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
-.trust{display:flex;flex-wrap:wrap;gap:22px;margin-top:40px;padding-top:26px;border-top:1px solid rgba(255,255,255,.12)}
-.trust div{display:flex;align-items:center;gap:10px;font-size:.92rem;color:#D3E3EC;font-weight:600}
-.trust svg{width:22px;height:22px;color:var(--aqua);flex:none}
+.hero{padding:0;background:radial-gradient(at 82% 34%,#E4EFFA,transparent 58%),linear-gradient(140deg,#fff,#FBFCFE)}
+.hero>.wrap{display:grid;grid-template-columns:1.05fr .95fr;gap:3rem;align-items:center;padding:8.5rem 0 5rem;min-height:92vh}
+.hero h1{font-size:clamp(3.4rem,7.6vw,6.4rem);margin-bottom:1.3rem}
+.hero .lead{max-width:46ch;font-size:1.14rem;color:var(--taupe);margin-bottom:2rem}
+.actions{display:flex;gap:.9rem;flex-wrap:wrap}
+.trust{display:grid;gap:.55rem;margin-top:2.4rem;padding-top:1.6rem;border-top:1px solid var(--line);font-size:.95rem;color:var(--taupe)}
+.trust span{padding-left:2rem;position:relative}
+.trust span::before{content:"";position:absolute;left:0;top:.8em;width:1.1rem;height:1px;background:var(--gold)}
+.arch{position:relative;max-width:440px;justify-self:center;width:100%}
+.arch .frame{aspect-ratio:4/5;border-radius:999px 999px 18px 18px;border:1px solid var(--gold);overflow:hidden;background:radial-gradient(120% 60% at 50% 48%,#FFFFFF 0,#EAF4FD 45%,transparent 75%),linear-gradient(180deg,#DCEEFC 0%,#C4E0F7 55%,#9FCBF0 100%);display:grid;place-items:center;position:relative;isolation:isolate}
+.arch .frame::before{content:"";position:absolute;left:-20%;right:-20%;bottom:-14%;height:46%;z-index:-1;border-radius:50%;border:2px solid rgba(224,194,125,.85);box-shadow:0 0 0 14px rgba(224,194,125,.18),0 0 0 15px rgba(224,194,125,.5)}
+.arch .frame::after{content:"";position:absolute;left:12%;right:12%;top:-8%;height:30%;z-index:-1;border-radius:50%;border:1.5px solid rgba(255,255,255,.9)}
+.arch .frame img{width:100%;height:auto;-webkit-mask-image:linear-gradient(180deg,transparent,#000 26%,#000 74%,transparent),linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent);-webkit-mask-composite:source-in;mask-image:linear-gradient(180deg,transparent,#000 26%,#000 74%,transparent),linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent);mask-composite:intersect}
+.arch::before{content:"";position:absolute;inset:-14px -14px 14px 14px;border:1px solid rgba(224,194,125,.7);border-radius:999px 999px 18px 18px}
+.badge{position:absolute;left:-1.2rem;bottom:2.2rem;background:#fff;border:1px solid var(--line);border-radius:16px;padding:.9rem 1.1rem;box-shadow:0 18px 40px -22px rgba(14,34,54,.45);font-size:.86rem;line-height:1.35;max-width:215px;z-index:2}
+.badge b{display:block;font-family:var(--display);font-size:1.25rem;color:var(--navy);font-weight:600}
+.hero-in>*{animation:rise .9s cubic-bezier(.2,.7,.2,1) both}
+.hero-in>:nth-child(2){animation-delay:.1s}.hero-in>:nth-child(3){animation-delay:.2s}.hero-in>:nth-child(4){animation-delay:.3s}.hero-in>:nth-child(5){animation-delay:.4s}
+@keyframes rise{from{opacity:0;transform:translateY(24px)}}
+@media (max-width:860px){.hero>.wrap{grid-template-columns:1fr;padding-top:7rem;min-height:0}.arch{max-width:340px;margin-top:1.5rem}.badge{left:-.4rem}}
 
-/* celular */
-.stage{position:relative;justify-self:center;width:min(100%,400px);padding:20px 0}
-.phone{position:relative;width:270px;margin:0 auto;aspect-ratio:9/18.5;border-radius:42px;background:#0A0F14;padding:11px;box-shadow:0 40px 80px -20px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.12),inset 0 0 0 2px #1E2A33;transform:rotate(-4deg)}
-.screen{height:100%;border-radius:32px;background:#F4F8FB;overflow:hidden;display:flex;flex-direction:column;color:#0E2433;font-size:11px}
-.notch{width:90px;height:22px;background:#0A0F14;border-radius:0 0 14px 14px;margin:0 auto}
-.app-h{background:#063559;color:#fff;padding:12px 14px 16px;margin-top:-22px;padding-top:30px}
-.app-h b{font-family:var(--f-d);font-size:15px;display:block}
-.app-h span{opacity:.75}
-.app-b{padding:12px;display:flex;flex-direction:column;gap:9px;flex:1}
-.a-card{background:#fff;border-radius:14px;padding:11px;box-shadow:0 2px 8px rgba(15,53,80,.08);border:1px solid #E1EAF0}
-.a-card small{color:#D38B59;font-weight:700;letter-spacing:.06em;font-size:9px}
-.a-card b{display:block;font-size:13px;margin:2px 0}
-.a-btn{margin-top:8px;background:#D38B59;color:#fff;border-radius:10px;padding:9px;text-align:center;font-weight:700}
-.vit{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
-.vit span{background:#E6F1F7;border-radius:6px;padding:2px 6px;font-weight:600}
-.bar{height:6px;border-radius:4px;background:#E6F1F7;overflow:hidden;margin-top:6px}
-.bar i{display:block;height:100%;width:72%;background:linear-gradient(90deg,#236292,#A9D4F5);border-radius:4px}
-.float{position:absolute;display:flex;gap:10px;align-items:center;padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(14px);color:#fff;font-size:.84rem;box-shadow:0 20px 40px -15px rgba(0,0,0,.5);max-width:230px}
-.float b{display:block;font-size:.92rem}
-.float span{color:#C8DCE7}
-.float .dot{flex:none;width:34px;height:34px;border-radius:11px;display:grid;place-items:center}
-.float svg{width:18px;height:18px}
-.f1{left:-6%;top:16%} .f1 .dot{background:#2EC27E}
-.f2{right:-8%;top:46%} .f2 .dot{background:var(--copper)}
-.f3{left:2%;bottom:6%} .f3 .dot{background:var(--ocean)}
-@media (prefers-reduced-motion:no-preference){
-  .f1{animation:bob 6s ease-in-out infinite} .f2{animation:bob 7s ease-in-out -2s infinite} .f3{animation:bob 6.5s ease-in-out -4s infinite}
-  .phone{animation:tilt 9s ease-in-out infinite}
-  @keyframes bob{50%{transform:translateY(-10px)}} @keyframes tilt{50%{transform:rotate(-2deg) translateY(-6px)}}
-  .hero-copy > *{animation:up .7s both} .hero-copy > *:nth-child(2){animation-delay:.08s} .hero-copy > *:nth-child(3){animation-delay:.16s} .hero-copy > *:nth-child(4){animation-delay:.24s}
-  @keyframes up{from{transform:translateY(14px)}}
-}
-@media (max-width:900px){.hero .in{grid-template-columns:1fr;padding-block:calc(100px + env(safe-area-inset-top,0px)) 60px}.f1{left:0}.f2{right:0}}
-@media (max-width:420px){.float{max-width:190px;font-size:.78rem;padding:9px 11px}.phone{width:240px}}
+/* serviços em linhas */
+.sec-head{display:flex;justify-content:space-between;align-items:flex-end;gap:2rem;flex-wrap:wrap}
+.rows{margin-top:2.6rem;border-top:1px solid var(--line)}
+.row{display:grid;grid-template-columns:1fr 1.25fr;gap:2rem;padding:1.8rem 0;border-bottom:1px solid var(--line);transition:padding .3s}
+.row:hover{padding-left:1rem}
+.row h3{font-size:clamp(1.8rem,3vw,2.4rem)}
+.row p{color:var(--taupe);align-self:center}
+.chips{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.8rem}
+.chips span{font-size:.84rem;padding:.25rem .8rem;border:1px solid var(--line);border-radius:999px;color:var(--ink);background:var(--soft)}
+@media (max-width:700px){.row{grid-template-columns:1fr;gap:.4rem}}
 
-/* faixa de especialidades */
-.marq{background:var(--copper);color:#2A1408;overflow:hidden;white-space:nowrap;padding-block:14px;font-family:var(--f-d);font-weight:600;font-size:1.1rem}
-.marq div{display:inline-flex;gap:40px;padding-right:40px}
-.marq span{display:inline-flex;align-items:center;gap:40px}
-.marq span::after{content:"✦";font-size:.8rem;opacity:.6}
-@media (prefers-reduced-motion:no-preference){.marq div{animation:mq 38s linear infinite}@keyframes mq{to{transform:translateX(-100%)}}}
+/* destaque enfermagem */
+.feature{background:var(--sand)}
+.feature .grid{display:grid;grid-template-columns:.85fr 1.15fr;gap:clamp(2rem,6vw,5rem);align-items:center}
+.plate{background:#fff;border:1px solid var(--line);border-radius:18px;padding:clamp(1.8rem,4vw,3rem);text-align:center}
+.plate .big{white-space:nowrap;font-family:var(--display);font-size:clamp(2.2rem,5.2vw,4rem);line-height:1;color:var(--navy);font-weight:500}
+.plate .big i{color:var(--gold);font-weight:500}
+.plate p{color:var(--taupe);margin-top:.8rem}
+.plate .eyebrow{margin-bottom:1.2rem}
+.benefits{list-style:none;padding:0;margin:1.8rem 0 2.2rem;display:grid;gap:.9rem}
+.benefits li{padding-left:2rem;position:relative}
+.benefits li::before{content:"";position:absolute;left:0;top:.8em;width:1.1rem;height:1px;background:var(--gold)}
+@media (max-width:820px){.feature .grid{grid-template-columns:1fr}}
 
-section.s{padding-block:100px}
-.head{display:flex;flex-direction:column;gap:14px;margin-bottom:48px;max-width:720px}
-.head p{color:var(--muted);font-size:1.08rem}
-.head.split{max-width:none;flex-direction:row;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:20px}
-.head.split > div{display:flex;flex-direction:column;gap:14px;max-width:640px}
-
-/* bento */
-.bento{display:grid;gap:16px;grid-template-columns:repeat(6,minmax(0,1fr));grid-auto-rows:minmax(180px,auto)}
-.tile{position:relative;border-radius:var(--r);padding:28px;background:var(--surface);border:1px solid var(--line);overflow:hidden;display:flex;flex-direction:column;gap:12px;min-width:0;transition:transform .25s,box-shadow .25s}
-.tile:hover{transform:translateY(-4px);box-shadow:0 24px 48px -24px rgba(7,30,46,.35)}
-.tile p{color:var(--muted)}
-.tile .ico{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;background:var(--tint);color:var(--ocean)}
-.tile .ico svg{width:26px;height:26px}
-.t-a{grid-column:span 3;grid-row:span 2;background:linear-gradient(160deg,#0A4470,#063559);color:#fff;border:0}
-.t-a p{color:#B9CEDB} .t-a .ico{background:rgba(169,212,245,.14);color:var(--aqua)}
-.t-a ul{list-style:none;padding:0;margin:auto 0 0;display:grid;gap:10px}
-.t-a li{display:flex;gap:10px;align-items:center;color:#E3EEF4}
-.t-a li::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--sand)}
-.t-a .big{position:absolute;right:-30px;top:-30px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(169,212,245,.25),transparent 70%)}
-.t-b{grid-column:span 3} .t-c{grid-column:span 3}
-.t-d{grid-column:span 3} .t-e{grid-column:span 3} .t-g{grid-column:span 3} .t-f{grid-column:span 3;background:linear-gradient(150deg,#F7E3D4,#F2C6A4);border:0;color:#2A1408} .t-f p{color:#5A3A26} .t-f .ico{background:rgba(255,255,255,.5);color:#8A4A22}
-.minis{display:flex;flex-wrap:wrap;gap:8px;margin-top:auto}
-.minis span{font-size:.85rem;font-weight:600;padding:6px 12px;border-radius:999px;background:var(--tint)}
-.clock{font-family:var(--f-d);font-size:3.4rem;font-weight:600;line-height:1;letter-spacing:-.03em;margin-top:auto}
-@media (max-width:900px){.bento{grid-template-columns:1fr 1fr}.t-a,.t-b,.t-c{grid-column:span 2}.t-a{grid-row:auto}.t-d,.t-e,.t-f,.t-g{grid-column:span 1}}
-@media (max-width:560px){.bento{grid-template-columns:1fr}.tile{grid-column:auto!important}}
-
-/* para quem */
-.who{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr))}
-.who div{display:flex;gap:14px;align-items:center;padding:18px 20px;border-radius:18px;background:var(--surface);border:1px solid var(--line);font-weight:600}
-.who i{flex:none;width:42px;height:42px;border-radius:13px;background:var(--tint);color:var(--ocean);display:grid;place-items:center;font-style:normal}
-.who svg{width:22px;height:22px}
+/* quem atendemos */
+.who{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:2.4rem;border-top:1px solid var(--line);border-left:1px solid var(--line)}
+.who div{padding:1.6rem 1.5rem;border-right:1px solid var(--line);border-bottom:1px solid var(--line);font-family:var(--display);font-size:1.5rem;line-height:1.2;transition:background .25s}
+.who div:hover{background:var(--soft)}
+.who small{display:block;font-family:var(--body);font-size:.72rem;letter-spacing:.14em;color:var(--gold);font-weight:600;margin-bottom:.5rem}
+@media (max-width:820px){.who{grid-template-columns:1fr 1fr}}
+@media (max-width:520px){.who{grid-template-columns:1fr}}
 
 /* tecnologia */
-.tech{background:var(--navy);color:#fff;position:relative;overflow:hidden}
-.tech::before{content:"";position:absolute;width:700px;height:700px;right:-200px;top:-200px;background:radial-gradient(circle,rgba(35,98,146,.55),transparent 65%)}
-.tech .in{position:relative;display:grid;gap:56px;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center}
-.tech h2{color:#fff} .tech .head p{color:#B9CEDB}
-.feats{display:grid;gap:12px}
-.feat{display:flex;gap:16px;padding:18px;border-radius:18px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
-.feat i{flex:none;width:44px;height:44px;border-radius:13px;display:grid;place-items:center;font-style:normal;background:rgba(169,212,245,.12);color:var(--aqua)}
-.feat svg{width:22px;height:22px}
-.feat b{display:block;font-family:var(--f-d);font-size:1.08rem;font-weight:600;margin-bottom:2px}
-.feat span{color:#AFC6D3;font-size:.95rem}
-.dash{background:#F4F8FB;border-radius:24px;padding:18px;color:#0E2433;box-shadow:0 40px 80px -30px rgba(0,0,0,.7);transform:perspective(1200px) rotateY(-8deg) rotateX(3deg)}
-.dash-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;font-family:var(--f-d);font-weight:600}
-.dash-h span{font-family:var(--f-b);font-size:.75rem;background:#E0F2E7;color:#2C7A52;padding:3px 10px;border-radius:999px}
-.kp{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
-.kp div{background:#fff;border-radius:12px;padding:10px;border:1px solid #E1EAF0}
-.kp b{display:block;font-family:var(--f-d);font-size:1.5rem;line-height:1.1}
-.kp small{color:#5A7287;font-size:.72rem}
-.rows{display:grid;gap:6px}
-.rows div{display:grid;grid-template-columns:56px 1fr auto;gap:10px;align-items:center;background:#fff;border-radius:10px;padding:9px 11px;font-size:.8rem;border:1px solid #E1EAF0;border-left:4px solid #2C7A52}
-.rows div.w{border-left-color:#D38B59}
-.rows b{font-weight:700}
-.rows em{font-style:normal;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:999px;background:#E0F2E7;color:#2C7A52}
-.rows div.w em{background:#F5E4D8;color:#B46E43}
-@media (max-width:900px){.tech .in{grid-template-columns:1fr}.dash{transform:none}}
+.tech .grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(2rem,6vw,5rem);align-items:center}
+.feats{margin-top:2rem;border-top:1px solid var(--line)}
+.feat{display:grid;grid-template-columns:3rem 1fr;gap:1rem;padding:1.3rem 0;border-bottom:1px solid var(--line)}
+.feat i{font-family:var(--display);font-style:normal;font-size:2rem;color:var(--gold);line-height:1}
+.feat b{display:block;font-family:var(--display);font-size:1.5rem;font-weight:500;line-height:1.1;margin-bottom:.2rem}
+.feat span{color:var(--taupe);font-size:.97rem}
+.dash{background:#fff;border:1px solid var(--gold);border-radius:18px;padding:1.4rem;box-shadow:0 30px 60px -36px rgba(14,34,54,.45);position:relative}
+.dash::before{content:"";position:absolute;inset:-12px -12px 12px 12px;border:1px solid rgba(224,194,125,.6);border-radius:18px;z-index:-1}
+.dash-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;font-family:var(--display);font-size:1.4rem}
+.dash-h span{font-family:var(--body);font-size:.74rem;background:#E3F4EA;color:#1F7A4D;padding:.2rem .7rem;border-radius:999px;font-weight:600}
+.kp{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-bottom:.9rem}
+.kp div{background:var(--sand);border-radius:12px;padding:.7rem .8rem}
+.kp b{display:block;font-family:var(--display);font-size:1.9rem;line-height:1;color:var(--navy);font-weight:600}
+.kp small{color:var(--taupe);font-size:.76rem}
+.lines{display:grid;gap:.4rem}
+.lines div{display:grid;grid-template-columns:52px 1fr auto;gap:.7rem;align-items:center;padding:.65rem .2rem;border-bottom:1px solid var(--line);font-size:.86rem}
+.lines em{font-style:normal;font-size:.72rem;font-weight:600;padding:.15rem .6rem;border-radius:999px;background:#E3F4EA;color:#1F7A4D}
+.lines div.w em{background:#F8EBD3;color:#8A5A12}
+.dash .nota{font-size:.74rem;color:var(--taupe);margin-top:.8rem}
+@media (max-width:860px){.tech .grid{grid-template-columns:1fr}.dash::before{display:none}}
 
 /* passos */
-.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;position:relative}
-.steps::before{content:"";position:absolute;left:28px;right:28px;top:27px;height:2px;background:repeating-linear-gradient(90deg,var(--copper) 0 8px,transparent 8px 16px);opacity:.6}
-.steps li{position:relative;display:flex;flex-direction:column;gap:10px}
-.steps .n{width:56px;height:56px;border-radius:50%;background:var(--surface);border:2px solid var(--copper);display:grid;place-items:center;font-family:var(--f-d);font-weight:700;font-size:1.3rem;color:var(--copper);position:relative}
-.steps b{font-family:var(--f-d);font-size:1.15rem;font-weight:600}
-.steps span{color:var(--muted)}
-@media (max-width:860px){.steps{grid-template-columns:1fr}.steps::before{display:none}}
-@media (max-width:480px){.steps{grid-template-columns:1fr}}
+.steps{background:var(--sand)}
+.step-row{margin-top:2.4rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:2rem;counter-reset:s}
+.step{counter-increment:s;border-top:1px solid var(--gold);padding-top:1rem}
+.step::before{content:counter(s);font-family:var(--display);font-size:3rem;color:var(--gold);line-height:1}
+.step h3{font-size:1.6rem;margin:.4rem 0}
+.step p{color:var(--taupe);font-size:.97rem}
 
 /* operadoras */
-.op{border-radius:32px;background:linear-gradient(135deg,#236292,#063559 60%,#063559);color:#fff;padding:clamp(28px,5vw,64px);display:grid;gap:40px;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));position:relative;overflow:hidden}
-.op::after{content:"";position:absolute;right:-80px;bottom:-80px;width:320px;height:320px;border-radius:50%;border:2px solid rgba(240,195,160,.25)}
-.op h2{color:#fff} .op p{color:#C2D6E2}
-.checks{list-style:none;margin:0;padding:0;display:grid;gap:12px;align-content:center}
-.checks li{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:14px;background:rgba(255,255,255,.07)}
-.checks svg{flex:none;width:22px;height:22px;color:var(--sand);margin-top:1px}
+.op{background:var(--ink);color:#fff}
+.op .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:clamp(2rem,6vw,5rem);align-items:center}
+.op .eyebrow{color:var(--gold-l)}
+.op h2 em{color:var(--gold-l)}
+.op .sub{color:#B7C6D4;margin-bottom:2rem}
+.checks{list-style:none;padding:0;display:grid;border-top:1px solid rgba(255,255,255,.14)}
+.checks li{padding:1.1rem 0 1.1rem 2rem;position:relative;border-bottom:1px solid rgba(255,255,255,.14);color:#E3ECF3}
+.checks li::before{content:"";position:absolute;left:0;top:1.95rem;width:1.1rem;height:1px;background:var(--gold-l)}
+@media (max-width:820px){.op .grid{grid-template-columns:1fr}}
 
 /* trabalhe conosco */
-.join{display:grid;gap:24px;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);align-items:stretch}
-.join-a{border-radius:32px;padding:clamp(28px,5vw,56px);background:linear-gradient(150deg,#F7E3D4,#E9A877);color:#2A1408;display:flex;flex-direction:column;gap:18px}
-.join-a h2{font-size:clamp(1.9rem,4vw,2.8rem)} .join-a p{color:#5A3A26;font-size:1.06rem} .join-a .tag{color:#8A4A22}
-.join-b{border-radius:32px;padding:clamp(24px,4vw,40px);background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:14px}
-.doc{display:flex;gap:14px;align-items:center;padding:12px 14px;border-radius:14px;background:var(--bg)}
-.doc i{flex:none;width:38px;height:38px;border-radius:12px;background:var(--copper);color:#fff;display:grid;place-items:center;font-style:normal;font-weight:800}
-.doc b{display:block} .doc span{font-size:.88rem;color:var(--muted)}
-@media (max-width:860px){.join{grid-template-columns:1fr}}
+.join .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:clamp(2rem,6vw,5rem);align-items:start}
+.join p{margin-bottom:1rem;max-width:54ch;color:var(--taupe)}
+.join p a{color:var(--navy);font-weight:500}
+.docs{border-top:1px solid var(--line)}
+.docs h3{font-size:1.7rem;margin-bottom:1rem}
+.doc{display:grid;grid-template-columns:2.4rem 1fr;gap:.8rem;padding:1rem 0;border-bottom:1px solid var(--line)}
+.doc i{font-family:var(--display);font-style:normal;font-size:1.8rem;color:var(--gold);line-height:1}
+.doc b{display:block;font-weight:500}.doc span{font-size:.9rem;color:var(--taupe)}
+.docs-card{background:var(--soft);border:1px solid var(--line);border-radius:18px;padding:clamp(1.4rem,3vw,2.2rem)}
+@media (max-width:820px){.join .grid{grid-template-columns:1fr}}
 
 /* FAQ */
-.faq{display:grid;gap:12px;max-width:860px}
-.faq details{border-radius:18px;background:var(--surface);border:1px solid var(--line);padding:4px 22px}
-.faq summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:16px;align-items:center;padding:18px 0;font-family:var(--f-d);font-weight:600;font-size:1.12rem}
-.faq summary::-webkit-details-marker{display:none}
-.faq summary::after{content:"+";flex:none;width:32px;height:32px;border-radius:50%;background:var(--tint);display:grid;place-items:center;font-size:1.3rem;color:var(--ocean);transition:transform .2s}
-.faq details[open] summary::after{transform:rotate(45deg)}
-.faq details p{color:var(--muted);padding-bottom:20px;max-width:70ch}
+.faq-list{max-width:780px;margin-top:2rem}
+details{border-bottom:1px solid var(--line);padding:1.2rem 0}
+summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:1rem;font-family:var(--display);font-size:1.6rem;line-height:1.15}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";color:var(--gold);transition:transform .25s}
+details[open] summary::after{transform:rotate(45deg)}
+details p{margin-top:.6rem;color:var(--taupe);max-width:62ch}
 
-/* chamada final e contato */
-.final{background:var(--navy);color:#fff;text-align:center;position:relative;overflow:hidden}
-.final::before{content:"";position:absolute;inset:0;background:radial-gradient(50% 80% at 50% 120%,rgba(211,139,89,.45),transparent 70%),radial-gradient(40% 60% at 50% -20%,rgba(35,98,146,.6),transparent 70%)}
-.final .in{position:relative;display:flex;flex-direction:column;align-items:center;gap:20px}
-.final h2{color:#fff;font-size:clamp(2.2rem,5.4vw,4rem);max-width:16ch}
-.final p{color:#C2D6E2;max-width:52ch}
-.contact{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:10px}
-.contact a,.contact span{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#E3EEF4;text-decoration:none;font-weight:600;font-size:.95rem}
-.contact svg{width:18px;height:18px;color:var(--aqua)}
-footer{background:#04243D;color:#8DA6B6;padding-block:40px calc(40px + env(safe-area-inset-bottom,0px));font-size:.92rem}
-footer .in{display:flex;flex-wrap:wrap;gap:20px;justify-content:space-between;align-items:center}
-footer a{color:#fff;text-decoration:none} footer a:hover{text-decoration:underline}
-footer .links{display:flex;gap:18px;flex-wrap:wrap}
-.wa-float{position:fixed;right:calc(20px + env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:25;display:flex;align-items:center;gap:10px;height:56px;padding:0 20px 0 16px;border-radius:999px;background:#1F9D5C;color:#fff;text-decoration:none;font-weight:700;box-shadow:0 14px 30px -10px rgba(31,157,92,.8)}
-.wa-float svg{width:26px;height:26px}
-@media (max-width:520px){.wa-float span{display:none}.wa-float{padding:0;width:56px;justify-content:center}}
+/* contato */
+.contact{background:var(--sand)}
+.contact .grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(2rem,6vw,5rem);align-items:start}
+.info{display:grid;gap:1.1rem;margin-top:2rem}
+.info a,.info span{display:flex;gap:.7rem;align-items:center;text-decoration:none;color:var(--ink)}
+.info svg{width:20px;height:20px;color:var(--gold);flex:none}
+form{background:#fff;border:1px solid var(--line);border-radius:18px;padding:2rem;display:grid;gap:1.1rem}
+label{display:grid;gap:.35rem;font-size:.92rem}
+input,select,textarea{font:inherit;padding:.85rem 1rem;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink);width:100%}
+textarea{resize:vertical;min-height:90px}
+form .note{font-size:.8rem;color:var(--taupe)}
+@media (max-width:820px){.contact .grid{grid-template-columns:1fr}}
+
+footer{background:var(--ink);color:#B7C6D4;padding:1.6rem 0;font-size:.9rem}
+footer .wrap{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:center}
+footer .links{display:flex;gap:1.2rem;flex-wrap:wrap}
+footer a{text-decoration:none;color:#fff}footer a:hover{text-decoration:underline}
+
+/* barra fixa no celular e WhatsApp */
+.mbar{display:none}
+.wa-float{position:fixed;right:20px;bottom:20px;z-index:40;display:flex;align-items:center;gap:.6rem;height:54px;padding:0 1.3rem 0 1.1rem;border-radius:999px;background:#1F9D5C;color:#fff;text-decoration:none;font-weight:600;box-shadow:0 14px 30px -12px rgba(31,157,92,.8)}
+.wa-float svg{width:24px;height:24px}
+@media (max-width:820px){
+  .wa-float{display:none!important}
+  .mbar{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;position:fixed;left:0;right:0;bottom:0;z-index:45;padding:.7rem .8rem calc(.7rem + env(safe-area-inset-bottom,0px));background:rgba(255,255,255,.96);backdrop-filter:blur(10px);box-shadow:0 -1px 0 var(--line)}
+  .mbar .btn{padding:.8rem .6rem;min-height:48px;font-size:.95rem}
+  .mbar .btn[hidden]{display:none}
+  .mbar:has(.btn[hidden]){grid-template-columns:1fr}
+  body{padding-bottom:76px}
+}
+
+/* cookies */
+.cookiebar{position:fixed;left:16px;right:16px;bottom:16px;z-index:80;max-width:560px;margin:0 auto;background:var(--ink);color:#fff;border-radius:14px;padding:14px 16px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.cookiebar p{margin:0;font-size:.88rem;color:#D8E6EE;line-height:1.5}
+.cookiebar a{color:#fff;text-decoration:underline}
+.cookiebar .btn{background:var(--gold-l);color:var(--ink);border:0;padding:.55rem 1.1rem;min-height:0;font-weight:600}
+@media (max-width:820px){.cookiebar{bottom:88px}}
+
+/* revelar ao rolar */
+html.js .rv{opacity:0;transform:translateY(22px);transition:opacity .8s cubic-bezier(.2,.7,.2,1),transform .8s cubic-bezier(.2,.7,.2,1)}
+html.js .rv.on{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.hero-in>*{animation:none}html.js .rv{opacity:1;transform:none;transition:none}}
+[hidden]{display:none!important}
 </style>
 
 <link rel="icon" type="image/png" href="data:image/png;base64,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">
@@ -242,140 +224,118 @@ footer .links{display:flex;gap:18px;flex-wrap:wrap}
 <style>:root{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
 </head>
 <body>
-<header class="top" id="top"><div class="in">
-  <a class="brand" href="#inicio"><img class="logo-wide" src="logo-viverbem-nova.jpeg" width="1402" height="1122" alt="Viver Bem Atendimento Domiciliar"></a>
-  <nav class="nav" aria-label="Seções"><a href="#servicos">Serviços</a><a href="#tecnologia">Como cuidamos</a><a href="#operadoras">Operadoras</a><a href="#trabalhe">Trabalhe conosco</a><a href="#duvidas">Dúvidas</a></nav>
-  <a class="btn b-main" href="public/index.html">Entrar no sistema</a>
+<header id="top"><div class="wrap bar">
+  <a class="brand" href="#inicio" aria-label="Viver Bem Atendimento Domiciliar"><b>Viver Bem</b><small>Atendimento Domiciliar</small></a>
+  <nav aria-label="Seções"><a href="#servicos">Serviços</a><a href="#tecnologia">Como cuidamos</a><a href="#operadoras">Operadoras</a><a href="#trabalhe">Trabalhe conosco</a><a href="#duvidas">Dúvidas</a><a class="btn" data-sis="solicitar" href="#">Solicitar avaliação</a></nav>
 </div></header>
 
 <main id="inicio">
-<section class="hero"><div class="in">
-  <div class="hero-copy">
-    <span class="pill-top"><i><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="m5 12 5 5L20 7"/></svg></i>Home care particular e para operadoras de saúde</span>
-    <h1>Cuidado profissional em casa, <em>com a família por perto.</em></h1>
-    <p class="sub">Enfermagem, fisioterapia, médicos e equipe multidisciplinar na casa do paciente. Plano de cuidados individual, presença registrada em cada plantão e a família acompanhando tudo de perto.</p>
-    <div>
-      <div class="ctas"><a class="btn b-main" data-sis="solicitar" href="#">Solicitar avaliação <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a><a class="btn b-glass" href="public/index.html">Área da Família</a></div>
-      <div class="trust">
-        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg>Profissionais com registro no conselho</div>
-        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Plantões de 6h a 24h</div>
-        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-6h6v6"/></svg>Seguimos a RDC 11 da Anvisa</div>
-      </div>
-    </div>
+<section class="hero"><div class="wrap">
+  <div class="hero-in">
+    <span class="eyebrow">Home care · Atendimento domiciliar</span>
+    <h1>Cuidado em casa, <em>com a família por perto.</em></h1>
+    <p class="lead">Assistência especializada com equipe multidisciplinar, cuidado individualizado e acompanhamento contínuo no conforto do lar.</p>
+    <div class="actions"><a class="btn" data-sis="solicitar" href="#">Solicitar avaliação</a><a class="btn line" href="#servicos">Ver serviços</a></div>
+    <div class="trust"><span>Profissionais com registro no conselho de classe</span><span>Plantões de 6h a 24h, particular e operadoras</span><span>Seguimos a RDC 11 da Anvisa</span></div>
   </div>
-  <div class="stage" aria-hidden="true">
-    <div class="phone"><div class="screen">
-      <div class="notch"></div>
-      <div class="app-h"><b>Olá, Maria</b><span>Seu plantão de hoje</span></div>
-      <div class="app-b">
-        <div class="a-card"><small>EM ATENDIMENTO</small><b>Dona Francisca</b><span style="color:#5A7287">19:00 – 07:00 · Plantão 12h</span><div class="bar"><i></i></div><div class="a-btn">Registrar evolução e saída</div></div>
-        <div class="a-card"><small>SINAIS VITAIS · 23:30</small><div class="vit"><span>PA 130/80</span><span>FC 78</span><span>SpO₂ 96%</span><span>36,4 °C</span></div></div>
-        <div class="a-card"><small>PLANO DE CUIDADOS</small><b style="font-size:11.5px;font-weight:600">Mudança de decúbito a cada 2h · Dieta pastosa · Controle de PA</b></div>
-      </div>
-    </div></div>
-    <div class="float f1"><span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><circle cx="12" cy="10" r="3"/><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/></svg></span><div><b>Chegada às 18:56</b><span>No endereço do paciente</span></div></div>
-    <div class="float f2"><span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M6 3h9l4 4v14H6z"/><path d="M9 13l2 2 4-4"/></svg></span><div><b>Evolução registrada</b><span>Paciente estável, sem intercorrências</span></div></div>
-    <div class="float f3"><span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z"/></svg></span><div><b>Família informada</b><span>Contato direto com a equipe</span></div></div>
+  <div class="arch">
+    <div class="frame"><img src="logo-viverbem-nova.jpeg" width="1402" height="1122" alt="Viver Bem Atendimento Domiciliar"></div>
+    <div class="badge"><b>Família informada</b>Chegada, saída e evolução de cada plantão registradas.</div>
   </div>
 </div></section>
 
-<div class="marq" aria-hidden="true"><div><span>Enfermagem</span><span>Fisioterapia</span><span>Medicina</span><span>Fonoaudiologia</span><span>Nutrição</span><span>Psicologia</span><span>Terapia ocupacional</span><span>Internação domiciliar</span><span>Cuidados paliativos</span></div><div><span>Enfermagem</span><span>Fisioterapia</span><span>Medicina</span><span>Fonoaudiologia</span><span>Nutrição</span><span>Psicologia</span><span>Terapia ocupacional</span><span>Internação domiciliar</span><span>Cuidados paliativos</span></div></div>
-
-<section class="s" id="servicos"><div class="in">
-  <div class="head split"><div><span class="tag">Serviços</span><h2>Tudo o que o paciente precisa, sem sair de casa.</h2></div><a class="btn b-dark" data-sis="solicitar" href="#">Pedir orçamento <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
-  <div class="bento">
-    <article class="tile t-a"><span class="big"></span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 2l4 4M7.5 20.5 3 21l.5-4.5L15 5l4 4z"/><path d="m13 7 4 4"/></svg></span>
-      <h3 style="font-size:1.7rem">Enfermagem domiciliar</h3><p>Enfermeiros, técnicos e auxiliares em plantões ou visitas, com supervisão de enfermagem e registro de cada atendimento.</p>
-      <ul><li>Medicação e antibiótico endovenoso</li><li>Curativos e manejo de feridas</li><li>Sonda nasoenteral, vesical, traqueostomia e oxigênio</li><li>Controle de sinais vitais e glicemia</li><li>Acompanhamento pós-operatório</li><li>Assistência ao paciente acamado</li></ul></article>
-    <article class="tile t-b"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="5" r="2.5"/><path d="M12 8v6l-3 7M12 14l3 7M7 11h10"/></svg></span><h3>Terapias e reabilitação</h3><p>Fisioterapia motora e respiratória, fonoaudiologia, nutrição, psicologia e terapia ocupacional.</p><ul><li>Suporte na reabilitação</li><li>Avaliação médica domiciliar</li></ul></article>
-    <article class="tile t-c"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z"/></svg></span><h3>Cuidado no dia a dia</h3><p>Banho no leito, higiene, mudança de decúbito, alimentação e apoio emocional ao paciente e à família.</p></article>
-    <article class="tile t-d"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l2-5 3 10 2-5h7"/></svg></span><h3>Exames em casa</h3><div class="minis"><span>Raio-X</span><span>Eletrocardiograma</span><span>Ecocardiograma</span><span>Holter 24h</span><span>MAPA</span><span>Ultrassonografia</span><span>Doppler</span><span>Coleta de sangue</span></div><p>Imagem e laboratório na casa do paciente, com laudo. Mediante pedido médico.</p><a class="btn b-outline" href="public/index.html#solicitar">Consultar exames</a></article>
-    <article class="tile t-e"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><h3>Plantões flexíveis</h3><div class="clock">6h · 12h · 24h</div><p>Por hora, por plantão ou com revezamento.</p></article>
-    <article class="tile t-g"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 12h4l2-5 3 10 2-5h7"/></svg></span><h3>Gerenciamento de crônicos</h3><p>Hipertensão, diabetes, coração e pulmão acompanhados de perto: medições registradas pelo aplicativo, alerta para a equipe quando sai do normal e relatório para o médico.</p></article>
-    <article class="tile t-f"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21V10l9-6 9 6v11"/><rect x="9" y="13" width="6" height="8"/></svg></span><h3>Internação domiciliar</h3><p>Equipe técnica fixa, materiais e medicamentos conforme o pacote, para quem precisa sair do hospital com segurança.</p></article>
-  </div>
-  <div class="who" style="margin-top:28px">
-    <div><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg></i>Atendimento rápido e personalizado</div>
-    <div><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg></i>Profissionais credenciados e experientes</div>
-    <div><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></i>Disponibilidade 24 horas</div>
-    <div><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z"/></svg></i>Segurança, conforto e praticidade</div>
+<section id="servicos"><div class="wrap">
+  <div class="sec-head rv"><div><span class="eyebrow">Serviços</span><h2>Tudo o que o paciente precisa, <em>sem sair de casa.</em></h2><p class="sub">Cada atendimento começa com uma avaliação para entender a necessidade do paciente e montar o plano de cuidados.</p></div><a class="btn line" data-sis="solicitar" href="#">Pedir orçamento</a></div>
+  <div class="rows rv">
+    <div class="row"><h3>Enfermagem domiciliar</h3><p>Enfermeiros, técnicos e auxiliares em plantões ou visitas, com supervisão de enfermagem e registro de cada atendimento.</p></div>
+    <div class="row"><h3>Terapias e reabilitação</h3><p>Fisioterapia motora e respiratória, fonoaudiologia, nutrição, psicologia e terapia ocupacional, além de avaliação médica domiciliar.</p></div>
+    <div class="row"><h3>Cuidado no dia a dia</h3><p>Banho no leito, higiene, mudança de decúbito, alimentação e apoio emocional ao paciente e à família.</p></div>
+    <div class="row"><h3>Exames em casa</h3><div><div class="chips" style="margin-top:0"><span>Raio-X</span><span>Eletrocardiograma</span><span>Ecocardiograma</span><span>Holter 24h</span><span>MAPA</span><span>Ultrassonografia</span><span>Doppler</span><span>Coleta de sangue</span></div><p style="margin-top:.8rem">Imagem e laboratório na casa do paciente, com laudo, mediante pedido médico.</p></div></div>
+    <div class="row"><h3>Gerenciamento de crônicos</h3><p>Hipertensão, diabetes, coração e pulmão acompanhados de perto: medições registradas pelo aplicativo, alerta para a equipe quando sai do normal e relatório para o médico.</p></div>
+    <div class="row"><h3>Internação domiciliar</h3><p>Equipe técnica fixa, materiais e medicamentos conforme o pacote, para quem precisa sair do hospital com segurança.</p></div>
   </div>
 </div></section>
 
-<section class="s" style="padding-top:0"><div class="in">
-  <div class="head"><span class="tag">Para quem é</span><h2>Quem atendemos</h2></div>
-  <div class="who">
-    <div><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="7" r="3"/><path d="M6 21v-2a6 6 0 0 1 12 0v2"/></svg></i>Idosos, com ou sem limitações</div>
-    <div><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12h16M12 4v16"/></svg></i>Recuperação pós-cirúrgica</div>
-    <div><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3a6 6 0 0 0-3 11v4h6v-4a6 6 0 0 0-3-11z"/><path d="M15 8h5M15 12h5"/></svg></i>AVC, Alzheimer e Parkinson</div>
-    <div><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21V10l9-6 9 6v11"/></svg></i>Quem precisa evitar internação</div>
-    <div><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z"/></svg></i>Cuidados paliativos</div>
-    <div><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/></svg></i>Beneficiários de planos de saúde</div>
+<section class="feature"><div class="wrap grid">
+  <div class="plate rv"><span class="eyebrow">Plantões flexíveis</span><div class="big">6h <i>·</i> 12h <i>·</i> 24h</div><p>Por hora, por plantão ou com revezamento, com reposição rápida em caso de falta.</p></div>
+  <div class="rv"><span class="eyebrow">Enfermagem domiciliar</span><h2>Cuidado técnico, <em>com calma e atenção.</em></h2>
+    <ul class="benefits"><li>Medicação e antibiótico endovenoso</li><li>Curativos e manejo de feridas</li><li>Sonda nasoenteral, vesical, traqueostomia e oxigênio</li><li>Controle de sinais vitais e glicemia</li><li>Acompanhamento pós-operatório</li><li>Assistência ao paciente acamado</li></ul>
+    <a class="btn" data-sis="solicitar" href="#">Solicitar avaliação</a></div>
+</div></section>
+
+<section><div class="wrap">
+  <div class="rv"><span class="eyebrow">Para quem é</span><h2>Quem <em>atendemos</em></h2></div>
+  <div class="who rv">
+    <div><small>01</small>Idosos, com ou sem limitações</div>
+    <div><small>02</small>Recuperação pós-cirúrgica</div>
+    <div><small>03</small>AVC, Alzheimer e Parkinson</div>
+    <div><small>04</small>Quem precisa evitar internação</div>
+    <div><small>05</small>Cuidados paliativos</div>
+    <div><small>06</small>Beneficiários de planos de saúde</div>
   </div>
 </div></section>
 
-<section class="s tech" id="tecnologia"><div class="in">
-  <div>
-    <div class="head"><span class="tag" style="color:var(--sand)">Como cuidamos</span><h2>Tecnologia para a família ficar tranquila.</h2><p>Nosso sistema acompanha cada atendimento do início ao fim. Nada fica só no papel.</p></div>
+<section class="tech" id="tecnologia" style="padding-top:0"><div class="wrap grid">
+  <div class="rv"><span class="eyebrow">Como cuidamos</span><h2>Tecnologia para a família <em>ficar tranquila.</em></h2><p class="sub">Nosso sistema acompanha cada atendimento do início ao fim. Nada fica só no papel.</p>
     <div class="feats">
-      <div class="feat"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="10" r="3"/><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/></svg></i><div><b>Presença confirmada</b><span>O profissional registra chegada e saída pelo celular, com horário e localização.</span></div></div>
-      <div class="feat"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h9l4 4v14H6z"/><path d="M9 12h6M9 16h4"/></svg></i><div><b>Evolução a cada plantão</b><span>Sinais vitais e relato do plantão salvos no prontuário do paciente.</span></div></div>
-      <div class="feat"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 17c1.5-2 2.5-2 3 0s2 1.5 3 0"/><path d="M6 3h9l4 4v14H6z"/></svg></i><div><b>Contrato digital</b><span>Família e profissionais assinam pelo celular, com código de verificação.</span></div></div>
-      <div class="feat"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></i><div><b>Escala organizada</b><span>Plantões planejados com antecedência e reposição rápida em caso de falta.</span></div></div>
+      <div class="feat"><i>01</i><div><b>Presença confirmada</b><span>O profissional registra chegada e saída pelo celular, com horário e localização.</span></div></div>
+      <div class="feat"><i>02</i><div><b>Evolução a cada plantão</b><span>Sinais vitais e relato do plantão salvos no prontuário do paciente.</span></div></div>
+      <div class="feat"><i>03</i><div><b>Contrato digital</b><span>Família e profissionais assinam pelo celular, com código de verificação.</span></div></div>
+      <div class="feat"><i>04</i><div><b>Escala organizada</b><span>Plantões planejados com antecedência e reposição rápida em caso de falta.</span></div></div>
     </div>
   </div>
-  <div class="dash" aria-hidden="true">
+  <div class="dash rv" aria-hidden="true">
     <div class="dash-h">Chegadas e saídas · hoje<span>6 em atendimento</span></div>
     <div class="kp"><div><b>96%</b><small>no horário</small></div><div><b>14</b><small>plantões</small></div><div><b>14</b><small>evoluções</small></div></div>
-    <div class="rows">
+    <div class="lines">
       <div><b>06:58</b><span>Técnica · Paciente A</span><em>No endereço</em></div>
       <div><b>07:02</b><span>Enfermeira · Paciente B</span><em>No endereço</em></div>
       <div class="w"><b>07:21</b><span>Técnico · Paciente C</span><em>Atraso 21 min</em></div>
       <div><b>09:00</b><span>Fisioterapeuta · Paciente D</span><em>No endereço</em></div>
     </div>
-    <p style="font-size:.7rem;color:#5A7287;margin-top:10px">Ilustração da tela do sistema</p>
+    <p class="nota">Ilustração da tela do sistema</p>
   </div>
 </div></section>
 
-<section class="s"><div class="in">
-  <div class="head"><span class="tag">Atendimento particular</span><h2>Como funciona o atendimento</h2></div>
-  <ol class="steps">
-    <li><span class="n">1</span><b>Solicite uma avaliação</b><span>Conte o que o paciente precisa e informe a cidade para confirmarmos a cobertura.</span></li>
-    <li><span class="n">2</span><b>Converse com a equipe</b><span>A equipe avalia as necessidades e combina o plano de cuidados, os profissionais e os horários com você.</span></li>
-    <li><span class="n">3</span><b>Acompanhe o atendimento</b><span>Na Área da Família, consulte a agenda e os registros de chegada e saída do plantão.</span></li>
-  </ol>
-</div></section>
-
-<section class="s" id="operadoras" style="padding-top:0"><div class="in">
-  <div class="op">
-    <div style="display:flex;flex-direction:column;gap:18px;position:relative;z-index:1"><span class="tag" style="color:var(--sand)">Operadoras de saúde</span><h2>Parceria para desospitalização e atenção domiciliar.</h2><p>Recebemos beneficiários encaminhados por planos e convênios, com faturamento organizado e relatórios completos de cada atendimento.</p>
-      <div class="ctas" style="margin-top:6px"><a class="btn b-main" data-sis="solicitar-operadora" href="#">Falar sobre credenciamento <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div></div>
-    <ul class="checks" style="position:relative;z-index:1">
-      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 12 5 5L20 7"/></svg>Plano de cuidados e evolução diária por paciente</li>
-      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 12 5 5L20 7"/></svg>Presença dos profissionais com horário e localização</li>
-      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 12 5 5L20 7"/></svg>Relatórios para auditoria e faturamento</li>
-      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 12 5 5L20 7"/></svg>Equipe selecionada com documentos conferidos</li>
-    </ul>
+<section class="steps"><div class="wrap">
+  <div class="rv"><span class="eyebrow">Atendimento particular</span><h2>Como funciona o <em>atendimento</em></h2></div>
+  <div class="step-row rv">
+    <div class="step"><h3>Solicite uma avaliação</h3><p>Conte o que o paciente precisa e informe a cidade para confirmarmos a cobertura.</p></div>
+    <div class="step"><h3>Converse com a equipe</h3><p>A equipe avalia as necessidades e combina o plano de cuidados, os profissionais e os horários com você.</p></div>
+    <div class="step"><h3>Acompanhe o atendimento</h3><p>Na Área da Família, consulte a agenda e os registros de chegada e saída do plantão.</p></div>
   </div>
+  <div class="actions rv" style="margin-top:2.6rem"><a class="btn" data-sis="solicitar" href="#">Solicitar avaliação</a><a class="btn line" href="public/index.html">Área da Família</a></div>
 </div></section>
 
-<section class="s" id="trabalhe" style="padding-top:0"><div class="in join">
-  <div class="join-a"><span class="tag">Trabalhe conosco</span><h2>É profissional de saúde? Venha cuidar com a gente.</h2>
+<section class="op" id="operadoras"><div class="wrap grid">
+  <div class="rv"><span class="eyebrow">Operadoras de saúde</span><h2>Parceria para desospitalização <em>e atenção domiciliar.</em></h2><p class="sub">Recebemos beneficiários encaminhados por planos e convênios, com faturamento organizado e relatórios completos de cada atendimento.</p>
+    <a class="btn on-dark" data-sis="solicitar-operadora" href="#">Falar sobre credenciamento</a></div>
+  <ul class="checks rv">
+    <li>Plano de cuidados e evolução diária por paciente</li>
+    <li>Presença dos profissionais com horário e localização</li>
+    <li>Relatórios para auditoria e faturamento</li>
+    <li>Equipe selecionada com documentos conferidos</li>
+  </ul>
+</div></section>
+
+<section class="join" id="trabalhe"><div class="wrap grid">
+  <div class="rv"><span class="eyebrow">Trabalhe conosco</span><h2>É profissional de saúde? <em>Venha cuidar com a gente.</em></h2>
     <p>Cadastro, processo seletivo e contrato de prestação de serviço, tudo pelo celular. Você escolhe os plantões conforme a sua disponibilidade e recebe a escala no aplicativo.</p>
     <p>Já faz parte da equipe? <a href="public/index.html?portal=profissional">Acesse a área do profissional</a> com o e-mail cadastrado pela administração.</p>
-    <div class="ctas" style="margin-top:auto"><a class="btn b-dark" data-sis="trabalhe" href="#">Quero me cadastrar <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a><a class="btn b-outline" data-sis="acompanhar" href="#" style="background:rgba(255,255,255,.5);border-color:transparent;color:#2A1408">Acompanhar candidatura</a></div></div>
-  <div class="join-b"><b style="font-family:var(--f-d);font-size:1.2rem">Tenha em mãos</b>
-    <div class="doc"><i>1</i><div><b>Inscrição no conselho</b><span>COREN, CREFITO, CRM, CRFa, CRP, CRN</span></div></div>
-    <div class="doc"><i>2</i><div><b>Foto da carteira do conselho</b><span>Frente legível</span></div></div>
-    <div class="doc"><i>3</i><div><b>Documento com foto</b><span>RG ou CNH</span></div></div>
-    <div class="doc"><i>4</i><div><b>Comprovante de endereço</b><span>Dos últimos 3 meses</span></div></div>
-    <div class="doc"><i>5</i><div><b>Currículo e selfie</b><span>A selfie é tirada na hora pelo celular</span></div></div>
-  </div>
+    <div class="actions" style="margin-top:1.6rem"><a class="btn" data-sis="trabalhe" href="#">Quero me cadastrar</a><a class="btn line" data-sis="acompanhar" href="#">Acompanhar candidatura</a></div></div>
+  <div class="docs-card rv"><h3 style="font-size:1.7rem;margin-bottom:.6rem">Tenha em mãos</h3>
+    <div class="docs">
+      <div class="doc"><i>1</i><div><b>Inscrição no conselho</b><span>COREN, CREFITO, CRM, CRFa, CRP, CRN</span></div></div>
+      <div class="doc"><i>2</i><div><b>Foto da carteira do conselho</b><span>Frente legível</span></div></div>
+      <div class="doc"><i>3</i><div><b>Documento com foto</b><span>RG ou CNH</span></div></div>
+      <div class="doc"><i>4</i><div><b>Comprovante de endereço</b><span>Dos últimos 3 meses</span></div></div>
+      <div class="doc"><i>5</i><div><b>Currículo e selfie</b><span>A selfie é tirada na hora pelo celular</span></div></div>
+    </div></div>
 </div></section>
 
-<section class="s" id="duvidas" style="padding-top:0"><div class="in">
-  <div class="head"><span class="tag">Dúvidas</span><h2>Perguntas frequentes</h2></div>
-  <div class="faq">
+<section id="duvidas" style="padding-top:0"><div class="wrap">
+  <div class="rv"><span class="eyebrow">Dúvidas</span><h2>Perguntas <em>frequentes</em></h2></div>
+  <div class="faq-list rv">
     <details open><summary>Quanto custa o atendimento domiciliar?</summary><p>O valor depende do quadro do paciente, dos profissionais necessários e da frequência. Por isso fazemos uma avaliação antes e enviamos uma proposta personalizada, sem compromisso.</p></details>
     <details><summary>Vocês atendem pelo plano de saúde?</summary><p>Atendemos particular e também pacientes encaminhados por operadoras credenciadas. Se você tem plano, informe na solicitação que verificamos a cobertura.</p></details>
     <details><summary>Quais profissionais vão até a casa?</summary><p>Médicos, enfermeiros, técnicos e auxiliares de enfermagem, fisioterapeutas, fonoaudiólogos, nutricionistas, psicólogos e terapeutas ocupacionais. Todos com registro ativo no conselho de classe.</p></details>
@@ -385,54 +345,69 @@ footer .links{display:flex;gap:18px;flex-wrap:wrap}
   </div>
 </div></section>
 
-<section class="s final" id="contato"><div class="in">
-  <span class="tag" style="color:var(--sand)">Fale com a Viver Bem</span>
-  <h2>Vamos cuidar de quem você ama.</h2>
-  <p>Conte o que o paciente precisa. Retornamos para agendar a avaliação domiciliar.</p>
-  <div class="ctas" style="justify-content:center"><a class="btn b-main" data-sis="solicitar" href="#">Solicitar avaliação <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a><a class="btn b-glass wa-link" href="#contato" hidden>Chamar no WhatsApp</a></div>
-  <div class="contact" id="contato-lista"></div>
+<section class="contact" id="contato"><div class="wrap grid">
+  <div class="rv"><span class="eyebrow">Fale com a Viver Bem</span><h2>Vamos cuidar de <em>quem você ama.</em></h2><p class="sub">Conte o que o paciente precisa. Retornamos para agendar a avaliação domiciliar.</p>
+    <div class="actions" style="margin-top:1.6rem"><a class="btn" data-sis="solicitar" href="#">Solicitar avaliação</a><a class="btn gold wa-link" href="#contato" hidden>Chamar no WhatsApp</a></div>
+    <div class="info" id="contato-lista"></div></div>
+  <form id="formContato" class="rv">
+    <label>Seu nome<input name="nome" required autocomplete="name"></label>
+    <label>Eu sou<select name="interesse"><option>Familiar de um paciente</option><option>Operadora de saúde</option><option>Profissional de saúde</option><option>Outro</option></select></label>
+    <label>Cidade do paciente<input name="cidade" autocomplete="address-level2"></label>
+    <label>Como podemos ajudar?<textarea name="msg" placeholder="Ex.: cuidado para idoso acamado, plantão noturno..."></textarea></label>
+    <button class="btn gold" type="submit">Enviar pelo WhatsApp</button>
+    <p class="note">Ao enviar, abrimos o WhatsApp com a sua mensagem pronta. Não guardamos esses dados no site.</p>
+  </form>
 </div></section>
 </main>
 
-<footer><div class="in">
+<footer><div class="wrap">
   <span>© <span id="ano"></span> Viver Bem Atendimento Domiciliar<span id="fCnpj"></span></span>
   <span class="links"><a href="#servicos">Serviços</a><a href="#operadoras">Operadoras</a><a data-sis="trabalhe" href="#">Trabalhe conosco</a><a href="/privacidade.html">Privacidade</a><a href="public/index.html">Entrar no sistema</a></span>
 </div></footer>
+
+<div class="mbar"><a class="btn" data-sis="solicitar" href="#">Solicitar avaliação</a><a class="btn gold wa-link" href="#contato" hidden>WhatsApp</a></div>
 <div id="cookieBanner" class="cookiebar" hidden>
   <p>Usamos cookies essenciais para o site funcionar bem. Veja nossa <a href="/privacidade.html">Política de Privacidade</a>.</p>
   <button class="btn btn-sm" id="cookieOk">Entendi</button>
 </div>
-<style>
-.cookiebar{position:fixed;left:16px;right:16px;bottom:16px;z-index:80;max-width:560px;margin:0 auto;background:var(--navy);color:#fff;border-radius:14px;padding:14px 16px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;box-shadow:0 10px 30px rgba(0,0,0,.25)}
-.cookiebar p{margin:0;font-size:.88rem;color:#D8E6EE}
-.cookiebar a{color:#fff;text-decoration:underline}
-.cookiebar .btn{background:var(--copper);color:#fff;border:0;border-radius:999px;padding:9px 16px;font-weight:700;cursor:pointer;white-space:nowrap}
-</style>
-<script>
-(function(){
-  try{
-    if(!localStorage.getItem("vb-cookies-ok")){
-      var b=document.getElementById("cookieBanner"); b.hidden=false;
-      document.getElementById("cookieOk").onclick=function(){
-        try{localStorage.setItem("vb-cookies-ok","1");}catch(e){}
-        b.hidden=true;
-      };
-    }
-  }catch(e){}
-})();
-</script>
 <a class="wa-float wa-link" href="#contato" aria-label="Falar no WhatsApp" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1.3-3.9A8 8 0 1 1 8 19z"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5l1-1.5-2-1-1 1c-1-.5-2-1.5-2.5-2.5l1-1-1-2z"/></svg><span>WhatsApp</span></a>
 
 <script>
+document.documentElement.classList.add("js");
 /* Endereço do sistema e do banco (o site lê WhatsApp, Instagram e endereço cadastrados em Configurações) */
 const SISTEMA = "public/index.html";
 const FIRESTORE = "https://firestore.googleapis.com/v1/projects/viver-bem-d23bd/databases/(default)/documents/config/empresa?key=AIzaSyDc8hSSCYQpBTFBABat_klqiRZ9_a7BKAc";
+let WA_NUM = "";
 
 document.querySelectorAll("[data-sis]").forEach(a=>{ a.href = SISTEMA + (a.dataset.sis ? "#"+a.dataset.sis : ""); });
 document.getElementById("ano").textContent = new Date().getFullYear();
 const topbar = document.getElementById("top");
 const onScroll = () => topbar.classList.toggle("solid", window.scrollY > 30);
 window.addEventListener("scroll", onScroll, {passive:true}); onScroll();
+
+/* revelar blocos ao rolar */
+const rv = document.querySelectorAll(".rv");
+if("IntersectionObserver" in window){
+  const io = new IntersectionObserver(es=>es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add("on"); io.unobserve(e.target); } }), {threshold:.12, rootMargin:"0px 0px -40px 0px"});
+  rv.forEach(el=>io.observe(el));
+}else rv.forEach(el=>el.classList.add("on"));
+
+/* cookies */
+try{
+  if(!localStorage.getItem("vb-cookies-ok")){
+    const b=document.getElementById("cookieBanner"); b.hidden=false;
+    document.getElementById("cookieOk").onclick=()=>{ try{localStorage.setItem("vb-cookies-ok","1");}catch(e){} b.hidden=true; };
+  }
+}catch(e){}
+
+/* formulário: abre o WhatsApp com a mensagem pronta (ou o pedido de avaliação do sistema se o número ainda não carregou) */
+document.getElementById("formContato").addEventListener("submit", e=>{
+  e.preventDefault();
+  const d = new FormData(e.target);
+  const txt = `Olá, Viver Bem! Meu nome é ${d.get("nome")}. Sou: ${d.get("interesse")}.` + (d.get("cidade") ? ` Cidade do paciente: ${d.get("cidade")}.` : "") + (d.get("msg") ? ` ${d.get("msg")}` : "");
+  if(WA_NUM) window.open(`https://wa.me/${WA_NUM}?text=${encodeURIComponent(txt)}`, "_blank", "noopener");
+  else location.href = SISTEMA + "#solicitar";
+});
 
 const ICON = {
   wa:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20l1.3-3.9A8 8 0 1 1 8 19z"/></svg>',
@@ -448,7 +423,7 @@ const ICON = {
     const lista = document.getElementById("contato-lista");
     const add = (html) => lista.insertAdjacentHTML("beforeend", html);
     const esc = s => s.replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-    if(zap){ const n = zap.startsWith("55") ? zap : "55"+zap;
+    if(zap){ const n = zap.startsWith("55") ? zap : "55"+zap; WA_NUM = n;
       const url = `https://wa.me/${n}?text=${encodeURIComponent("Olá, Viver Bem! Vim pelo site e gostaria de informações sobre atendimento domiciliar.")}`;
       document.querySelectorAll(".wa-link").forEach(a=>{ a.href=url; a.target="_blank"; a.rel="noopener"; a.hidden=false; });
       add(`<a href="${url}" target="_blank" rel="noopener">${ICON.wa}${esc(v("whatsapp"))}</a>`); }
