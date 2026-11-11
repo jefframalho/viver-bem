@@ -403,6 +403,10 @@ a.pacard h2{font-size:1.1rem;margin:0}
 .b7bar i.sem{background:var(--copper);border-radius:6px 6px 0 0}
 .b7n{font-weight:700;font-variant-numeric:tabular-nums}.b7l{font-size:.78rem;color:var(--muted)}
 .b7dot{display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--blue);margin:0 4px 0 10px}.b7dot.sem{background:var(--copper)}
+.fotos{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.foto{position:relative;display:inline-block}
+.foto img{width:92px;height:92px;object-fit:cover;border-radius:10px;border:1px solid var(--line);cursor:zoom-in}
+.foto-x{position:absolute;top:-6px;right:-6px;width:24px;height:24px;border-radius:50%;border:0;background:var(--bad);color:#fff;font-size:16px;line-height:1;cursor:pointer}
 .fun-banner{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;padding:22px 24px;border-radius:16px;background:linear-gradient(120deg,#0f2f2a,#1d5a4f);color:#fff;margin-bottom:12px}
 .fun-banner h1{color:#fff;margin:0}
 .fun-banner p{margin:4px 0 0;color:rgba(255,255,255,.8);max-width:560px;font-size:.95rem}
@@ -2670,6 +2674,8 @@ const ACT = {
 };
 /* ações da tela de auditoria */
 Object.assign(ACT,{
+  fotoDel(id){ evoFotos.splice(+id,1); const box=$("#evFotosBox"); if(box) box.innerHTML=fotosThumbs(evoFotos,true); },
+  fotoAbrir(id,b){ const l=b.dataset.v==="edit"?evoFotos:(b._l||[]); const src=b.src; modal("Foto",`<img src="${src}" alt="Foto ampliada" style="max-width:100%;border-radius:12px">`,{nofocus:1}); },
   acessoFun(id){ const f=Store.get("funcionarios",id); if(!f) return;
     modal("Login do funcionário", `<p>${esc(f.nome)} vai entrar no sistema com este e-mail e ver só o que as permissões do cadastro liberam.</p>
       ${fields([{k:"uEmail",l:"E-mail de login",t:"email"},{k:"uSenha",l:"Senha inicial",h:"Mínimo de 6 caracteres"}],{uEmail:f.email||""})}
@@ -2754,7 +2760,7 @@ function tabela(hs,rows,vazio,foot){
 const centroPac=p=>p?.centro||(p?.modalidade==="ilpi"?"Assistencial · ILPI":p?.modalidade==="hospital"?"Assistencial · Hospital":"Assistencial · Domicílio");
 const pagadorKey=p=>{ const pac=Store.get("pacientes",p.pacId); return pac?.tipo==="operadora"&&pac.operadoraId?"op:"+pac.operadoraId:"pac:"+p.pacId; };
 const pagadorNome=k=>{ const [t,id]=k.split(":"); return t==="op"?(Store.get("operadoras",id)?.nome||"Operadora")+" (operadora)":pacName(id); };
-const compart=k=>((Store.cfg().compart||{})[k]??(k==="formularios"?"nao":"sim"))==="sim";
+const compart=k=>((Store.cfg().compart||{})[k]??(["formularios","fotos"].includes(k)?"nao":"sim"))==="sim";
 const assPacOk=p=>!!(p.evolucao?.assPac&&!p.evolucao.assPac.semAssinatura);
 const SERV_FAT=()=>[...MODS.map(([k,l])=>[k,l]),...TELE.map(([k,l])=>["tele:"+k,l])];
 const proOpts=()=>[["","Selecione"],...Store.all("profissionais").filter(p=>p.status==="ativo").map(p=>[p.id,`${p.nome} · ${p.funcao}`])];
@@ -3226,8 +3232,16 @@ function evoExtras(p){
     <div class="sigpad"><canvas id="sigPad" width="600" height="180" aria-label="Área para assinar com o dedo"></canvas><button type="button" class="btn btn-sm btn-line" data-act="sigClear">Limpar</button></div>
     <label class="small sigsem"><input type="checkbox" id="sig_sem"> Não foi possível colher a assinatura</label><input id="sig_mot" placeholder="Motivo (ex.: paciente dormindo, responsável ausente)" hidden>`;
   const prof=e.assProf?`<p class="small muted" style="margin-top:8px">Assinado eletronicamente por ${esc(e.assProf.nome)}${e.assProf.registro?" · "+esc(e.assProf.registro):""} em ${fmtDT(e.assProf.em)} · código ${esc(e.assProf.hash||"")}</p>`:"";
-  return fs+sig+prof;
+  evoFotos=[...(e.fotos||[])];
+  const fot=`<h3>Fotos do curativo e da evolução</h3><p class="small muted">Até ${MAX_FOTOS} fotos. Ficam só no prontuário e a família só vê se a administração liberar.</p><div id="evFotosBox">${fotosThumbs(evoFotos,true)}</div>
+    <label class="btn btn-line btn-sm">${ICON.plus}Tirar ou anexar foto<input type="file" id="evFotoIn" accept="image/*" multiple hidden></label>`;
+  return fs+fot+sig+prof;
 }
+const MAX_FOTOS=4; let evoFotos=[];
+function fotosThumbs(l,edit){ return (l||[]).length?`<div class="fotos">${l.map((f,i)=>`<span class="foto"><img src="${f}" alt="Foto ${i+1}" data-act="fotoAbrir" data-id="${i}" data-v="${edit?"edit":""}">${edit?`<button type="button" class="foto-x" data-act="fotoDel" data-id="${i}" aria-label="Remover foto ${i+1}">×</button>`:""}</span>`).join("")}</div>`:""; }
+function comprimeFoto(file,max=800,q=.65){ return new Promise((ok,ko)=>{ const url=URL.createObjectURL(file), im=new Image();
+  im.onload=()=>{ const k=Math.min(1,max/Math.max(im.width,im.height)), c=document.createElement("canvas"); c.width=Math.round(im.width*k); c.height=Math.round(im.height*k); c.getContext("2d").drawImage(im,0,0,c.width,c.height); URL.revokeObjectURL(url); ok(c.toDataURL("image/jpeg",q)); };
+  im.onerror=()=>{ URL.revokeObjectURL(url); ko(new Error("img")); }; im.src=url; }); }
 function initSig(){ const c=$("#sigPad"); if(!c) return; const x=c.getContext("2d"); x.lineWidth=2.6; x.lineCap="round"; x.lineJoin="round"; x.strokeStyle="#13293A"; let dn=false;
   const pt=e=>{ const r=c.getBoundingClientRect(); return [(e.clientX-r.left)*c.width/r.width,(e.clientY-r.top)*c.height/r.height]; };
   c.onpointerdown=e=>{ dn=true; try{ c.setPointerCapture(e.pointerId); }catch(_){} const [a,b]=pt(e); x.beginPath(); x.moveTo(a,b); e.preventDefault(); };
@@ -3237,7 +3251,7 @@ let evoMsg="";
 function readEvo(){ evoMsg=""; const ev=readEvoBase(); if(!ev) return null;
   const id=$(".modal-b [data-act='saveEvo'],.modal-b [data-act='checkout']")?.dataset.id, p=id?Store.get("plantoes",id):null;
   const campos={}; if(p) for(const f of formsDoPlantao(p)) for(const c of f.campos){ const el=$("#fx_"+f.id+"_"+c.id), v=el?el.value.trim():""; if(c.req&&!v){ evoMsg=`Responda "${c.l}" em ${f.nome}.`; return null; } if(v) campos[f.id+"_"+c.id]={l:c.l,f:f.nome,v}; }
-  ev.campos=campos;
+  ev.campos=campos; ev.fotos=[...evoFotos];
   const c=$("#sigPad");
   if(c&&c.dataset.dirty==="1"){ const nome=$("#sig_nome").value.trim(); if(!nome){ evoMsg="Escreva o nome de quem assinou."; return null; } ev.assPac={img:c.toDataURL("image/png"),nome,em:new Date().toISOString()}; }
   else if($("#sig_sem")?.checked){ const mot=$("#sig_mot").value.trim(); if(!mot){ evoMsg="Informe por que não foi possível colher a assinatura."; return null; } ev.assPac={semAssinatura:true,motivo:mot,em:new Date().toISOString()}; }
@@ -3248,7 +3262,7 @@ async function assinaProf(ev,p){ if(S.role!=="prof") return; const pro=Store.get
 function evoBlock(x,o={}){
   const e=x.evolucao, v=[e.pa&&"PA "+e.pa, e.fc&&"FC "+e.fc+" bpm", e.temp&&e.temp+" °C", e.sat&&"SpO₂ "+e.sat+"%", e.glic&&"Glicemia "+e.glic].filter(Boolean);
   const vis=!o.fam||compart("sinais"), cs=Object.values(e.campos||{}), visF=!o.fam||compart("formularios");
-  return `<div class="evo"><div class="small muted">${fmtDay(x.data)} · ${x.inicio} – ${fim(x)} · ${esc(proName(e.por||x.profId))}${x.chegada?` · presença ${hhmm(x.chegada.em)}${x.saida?"–"+hhmm(x.saida.em):""}`:""}</div>${vis&&v.length?`<div class="vitals">${v.map(s=>`<span>${esc(s)}</span>`).join("")}</div>`:""}<p>${esc(e.texto)}</p>${visF&&cs.length?`<dl class="kv small">${cs.map(c=>`<dt>${esc(c.l)}</dt><dd>${esc(c.v)}</dd>`).join("")}</dl>`:""}${!o.fam&&(e.assProf||e.assPac)?`<div class="small muted">${e.assProf?"✓ Assinado pelo profissional":""}${e.assProf&&e.assPac?" · ":""}${e.assPac?(e.assPac.semAssinatura?"Sem assinatura do paciente: "+esc(e.assPac.motivo):"✓ Assinado por "+esc(e.assPac.nome)):""}</div>`:""}</div>`;
+  return `<div class="evo"><div class="small muted">${fmtDay(x.data)} · ${x.inicio} – ${fim(x)} · ${esc(proName(e.por||x.profId))}${x.chegada?` · presença ${hhmm(x.chegada.em)}${x.saida?"–"+hhmm(x.saida.em):""}`:""}</div>${vis&&v.length?`<div class="vitals">${v.map(s=>`<span>${esc(s)}</span>`).join("")}</div>`:""}<p>${esc(e.texto)}</p>${(e.fotos||[]).length&&(!o.fam||compart("fotos"))?fotosThumbs(e.fotos,false):""}${visF&&cs.length?`<dl class="kv small">${cs.map(c=>`<dt>${esc(c.l)}</dt><dd>${esc(c.v)}</dd>`).join("")}</dl>`:""}${!o.fam&&(e.assProf||e.assPac)?`<div class="small muted">${e.assProf?"✓ Assinado pelo profissional":""}${e.assProf&&e.assPac?" · ":""}${e.assPac?(e.assPac.semAssinatura?"Sem assinatura do paciente: "+esc(e.assPac.motivo):"✓ Assinado por "+esc(e.assPac.nome)):""}</div>`:""}</div>`;
 }
 function pgAssinaturas(){
   const modo=Store.cfg().assinaPaciente||"nao", ls=Store.all("plantoes").filter(p=>p.evolucao?.assPac).sort((a,b)=>tStart(b)-tStart(a)).slice(0,80);
@@ -3258,7 +3272,7 @@ function pgAssinaturas(){
     <div class="actions" style="margin-top:10px"><button class="btn btn-primary" data-act="saveAssModo">Salvar</button></div></section>
   <section class="card"><h2>Assinaturas recentes</h2>${tabela(["Data","Paciente","Profissional","Assinado por"],ls.map(p=>{ const a=p.evolucao.assPac; return {act:"verAss",id:p.id,cells:[fmtDay(p.data),esc(pacName(p.pacId)),esc(proName(p.profId)),a.semAssinatura?`<span class="pill p-warn">Sem assinatura</span> <span class="small muted">${esc(a.motivo)}</span>`:esc(a.nome)]}; }),"Nenhuma assinatura colhida ainda.")}</section>`;
 }
-const COMPART=[["evolucoes","Família vê o relatório dos plantões (evoluções)"],["sinais","Família vê os sinais vitais das evoluções"],["estado","Família vê o estado clínico e os medicamentos"],["equipe","Família vê o nome da equipe que atende"],["formularios","Família vê as respostas dos formulários personalizados"]];
+const COMPART=[["evolucoes","Família vê o relatório dos plantões (evoluções)"],["sinais","Família vê os sinais vitais das evoluções"],["estado","Família vê o estado clínico e os medicamentos"],["equipe","Família vê o nome da equipe que atende"],["formularios","Família vê as respostas dos formulários personalizados"],["fotos","Família vê as fotos de curativo das evoluções"]];
 function pgCompart(){
   return pageHead("Compartilhamento de registros","O que a família vê na área do paciente. Vale para todos os pacientes.")+
   `<section class="card"><div class="tablewrap"><table><tbody>${COMPART.map(([k,l])=>`<tr><td>${l}</td><td class="r"><select id="cp_${k}" aria-label="${esc(l)}"><option value="sim" ${compart(k)?"selected":""}>Compartilhar</option><option value="nao" ${compart(k)?"":"selected"}>Não mostrar</option></select></td></tr>`).join("")}</tbody></table></div>
@@ -3477,6 +3491,10 @@ function parseCSVSimples(txt){ const sep=(txt.split("\n")[0].match(/;/g)||[]).le
     else if(c==='"') q=true; else if(c===sep){ cur.push(v); v=""; } else if(c==="\n"||c==="\r"){ if(c==="\r"&&txt[i+1]==="\n") i++; cur.push(v); v=""; if(cur.some(x=>x.trim())) rows.push(cur); cur=[]; } else v+=c; }
   cur.push(v); if(cur.some(x=>x.trim())) rows.push(cur); return rows; }
 document.addEventListener("change", async e=>{
+  if(e.target.id==="evFotoIn"){
+    const arq=[...e.target.files]; e.target.value="";
+    for(const f of arq){ if(evoFotos.length>=MAX_FOTOS){ toast(`Máximo de ${MAX_FOTOS} fotos por evolução`); break; } try{ evoFotos.push(await comprimeFoto(f)); }catch(_){ toast("Não consegui ler essa imagem"); } }
+    const box=$("#evFotosBox"); if(box) box.innerHTML=fotosThumbs(evoFotos,true); return; }
   if(e.target.id==="pacFile"){
     const f=e.target.files[0]; if(!f) return; e.target.value="";
     let txt=await f.text(); if(txt.includes("\ufffd")) txt=await new Promise(ok=>{ const r=new FileReader(); r.onload=()=>ok(r.result); r.readAsText(f,"ISO-8859-1"); });
