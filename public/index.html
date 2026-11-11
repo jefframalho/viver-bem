@@ -1277,7 +1277,7 @@ let pacFiltro="ativo", pacBusca="";
 function pgPacientes(){
   const list = Store.all("pacientes").filter(p=>(pacFiltro==="todos"||p.status===pacFiltro) && norm(p.nome+" "+p.cidade+" "+p.responsavel).includes(norm(pacBusca))).sort((a,b)=>a.nome.localeCompare(b.nome));
   const cnt = s => Store.all("pacientes").filter(p=>s==="todos"||p.status===s).length;
-  return `<div class="pagehead"><div><h1>Pacientes</h1><p class="sub">${cnt("ativo")} em atendimento</p></div><button class="btn btn-primary" data-act="novoPaciente">${ICON.plus}Novo paciente</button></div>
+  return `<div class="pagehead"><div><h1>Pacientes</h1><p class="sub">${cnt("ativo")} em atendimento</p></div><div class="actions"><label class="btn btn-line">Importar planilha (CSV)<input type="file" id="pacFile" accept=".csv,.txt" hidden></label><button class="btn btn-primary" data-act="novoPaciente">${ICON.plus}Novo paciente</button></div></div>
   <div class="toolbar"><input id="pacBusca" type="search" placeholder="Buscar por nome, cidade ou responsável" value="${esc(pacBusca)}" aria-label="Buscar paciente">
     <div class="chips">${[["ativo","Ativos"],["avaliacao","Em avaliação"],["alta","Alta"],["todos","Todos"]].map(([k,l])=>`<button class="chipbtn" data-act="pacFiltro" data-id="${k}" aria-pressed="${pacFiltro===k}">${l} · ${cnt(k)}</button>`).join("")}</div></div>
   <div class="tablewrap"><table><thead><tr><th>Paciente</th><th>Idade</th><th>Cidade</th><th>Complexidade</th><th>Responsável</th><th>Atendimento</th><th>Situação</th></tr></thead><tbody>
@@ -1390,7 +1390,8 @@ function plantaoView(id){
       ${p.status!=="falta"?`<button class="btn btn-line" data-act="plStatus" data-id="${p.id}" data-v="falta">Marcar falta</button>`:""}
       ${p.status!=="cancelado"?`<button class="btn btn-line" data-act="plStatus" data-id="${p.id}" data-v="cancelado">Cancelar plantão</button>`:`<button class="btn btn-line" data-act="plStatus" data-id="${p.id}" data-v="agendado">Reativar</button>`}
       <button class="btn btn-line" data-act="editPlantao" data-id="${p.id}">Editar</button><button class="btn btn-danger" data-act="delPlantao" data-id="${p.id}">Excluir</button>
-      ${p.profId?`<a class="btn btn-line" target="_blank" rel="noopener" href="${wa(Store.get("profissionais",p.profId)?.tel||"",`Olá, ${first(proName(p.profId))}! Plantão confirmado: ${pac.nome}, ${fmtDay(p.data)} das ${p.inicio} às ${fim(p)}. Endereço: ${pac.endereco}, ${loc(pac)}. Lembre de registrar chegada e saída no aplicativo.`)}">${ICON.wa}Enviar ao profissional</a>`:""}`;
+      ${p.profId?`<a class="btn btn-line" target="_blank" rel="noopener" href="${wa(Store.get("profissionais",p.profId)?.tel||"",`Olá, ${first(proName(p.profId))}! Plantão confirmado: ${pac.nome}, ${fmtDay(p.data)} das ${p.inicio} às ${fim(p)}. Endereço: ${pac.endereco}, ${loc(pac)}. Lembre de registrar chegada e saída no aplicativo.`)}">${ICON.wa}Enviar ao profissional</a>`:""}
+      ${pac.telResp&&p.status==="agendado"?`<a class="btn btn-line" target="_blank" rel="noopener" href="${wa(pac.telResp,`Olá, ${first(pac.responsavel)}! Lembrete da Viver Bem: ${p.profId?proName(p.profId)+" vai atender":"temos atendimento marcado para"} ${first(pac.nome)} em ${fmtDay(p.data)}, das ${p.inicio} às ${fim(p)}. Qualquer dúvida, é só responder esta mensagem.`)}">${ICON.wa}Avisar a família</a>`:""}`;
   }
   const body = `
     <dl class="kv"><dt>Paciente</dt><dd><b>${esc(pac.nome||"-")}</b>${pac.id?` · <a href="#paciente-${pac.id}" data-act="close">abrir ficha</a>`:""}</dd>
@@ -1563,6 +1564,21 @@ function formOp(id,pre){ const o=id?Store.get("operadoras",id):{status:"prospecc
 
 /* =================== FINANCEIRO =================== */
 let finMes=null;
+function projecaoCaixa(){
+  const t=today(), fimJ=addDays(t,30), semanas=[7,14,21,30];
+  const saldo=Store.all("lancamentos").reduce((a,x)=>a+sinalL(x),0);
+  const ent=[], sai=[];
+  Store.all("plantoes").filter(p=>["agendado","andamento","realizado"].includes(p.status)).forEach(p=>{
+    if(!p.recebido&&p.data<=fimJ) ent.push([p.data<t?t:p.data,+p.valorCobrado||0]);
+    if(!p.pago&&p.data<=fimJ) sai.push([p.data<t?t:p.data,valorProf(p)||0]); });
+  Store.all("despesas").filter(d=>d.pago!=="sim"&&d.vencimento&&d.vencimento<=fimJ).forEach(d=>sai.push([d.vencimento<t?t:d.vencimento,+d.valor||0]));
+  const ate=n=>[ent,sai].map(l=>l.filter(([d])=>d<=addDays(t,n)).reduce((a,[,v])=>a+v,0));
+  const rows=semanas.map(n=>{ const [e,s2]=ate(n); return {n,e,s:s2,saldo:saldo+e-s2}; });
+  const f=rows[rows.length-1];
+  return `<section class="card"><div class="card-h"><h2>Projeção de caixa · 30 dias</h2><span class="small muted">saldo do extrato + o que está previsto</span></div>
+    <div class="kpis"><div class="kpi"><span class="kl">Saldo hoje</span><b>${brl(saldo)}</b><span>lançamentos do extrato</span></div><div class="kpi k-green"><span class="kl">Entradas previstas</span><b>${brl(f.e)}</b><span>plantões a receber</span></div><div class="kpi k-red"><span class="kl">Saídas previstas</span><b>${brl(f.s)}</b><span>profissionais e despesas</span></div><div class="kpi ${f.saldo<0?"k-red":"k-blue"}"><span class="kl">Saldo em 30 dias</span><b>${brl(f.saldo)}</b><span>${f.saldo<0?"atenção: caixa negativo":"projeção"}</span></div></div>
+    <div class="tablewrap" style="margin-top:10px"><table><thead><tr><th>Até</th><th class="r">Entradas</th><th class="r">Saídas</th><th class="r">Saldo projetado</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${fmtDay(addDays(t,r.n))} <span class="small muted">(${r.n} dias)</span></td><td class="r">${brl(r.e)}</td><td class="r">${brl(r.s)}</td><td class="r"><b style="color:${r.saldo<0?"var(--bad)":"inherit"}">${brl(r.saldo)}</b></td></tr>`).join("")}</tbody></table></div></section>`;
+}
 function pgFinResumo(){
   finMes=curMes();
   const [y,m]=finMes.split("-").map(Number);
@@ -1579,6 +1595,7 @@ function pgFinResumo(){
   return `<div class="pagehead"><div><h1>Financeiro</h1><p class="sub">${capital(label)} · com base nos plantões realizados</p></div>
     <div class="actions"><button class="btn btn-line btn-sm" data-act="finMes" data-id="-1">‹ Mês anterior</button><button class="btn btn-line btn-sm" data-act="finMes" data-id="1">Próximo mês ›</button></div></div>
   <div class="kpis"><div class="kpi"><b>${brl(fat)}</b><span>Faturado</span></div><div class="kpi"><b>${brl(fat-rec)}</b><span>A receber</span></div><div class="kpi"><b>${brl(cus-pag)}</b><span>A pagar aos profissionais</span></div><div class="kpi"><b>${brl(fat-cus)}</b><span>Margem bruta${fat?` · ${Math.round((fat-cus)/fat*100)}%`:""}</span></div></div>
+  ${projecaoCaixa()}
   <section class="card"><h2>A receber de pacientes e operadoras</h2><div class="tablewrap"><table><thead><tr><th>Pagador</th><th class="r">Total do mês</th><th class="r">Em aberto</th><th></th></tr></thead><tbody>${rowsR||`<tr><td colspan="4" class="empty">Nenhum plantão realizado neste mês.</td></tr>`}</tbody></table></div></section>
   <section class="card"><h2>A pagar aos profissionais</h2><div class="tablewrap"><table><thead><tr><th>Profissional</th><th class="r">Total do mês</th><th class="r">Em aberto</th><th></th></tr></thead><tbody>${rowsP||`<tr><td colspan="4" class="empty">Nenhum plantão realizado neste mês.</td></tr>`}</tbody></table></div></section>`;
 }
@@ -3454,7 +3471,23 @@ document.addEventListener("submit", async e=>{
   await Store.put("mensagens",{id:uid("msg"),profId:e.target.dataset.pro,de:isStaff()?"admin":"prof",nome:S.nome,texto,em:new Date().toISOString(),lida:false});
   render();
 });
+function parseCSVSimples(txt){ const sep=(txt.split("\n")[0].match(/;/g)||[]).length>=(txt.split("\n")[0].match(/,/g)||[]).length?";":","; const rows=[]; let cur=[],v="",q=false;
+  for(let i=0;i<txt.length;i++){ const c=txt[i];
+    if(q){ if(c==='"'&&txt[i+1]==='"'){ v+='"'; i++; } else if(c==='"') q=false; else v+=c; }
+    else if(c==='"') q=true; else if(c===sep){ cur.push(v); v=""; } else if(c==="\n"||c==="\r"){ if(c==="\r"&&txt[i+1]==="\n") i++; cur.push(v); v=""; if(cur.some(x=>x.trim())) rows.push(cur); cur=[]; } else v+=c; }
+  cur.push(v); if(cur.some(x=>x.trim())) rows.push(cur); return rows; }
 document.addEventListener("change", async e=>{
+  if(e.target.id==="pacFile"){
+    const f=e.target.files[0]; if(!f) return; e.target.value="";
+    let txt=await f.text(); if(txt.includes("\ufffd")) txt=await new Promise(ok=>{ const r=new FileReader(); r.onload=()=>ok(r.result); r.readAsText(f,"ISO-8859-1"); });
+    const rows=parseCSVSimples(txt.replace(/^\ufeff/,"")); if(rows.length<2) return toast("Planilha vazia. Use a primeira linha com os títulos: nome, responsável, telefone, cidade.");
+    const H=rows[0].map(h=>norm(h)), col=(...ks)=>H.findIndex(h=>ks.some(k=>h.includes(k)));
+    const iN=col("paciente","nome"), iR=col("responsavel","familiar"), iT=col("telefone","whatsapp","celular","fone"), iC=col("cidade"), iD=col("diagnostico"), iE=col("endereco","rua");
+    if(iN<0) return toast("Não achei a coluna \"nome\" na primeira linha.");
+    const ja=new Set(Store.all("pacientes").map(p=>norm(p.nome))); let novos=0, repetidos=0;
+    for(const r of rows.slice(1)){ const nome=(r[iN]||"").trim(); if(!nome) continue; if(ja.has(norm(nome))){ repetidos++; continue; } ja.add(norm(nome));
+      await Store.put("pacientes",{id:uid("pac"),nome,responsavel:(iR>=0?r[iR]:"")?.trim()||nome,telResp:iT>=0?digits(r[iT]):"",cidade:iC>=0?(r[iC]||"").trim():"",endereco:iE>=0?(r[iE]||"").trim():"",diagnostico:iD>=0?(r[iD]||"").trim():"",tipo:"particular",status:"ativo"}); novos++; }
+    toast(`${novos} paciente(s) importado(s)${repetidos?` · ${repetidos} já existiam`:""}`); return render(); }
   if(e.target.id!=="bkFile") return;
   const f=e.target.files[0]; if(!f) return;
   const txt=await new Promise(ok=>{ const r=new FileReader(); r.onload=()=>ok(r.result); r.readAsText(f,"ISO-8859-1"); });
