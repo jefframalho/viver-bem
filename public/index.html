@@ -69,8 +69,12 @@ a{color:var(--blue)}
 .main{min-width:0;padding-block:20px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .main-in{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
 .topbar{display:none}
-.pagehead{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
-.pagehead .sub{color:var(--muted);font-size:.92rem;margin-top:2px}
+.pagehead{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:20px 24px;border-radius:16px;background:linear-gradient(120deg,var(--blue-deep),#1d5a4f);color:#fff;margin-bottom:4px}
+.pagehead h1{color:#fff;margin:0}
+.pagehead .sub{color:rgba(255,255,255,.8);font-size:.92rem;margin-top:2px;max-width:640px}
+.pagehead .btn-line,.pagehead .btn-ghost{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.35)}
+.pagehead .btn-line:hover{background:rgba(255,255,255,.22)}
+.kbd{font:600 .7rem var(--f-body);border:1px solid var(--line);border-radius:6px;padding:1px 6px;color:var(--muted)}
 @media (max-width:899px){
   .shell{display:block}
   .side{position:fixed;inset:0 auto 0 0;width:min(270px, 100%);height:auto;overscroll-behavior-y:contain;z-index:50;transform:translateX(-102%);transition:transform .2s;padding-top:calc(14px + env(safe-area-inset-top,0px))}
@@ -392,6 +396,13 @@ a.pacard h2{font-size:1.1rem;margin:0}
 .lista-simples li{font-size:.92rem}
 
 /* auditoria */
+.b7wrap{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;align-items:end}
+.b7{display:grid;gap:4px;justify-items:center;text-decoration:none;color:inherit}
+.b7bar{display:flex;flex-direction:column;justify-content:flex-end;width:100%;max-width:56px;height:92px}
+.b7bar i{display:block;background:var(--blue);border-radius:6px 6px 0 0}
+.b7bar i.sem{background:var(--copper);border-radius:6px 6px 0 0}
+.b7n{font-weight:700;font-variant-numeric:tabular-nums}.b7l{font-size:.78rem;color:var(--muted)}
+.b7dot{display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--blue);margin:0 4px 0 10px}.b7dot.sem{background:var(--copper)}
 .fun-banner{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;padding:22px 24px;border-radius:16px;background:linear-gradient(120deg,#0f2f2a,#1d5a4f);color:#fff;margin-bottom:12px}
 .fun-banner h1{color:#fff;margin:0}
 .fun-banner p{margin:4px 0 0;color:rgba(255,255,255,.8);max-width:560px;font-size:.95rem}
@@ -1066,7 +1077,7 @@ function appShell(cur, body){
     <header class="topbar"><button data-act="menu" aria-label="Abrir menu">${ICON.menu} Menu</button><b>Viver Bem</b></header>
     <aside class="side" aria-label="Menu">
       <a class="brand" href="#"><img class="logo-wide" src="${LOGO}" alt="Viver Bem Atendimento Domiciliar"></a>
-      ${S.role==="admin"?`<form class="busca-side" id="fBusca" role="search"><input id="buscaGeral" type="search" placeholder="Buscar paciente, profissional..." value="${esc(buscaTxt)}" aria-label="Busca geral"></form>`:""}
+      ${S.role==="admin"?`<form class="busca-side" id="fBusca" role="search"><input id="buscaGeral" type="search" placeholder="Buscar (Ctrl+K)" value="${esc(buscaTxt)}" aria-label="Busca geral"></form>`:""}
       <nav class="nav">${nav}</nav>
       <div class="side-foot"><div>${esc(S.nome)}</div><div class="small" style="color:#7FA0B6">${{admin:"Administração",prof:"Profissional",paciente:"Paciente e família"}[S.role]}${Store.mode==="demo"?" · demonstração":""}</div>
       ${botaoInstalar("btn-sm btn-ghost-light")}
@@ -1170,6 +1181,7 @@ function pgPainel(){
     <div class="kpi k-green"><small class="kl">Receita prevista</small><b>${brl(receita)}</b><span>Estimativa do dia</span></div>
   </div>
   ${painelBreak(hoje,grp)}
+  ${painel7dias()}
   <div class="grid3">
     <section class="card"><div class="card-h"><h2>Atendimentos do dia</h2><a href="#escala" class="small">Agenda completa</a></div>
       ${hoje.length?`<div class="day" style="max-height:420px;overflow:auto">${hoje.map(shiftRow).join("")}</div>`:`<p class="empty">Nenhum atendimento hoje.</p>`}</section>
@@ -1192,6 +1204,16 @@ function pgPainel(){
   ${painelMes()}
   <section class="card"><div class="card-h"><h2>Links para divulgar</h2></div>
     <div class="tablewrap"><table><tbody>${links.map(([l,h])=>`<tr><td><b>${l}</b></td><td class="small muted" style="word-break:break-all">${esc(baseURL()+"#"+h)}</td><td class="r"><button class="btn btn-sm btn-line" data-act="copy" data-v="${esc(baseURL()+"#"+h)}">${ICON.link}Copiar</button></td></tr>`).join("")}</tbody></table></div></section>`;
+}
+function painel7dias(){
+  const t=today(), dias=[...Array(7)].map((_,i)=>addDays(t,i));
+  const pl=Store.all("plantoes").filter(p=>p.status!=="cancelado");
+  const d=dias.map(x=>{ const l=pl.filter(p=>p.data===x); return {x,n:l.length,sem:l.filter(p=>!p.profId).length,v:l.reduce((a,p)=>a+(+p.valorCobrado||0),0)}; });
+  const max=Math.max(1,...d.map(y=>y.n)), tot=d.reduce((a,y)=>a+y.v,0);
+  const W=["dom","seg","ter","qua","qui","sex","sáb"];
+  const bars=d.map((y,i)=>{ const h=Math.round(y.n/max*90), hs=Math.round(y.sem/max*90), dt=new Date(y.x+"T12:00");
+    return `<a class="b7" href="#escala" title="${fmtDay(y.x)}: ${y.n} plantão(ões), ${y.sem} sem profissional"><span class="b7n">${y.n}</span><span class="b7bar"><i style="height:${h-hs}px"></i><i class="sem" style="height:${hs}px"></i></span><span class="b7l">${i===0?"hoje":W[dt.getDay()]}</span></a>`; }).join("");
+  return `<section class="card"><div class="card-h"><h2>Próximos 7 dias</h2><span class="small muted">previsto ${brl(tot)}</span></div><div class="b7wrap">${bars}</div><p class="small muted" style="margin-top:6px"><i class="b7dot"></i>com profissional <i class="b7dot sem"></i>sem profissional</p></section>`;
 }
 function shiftRow(p){
   const pac=Store.get("pacientes",p.pacId), at=atrasoMin(p), ch=regInfo(p.chegada,pac);
@@ -2665,6 +2687,7 @@ async function buscaCep(input){
 document.addEventListener("change", e=>{ if(e.target.hasAttribute&&e.target.hasAttribute("data-tele-ref")){ const esp=$("#tc_esp").value, prof=e.target.id==="tc_prof"?$("#tc_prof").value:""; const pac=$("#tc_pac")?.value;
   if(S.role==="paciente"&&location.hash==="#teleconsulta"&&$("#famTeleForm")){ famTele={esp,prof}; $("#famTeleForm").innerHTML="<h2>Agendar</h2>"+teleForm({esp,prof}); }
   else { const bd=$(".modal-b"); if(bd) bd.innerHTML=teleForm({esp,prof,pac}); } } });
+document.addEventListener("keydown", e=>{ if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){ const i=$("#buscaGeral"); if(i){ e.preventDefault(); i.focus(); i.select(); } } });
 document.addEventListener("submit", e=>{ if(e.target.id==="fBusca"){ e.preventDefault(); buscaTxt=$("#buscaGeral").value.trim(); if(location.hash==="#busca") render(); else location.hash="busca"; } });
 document.addEventListener("change", e=>{
   if(/^rel_/.test(e.target.id||"")){ rel={tipo:$("#rel_tipo").value,de:$("#rel_de").value||rel.de,ate:$("#rel_ate").value||rel.ate,pac:$("#rel_pac").value,pro:$("#rel_pro").value}; render(); }
