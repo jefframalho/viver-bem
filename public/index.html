@@ -390,6 +390,33 @@ a.pacard h2{font-size:1.1rem;margin:0}
 .tarefas small.muted{color:var(--muted)}
 .lista-simples{margin:6px 0 0;padding-left:18px;display:grid;gap:4px}
 .lista-simples li{font-size:.92rem}
+
+/* auditoria */
+.aud-tabs{display:inline-flex;gap:4px;padding:4px;border:1px solid var(--line);border-radius:12px;background:var(--surface);margin:14px 0}
+.aud-tabs button{font:600 .95rem var(--f-body);padding:9px 16px;border-radius:9px;border:0;background:transparent;color:var(--muted);cursor:pointer}
+.aud-tabs button[aria-selected="true"]{background:var(--info-bg);color:var(--blue)}
+.aud-kpis{margin-bottom:12px}
+.aud-sel{font-family:var(--f-body)!important;font-size:1.05rem!important;font-weight:600!important;line-height:1.35!important}
+.aud-per{margin-bottom:12px;display:grid;gap:6px}
+.aud-per select{max-width:220px}
+.aud-grid{display:grid;grid-template-columns:minmax(260px,.85fr) minmax(0,1.6fr);gap:12px;align-items:start}
+.aud-list{display:grid;gap:8px;margin-top:10px;max-height:640px;overflow:auto}
+.aud-item{display:grid;gap:1px;text-align:left;width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:inherit;font:inherit;cursor:pointer}
+.aud-item:hover{border-color:var(--blue)}
+.aud-item.on{border-color:var(--ok);background:var(--ok-bg)}
+.aud-top{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.aud-head{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:flex-end}
+.aud-head input{max-width:260px}
+.aud-tl{display:grid;gap:10px;margin:12px 0}
+.aud-ev{border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:var(--surface)}
+.aud-evh{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:flex-start}
+.aud-t{font-weight:600;margin:0}
+.aud-badges{display:flex;gap:6px;flex-wrap:wrap}
+.aud-ev details{margin-top:8px}
+.aud-ev summary{cursor:pointer;font-size:.85rem;color:var(--muted)}
+.aud-dl{display:grid;grid-template-columns:max-content 1fr;gap:3px 12px;margin:8px 0 0;padding:10px 12px;border-radius:10px;background:var(--bg,#F4F8FB);font-size:.84rem}
+.aud-dl dt{color:var(--muted)} .aud-dl dd{margin:0;word-break:break-word}
+@media (max-width:860px){.aud-grid{grid-template-columns:1fr}.aud-list{max-height:320px}}
 </style>
 
 <style>:root{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
@@ -565,17 +592,25 @@ const Store = {
   async put(c,obj){
     obj.atualizado = new Date().toISOString(); if(!obj.criado) obj.criado = obj.atualizado;
     const arr = this.data[c] || (this.data[c]=[]); const i = arr.findIndex(x=>x.id===obj.id);
+    const antes = i>=0 ? arr[i] : null;
     if(i>=0) arr[i]=obj; else arr.unshift(obj);
     const novo = i<0;
     if(this.mode==="firebase") await this.fs.collection(c).doc(obj.id).set(JSON.parse(JSON.stringify(obj)));
     else this._local();
-    if(c!=="auditoria") this._audit(novo?"Criou":"Alterou", c, obj);
+    if(c!=="auditoria") this._audit(novo?"Criou":"Alterou", c, obj, antes);
     return obj;
   },
-  async _audit(acao, c, obj){
+  async _audit(acao, c, obj, antes){
     const nomes={avisos:"Aviso",pacientes:"Paciente",profissionais:"Profissional",candidatos:"Candidato",plantoes:"Plantão",solicitacoes:"Solicitação",operadoras:"Operadora",contratos:"Contrato",config:"Configurações",produtos:"Produto",movEstoque:"Estoque",lotes:"Faturamento",documentos:"Documento",curriculos:"Currículo",usuarios:"Acesso",funcionarios:"Funcionário",coordenadores:"Coordenador",organizacoes:"Organização",rotas:"Rota",mensagens:"Mensagem",indisponibilidades:"Folga",despesas:"Despesa",adiantamentos:"Adiantamento",lancamentos:"Lançamento",extratoBanco:"Extrato bancário",tuss:"TUSS",mapTuss:"Mapeamento TUSS",inventarios:"Inventário",conferencias:"Conferência"};
     const item = obj ? (c==="plantoes" ? `${pacName(obj.pacId)} · ${fmtDay(obj.data)} ${obj.inicio}` : c==="movEstoque" ? `${obj.tipo==="entrada"?"Entrada":"Saída"} de ${obj.qtd} · ${Store.get("produtos",obj.prodId)?.nome||""}` : (obj.nome||obj.titulo||obj.empresa||obj.numero||obj.id)) : "";
-    const det = obj?.status ? "Situação: "+obj.status : "";
+    let det = obj?.status ? "Situação: "+obj.status : "";
+    if(antes && obj && antes!==obj){
+      const ign=new Set(["atualizado","criado","em"]), campo=k=>k.replace(/([A-Z])/g," $1").replace(/_/g," ").toLowerCase();
+      const ch=Object.keys(obj).filter(k=>!ign.has(k) && JSON.stringify(obj[k])!==JSON.stringify(antes[k]));
+      if(antes.status!==undefined && antes.status!==obj.status) det="Situação: "+antes.status+" → "+obj.status;
+      if(ch.length) det=(det?det+" · ":"")+"Campos: "+ch.slice(0,10).map(campo).join(", ")+(ch.length>10?" e mais "+(ch.length-10):"");
+    }
+    det=det.slice(0,280);
     if(this.mode === "firebase" && (!S || !this.auth.currentUser)) return;
     const a={id:uid("au"),em:new Date().toISOString(),uid:this.auth?.currentUser?.uid||"demo",usuario:S?.nome||"Demonstração",perfil:S?.role||"publico",acao,colecao:nomes[c]||c,docId:obj?.id||"",item:String(item).slice(0,140),detalhe:det};
     const arr=this.data.auditoria||(this.data.auditoria=[]); arr.unshift(a); if(arr.length>600) arr.length=600;
@@ -638,6 +673,7 @@ async function login(email, senha){
   }
   S = {role:u.role, profId:u.profId||null, pacId:u.pacId||null, nome:u.nome||email};
   await Store.loadFor(S);
+  Store._audit("Entrou","usuarios",{id:cred.user.uid,nome:S.nome});
   if(Store.bloqueadas&&Store.bloqueadas.length) setTimeout(()=>toast("Algumas áreas não carregaram por falta de permissão no banco ("+Store.bloqueadas.join(", ")+"). Atualize as regras do Firestore no console do Firebase."),600);
 }
 async function logout(){ if(Store.mode==="firebase") { await Store.auth.signOut(); clearUserState(); } else {S=null;saveSession();} location.hash=""; render(); }
@@ -1672,14 +1708,88 @@ function pgRelatorios(){
 }
 
 /* =================== AUDITORIA =================== */
-let audBusca="";
+let audBusca="", audAba="colab", audSel="*", audPer="mes", audUpd=new Date();
+const AUD_COL={Paciente:"pacientes","Plantão":"plantoes",Contrato:"contratos","Solicitação":"solicitacoes","Funcionário":"funcionarios"};
+const audBadge=p=>({admin:"Gestão",prof:"Profissional",paciente:"Família",publico:"Link público"}[p]||"Funcionário");
+const audPerfil=p=>({admin:"Administração",prof:"Profissional",paciente:"Família",publico:"Link público"}[p]||"-");
+const fmtDTs=iso=>iso?new Date(iso).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit",second:"2-digit"}):"-";
+function audPacId(a){
+  if(a.colecao==="Paciente") return a.docId||"";
+  if(!a.docId) return "";
+  const d=Store.get(AUD_COL[a.colecao]||a.colecao, a.docId); if(d?.pacId) return d.pacId;
+  if(a.colecao==="Plantão"){ const n=norm(String(a.item||"").split(" · ")[0]); const p=Store.all("pacientes").find(x=>norm(x.nome)===n); return p?.id||""; }
+  return "";
+}
+function audDesde(){
+  const n=new Date();
+  if(audPer==="dia"){ n.setHours(0,0,0,0); return n; }
+  if(audPer==="semana") return new Date(Date.now()-7*864e5);
+  if(audPer==="mes") return new Date(n.getFullYear(),n.getMonth(),1);
+  return null;
+}
+function audFrase(a){
+  const quem=esc(a.usuario||"Alguém"), tipo=esc(String(a.colecao||"registro").toLowerCase()), item=a.item?`: <b>${esc(a.item)}</b>`:"";
+  if(a.acao==="Entrou") return `Login realizado por <b>${quem}</b>.`;
+  if(a.acao==="Criou") return `${quem} criou ${tipo}${item}`;
+  if(a.acao==="Excluiu") return `${quem} excluiu ${tipo}${item}`;
+  return `${quem} alterou ${tipo}${item}`;
+}
 function pgAuditoria(){
-  const l=Store.all("auditoria").filter(a=>norm([a.usuario,a.acao,a.colecao,a.item,a.detalhe].join(" ")).includes(norm(audBusca))).slice(0,300);
-  return `<div class="pagehead"><div><h1>Auditoria</h1><p class="sub">Quem criou, alterou ou excluiu cada registro, com data e hora</p></div></div>
-  <div class="toolbar"><input id="audBusca" type="search" placeholder="Filtrar por pessoa, tipo ou item" value="${esc(audBusca)}" aria-label="Filtrar auditoria"></div>
-  <div class="tablewrap"><table><thead><tr><th>Data e hora</th><th>Quem</th><th>Ação</th><th>Tipo</th><th>Item</th><th>Detalhe</th></tr></thead><tbody>
-  ${l.map(a=>`<tr><td class="num">${fmtDT(a.em)}</td><td>${esc(a.usuario)}<div class="small muted">${{admin:"Administração",prof:"Profissional",publico:"Link público"}[a.perfil]||""}</div></td><td><span class="pill ${a.acao==="Excluiu"?"p-bad":a.acao==="Criou"?"p-ok":"p-blue"}">${esc(a.acao)}</span></td><td>${esc(a.colecao)}</td><td>${esc(a.item)}</td><td class="small muted">${esc(a.detalhe||"")}</td></tr>`).join("")||`<tr><td colspan="6" class="empty">Nenhum registro ainda. As próximas alterações aparecem aqui.</td></tr>`}
-  </tbody></table></div><p class="small muted">Mostra os 500 registros mais recentes.</p>`;
+  const desde=audDesde(), q=norm(audBusca), todos=Store.all("auditoria").slice().sort((x,y)=>String(y.em).localeCompare(String(x.em)));
+  const noPeriodo=todos.filter(a=>!desde||new Date(a.em)>=desde).map(a=>({...a,_pac:audPacId(a)}));
+  const colabAba=audAba==="colab";
+  const uPorId=new Set(Store.all("usuarios").map(u=>u.id)), uPorNome=new Map(Store.all("usuarios").map(u=>[norm(u.nome),u.id]));
+  const chave=a=>{ const k=a.uid||a.usuario; return uPorId.has(k)?k:(uPorNome.get(norm(a.usuario))||k); };
+  /* lista da esquerda */
+  let itens=[];
+  if(colabAba){
+    const m=new Map();
+    Store.all("usuarios").forEach(u=>m.set(u.id,{id:u.id,nome:u.nome||u.email||"Usuário",email:u.email||"",perfil:u.role,n:0,ult:""}));
+    todos.forEach(a=>{ const k=chave(a); const p=m.get(k)||(m.set(k,{id:k,nome:a.usuario||"Usuário",email:"",perfil:a.perfil,n:0,ult:""}),m.get(k)); if(!p.ult) p.ult=a.em; if(p.nome==="Usuário"&&a.usuario) p.nome=a.usuario; if(!p.perfil) p.perfil=a.perfil; });
+    noPeriodo.forEach(a=>{ const p=m.get(chave(a)); if(p) p.n++; });
+    itens=[...m.values()].sort((x,y)=>y.n-x.n||x.nome.localeCompare(y.nome));
+  } else {
+    const m=new Map(Store.all("pacientes").map(p=>[p.id,{id:p.id,nome:p.nome||"Paciente",email:p.responsavel?"Resp.: "+p.responsavel:"",n:0,ult:""}]));
+    todos.forEach(a=>{ const id=audPacId(a); const p=m.get(id); if(p&&!p.ult) p.ult=a.em; });
+    noPeriodo.forEach(a=>{ const p=m.get(a._pac); if(p) p.n++; });
+    itens=[...m.values()].sort((x,y)=>y.n-x.n||x.nome.localeCompare(y.nome));
+  }
+  const sel=audSel==="*"?null:itens.find(i=>i.id===audSel);
+  if(audSel!=="*"&&!sel) audSel="*";
+  /* linha do tempo */
+  let ev=noPeriodo.filter(a=>audSel==="*" ? (colabAba||a._pac) : colabAba ? chave(a)===audSel : a._pac===audSel);
+  const base=ev.length;
+  if(q) ev=ev.filter(a=>norm([a.usuario,a.acao,a.colecao,a.item,a.detalhe].join(" ")).includes(q));
+  const mostra=ev.slice(0,150);
+  const ativos=colabAba ? new Set(noPeriodo.map(chave)).size : new Set(noPeriodo.filter(a=>a._pac).map(a=>a._pac)).size;
+  const totalK=colabAba ? noPeriodo.length : noPeriodo.filter(a=>a._pac).length;
+  const selNome=sel?sel.nome:(colabAba?"Todos os colaboradores":"Todos os pacientes");
+  const pill=a=>`<span class="pill ${a.acao==="Excluiu"?"p-bad":a.acao==="Criou"?"p-ok":a.acao==="Entrou"?"p-blue":"p-warn"}">${esc(a.acao==="Entrou"?"Login":a.acao)}</span>`;
+  return `<div class="pagehead"><div><h1>Auditoria de Ações</h1><p class="sub">Veja quem alterou a operação, por colaborador ou por paciente, sempre com data e hora.</p><p class="small muted">Última atualização: ${audUpd.toLocaleTimeString("pt-BR")}</p></div>
+    <button class="btn btn-line" data-act="audAtualizar" type="button">Atualizar auditoria</button></div>
+  <div class="aud-tabs" role="tablist"><button type="button" role="tab" aria-selected="${colabAba}" data-act="audAba" data-id="colab">Por colaborador</button><button type="button" role="tab" aria-selected="${!colabAba}" data-act="audAba" data-id="pac">Por paciente</button></div>
+  <div class="kpis aud-kpis">
+    <div class="kpi"><span class="kl">Ações no período</span><b>${totalK}</b></div>
+    <div class="kpi"><span class="kl">${colabAba?"Usuários":"Pacientes"} com atividade</span><b>${ativos}</b></div>
+    <div class="kpi"><span class="kl">Selecionado</span><b class="aud-sel">${esc(selNome)}</b></div>
+  </div>
+  <section class="card aud-per"><label for="audPer"><span class="kl small muted">Período</span></label>
+    <select id="audPer"><option value="dia"${audPer==="dia"?" selected":""}>Hoje</option><option value="semana"${audPer==="semana"?" selected":""}>Últimos 7 dias</option><option value="mes"${audPer==="mes"?" selected":""}>Mês</option><option value="tudo"${audPer==="tudo"?" selected":""}>Tudo</option></select></section>
+  <div class="aud-grid">
+    <section class="card"><h2>${colabAba?"Colaboradores e gestão":"Pacientes"}</h2>
+      <div class="aud-list">
+        <button type="button" class="aud-item${audSel==="*"?" on":""}" data-act="audSel" data-id="*"><span class="aud-top"><b>Todos</b></span><span class="small muted">Ações: ${totalK}</span></button>
+        ${itens.map(i=>`<button type="button" class="aud-item${audSel===i.id?" on":""}" data-act="audSel" data-id="${esc(i.id)}"><span class="aud-top"><b>${esc(i.nome)}</b>${colabAba?`<span class="pill ${i.perfil==="admin"?"p-blue":"p-ok"}">${esc(audBadge(i.perfil))}</span>`:""}</span>${i.email?`<span class="small muted">${esc(i.email)}</span>`:""}<span class="small muted">Ações: ${i.n}</span><span class="small muted">Última atividade: ${i.ult?esc(fmtDTs(i.ult)):"-"}</span></button>`).join("")||`<p class="empty">Nada para mostrar.</p>`}
+      </div></section>
+    <section class="card"><div class="aud-head"><div><h2>Timeline de auditoria</h2><p class="muted">Selecionado: ${esc(selNome)}</p></div>
+      <input id="audBusca" type="search" placeholder="Filtrar a linha do tempo" value="${esc(audBusca)}" aria-label="Filtrar linha do tempo"></div>
+      <div class="aud-tl">
+      ${mostra.map(a=>`<article class="aud-ev"><div class="aud-evh"><p class="aud-t">${audFrase(a)}</p><span class="aud-badges">${pill(a)}<span class="pill p-blue">${esc(a.colecao||"")}</span></span></div>
+        <p class="small muted">${esc(fmtDTs(a.em))}${a.detalhe?" · "+esc(a.detalhe):""}</p>
+        <details><summary>Detalhes técnicos</summary><dl class="aud-dl"><dt>Usuário</dt><dd>${esc(a.usuario||"-")} (${esc(audPerfil(a.perfil))})</dd><dt>Tipo</dt><dd>${esc(a.colecao||"-")}</dd><dt>Item</dt><dd>${esc(a.item||"-")}</dd><dt>Detalhe</dt><dd>${esc(a.detalhe||"-")}</dd><dt>ID do registro</dt><dd>${esc(a.docId||"-")}</dd><dt>ID do usuário</dt><dd>${esc(a.uid||"-")}</dd></dl></details></article>`).join("")||`<p class="empty">${base?"Nada encontrado com esse filtro.":"Nenhuma ação neste período. As próximas alterações aparecem aqui."}</p>`}
+      </div>
+      <p class="small muted">${ev.length>mostra.length?`Mostrando as ${mostra.length} mais recentes de ${ev.length}. `:""}O sistema guarda as 500 ações mais recentes.</p></section>
+  </div>`;
 }
 
 /* =================== MONITORAMENTO DE CRÔNICOS =================== */
@@ -2501,6 +2611,16 @@ const ACT = {
     modal("Prévia do contrato", `<div class="contract">${makeContrato(tipo,d,c).html}</div>`,{wide:1,nofocus:1}); },
   resetDemo(_,b){ if(b.dataset.ok!=="1"){ b.dataset.ok="1"; b.textContent="Confirmar: apagar tudo e restaurar exemplos"; return; } Store.data=seed(); Store._local(); toast("Dados de exemplo restaurados"); render(); }
 };
+/* ações da tela de auditoria */
+Object.assign(ACT,{
+  audAba(id){ audAba=id; audSel="*"; return render(); },
+  audSel(id){ audSel=id; return render(); },
+  async audAtualizar(){
+    if(Store.mode==="firebase"){ const sn=await Store.fs.collection("auditoria").orderBy("em","desc").limit(500).get(); Store.data.auditoria=sn.docs.map(d=>{ const v=d.data(); return {...v,em:v.em?.toDate?v.em.toDate().toISOString():v.em}; }); }
+    audUpd=new Date(); await render(); toast("Auditoria atualizada");
+  }
+});
+document.addEventListener("change", e=>{ if(e.target.id==="audPer"){ audPer=e.target.value; render(); } });
 document.addEventListener("click", e=>{
   const b=e.target.closest("[data-act]"); if(!b) return;
   const fn=ACT[b.dataset.act]; if(!fn) return;
