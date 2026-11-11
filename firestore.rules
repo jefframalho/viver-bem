@@ -6,6 +6,10 @@ service cloud.firestore {
     function me()      { return get(/databases/$(db)/documents/usuarios/$(request.auth.uid)).data; }
     function temPerfil(){ return signed() && exists(/databases/$(db)/documents/usuarios/$(request.auth.uid)); }
     function isAdmin() { return temPerfil() && me().role == 'admin'; }
+    function isFunc() { return temPerfil() && me().role == 'func'; }
+    function isOps()  { return isAdmin() || isFunc(); }
+    function isFin()  { return isAdmin() || (isFunc() && me().get('acessoFin', false) == true); }
+    function isChat() { return isAdmin() || (isFunc() && me().get('chat', false) == true); }
     function isProf()  { return temPerfil() && me().role == 'prof' && me().get('profId', '') is string && me().get('profId', '').size() > 0; }
     function isPac()   { return temPerfil() && me().role == 'paciente' && me().get('pacId', '') is string && me().get('pacId', '').size() > 0; }
     function meuProf() { return isProf() && resource.data.profId == me().profId; }
@@ -38,7 +42,7 @@ service cloud.firestore {
     }
 
     // Dados da empresa: leitura pública (contratos, links e site), escrita só da administração
-    match /config/{id}       { allow get: if id == 'empresa' || isAdmin(); allow list, write: if isAdmin(); }
+    match /config/{id}       { allow get: if id == 'empresa' || isAdmin(); allow list: if isOps(); allow write: if isAdmin(); }
     // Quem pode entrar e com qual perfil
     match /usuarios/{uid}    { allow get: if signed() && (request.auth.uid == uid || isAdmin()); allow list, write: if isAdmin(); }
 
@@ -90,79 +94,79 @@ service cloud.firestore {
 
     // Plantões: profissional vê e evolui os próprios; a família vê os do seu paciente
     match /plantoes/{id} {
-      allow read: if isAdmin() || meuProf() || (isPac() && resource.data.pacId == me().pacId);
-      allow update: if isAdmin()
+      allow read: if isOps() || meuProf() || (isPac() && resource.data.pacId == me().pacId);
+      allow update: if isOps()
         || (meuProf() && only(['status','evolucao','chegada','saida','tentativas','tarefas','materiais','atualizado']));
-      allow create, delete: if isAdmin();
+      allow create, delete: if isOps();
     }
 
     // Pacientes: a família lê só o seu
-    match /pacientes/{id}     { allow get: if isAdmin() || cuida(id) || (isPac() && me().pacId == id); allow list: if isAdmin() || (isProf() && me().profId in resource.data.get('profIds', [])); allow write: if isAdmin(); }
+    match /pacientes/{id}     { allow get: if isOps() || cuida(id) || (isPac() && me().pacId == id); allow list: if isOps() || (isProf() && me().profId in resource.data.get('profIds', [])); allow write: if isOps(); }
     match /profissionais/{id} {
-      allow read: if isAdmin() || (isProf() && me().profId == id);
-      allow create, delete: if isAdmin();
-      allow update: if isAdmin() || (isProf() && me().profId == id && only(['tel','email','pix','areas','disp','docs','cep','rua','numero','complemento','bairro','cidade','uf','referencia','endereco','atualizado']));
+      allow read: if isOps() || (isProf() && me().profId == id);
+      allow create, delete: if isOps();
+      allow update: if isOps() || (isProf() && me().profId == id && only(['tel','email','pix','areas','disp','docs','cep','rua','numero','complemento','bairro','cidade','uf','referencia','endereco','atualizado']));
     }
-    match /operadoras/{id}    { allow read, write: if isAdmin(); }
+    match /operadoras/{id}    { allow read, write: if isFin(); }
 
     // Teleconsultas
     match /consultas/{id} {
-      allow read: if isAdmin() || meuProf() || (isPac() && resource.data.pacId == me().pacId);
-      allow create: if isAdmin() || (isPac() && request.resource.data.pacId == me().pacId && request.resource.data.status == 'solicitada' && request.resource.data.pagamento == 'pendente'
+      allow read: if isOps() || meuProf() || (isPac() && resource.data.pacId == me().pacId);
+      allow create: if isOps() || (isPac() && request.resource.data.pacId == me().pacId && request.resource.data.status == 'solicitada' && request.resource.data.pagamento == 'pendente'
         && request.resource.data.keys().hasOnly(['id','pacId','profId','profNome','esp','data','hora','dur','valor','status','pagamento','sala','obs','consentimento','criado','atualizado'])
         && request.resource.data.valor == get(/databases/$(db)/documents/config/empresa).data.get('teleValores', {}).get(request.resource.data.esp, 0)
         && get(/databases/$(db)/documents/agendaTele/$(request.resource.data.profId)).data.ativo == true);
-      allow update: if isAdmin()
+      allow update: if isOps()
         || (meuProf() && only(['evolucao','orientacoes','documentos','status','retornoEm','atualizado']))
         || (isPac() && resource.data.pacId == me().pacId && only(['consentimento','status','atualizado']) && request.resource.data.status in [resource.data.status, 'cancelada']);
-      allow delete: if isAdmin();
+      allow delete: if isOps();
     }
     // Agenda de teleconsulta dos profissionais (nome, especialidade e horários livres)
-    match /agendaTele/{id} { allow read: if temPerfil(); allow write: if isAdmin(); }
+    match /agendaTele/{id} { allow read: if temPerfil(); allow write: if isOps(); }
     // Monitoramento de crônicos
     match /medicoes/{id} {
-      allow read: if isAdmin() || cuida(resource.data.pacId) || (isPac() && resource.data.pacId == me().pacId);
-      allow create: if isAdmin() || cuida(request.resource.data.pacId) || (isPac() && request.resource.data.pacId == me().pacId);
-      allow update, delete: if isAdmin();
+      allow read: if isOps() || cuida(resource.data.pacId) || (isPac() && resource.data.pacId == me().pacId);
+      allow create: if isOps() || cuida(request.resource.data.pacId) || (isPac() && request.resource.data.pacId == me().pacId);
+      allow update, delete: if isOps();
     }
-    match /intercorrencias/{id} { allow read: if isAdmin() || cuida(resource.data.pacId); allow create: if isAdmin() || cuida(request.resource.data.pacId); allow update, delete: if isAdmin(); }
+    match /intercorrencias/{id} { allow read: if isOps() || cuida(resource.data.pacId); allow create: if isOps() || cuida(request.resource.data.pacId); allow update, delete: if isOps(); }
 
     // Estoque e faturamento de convênios
-    match /produtos/{id}      { allow read: if isAdmin() || isProf(); allow write: if isAdmin(); }
-    match /movEstoque/{id}    { allow read: if isAdmin(); allow create: if isAdmin() || (isProf() && request.resource.data.tipo == 'saida'); allow update, delete: if isAdmin(); }
-    match /lotes/{id}         { allow read, write: if isAdmin(); }
-    match /inventarios/{id}   { allow read, write: if isAdmin(); }
-    match /tuss/{id}          { allow read: if isAdmin() || isProf(); allow write: if isAdmin(); }
-    match /mapTuss/{id}       { allow read, write: if isAdmin(); }
+    match /produtos/{id}      { allow read: if isOps() || isProf(); allow write: if isOps(); }
+    match /movEstoque/{id}    { allow read: if isOps(); allow create: if isOps() || (isProf() && request.resource.data.tipo == 'saida'); allow update, delete: if isOps(); }
+    match /lotes/{id}         { allow read, write: if isFin(); }
+    match /inventarios/{id}   { allow read, write: if isOps(); }
+    match /tuss/{id}          { allow read: if isOps() || isProf(); allow write: if isOps(); }
+    match /mapTuss/{id}       { allow read, write: if isFin(); }
 
     // Cadastros da operação
     match /funcionarios/{id}  { allow read, write: if isAdmin(); }
-    match /coordenadores/{id} { allow read: if isAdmin() || isProf(); allow write: if isAdmin(); }
-    match /organizacoes/{id}  { allow read: if isAdmin() || isProf(); allow write: if isAdmin(); }
-    match /rotas/{id}         { allow read: if isAdmin() || isProf(); allow write: if isAdmin(); }
+    match /coordenadores/{id} { allow read: if isOps() || isProf(); allow write: if isOps(); }
+    match /organizacoes/{id}  { allow read: if isOps() || isProf(); allow write: if isOps(); }
+    match /rotas/{id}         { allow read: if isOps() || isProf(); allow write: if isOps(); }
     // Avisos da administração para a equipe de campo
-    match /avisos/{id}        { allow read: if signed(); allow write: if isAdmin(); }
+    match /avisos/{id}        { allow read: if signed(); allow write: if isOps(); }
 
     // Chat: cada profissional só vê e escreve na própria conversa
     match /mensagens/{id} {
-      allow read: if isAdmin() || meuProf();
-      allow create: if isAdmin() || (isProf() && request.resource.data.profId == me().profId && request.resource.data.de == 'prof');
-      allow update: if isAdmin() || (meuProf() && only(['lida','atualizado']));
-      allow delete: if isAdmin();
+      allow read: if isChat() || meuProf();
+      allow create: if isChat() || (isProf() && request.resource.data.profId == me().profId && request.resource.data.de == 'prof');
+      allow update: if isChat() || (meuProf() && only(['lida','atualizado']));
+      allow delete: if isChat();
     }
     // Folgas e férias: o profissional avisa as suas
     match /indisponibilidades/{id} {
-      allow read: if isAdmin() || meuProf();
-      allow create: if isAdmin() || (isProf() && request.resource.data.profId == me().profId);
-      allow update: if isAdmin() || (meuProf() && only(['de','ate','motivo','obs','profNome','atualizado'])); allow delete: if isAdmin() || meuProf();
+      allow read: if isOps() || meuProf();
+      allow create: if isOps() || (isProf() && request.resource.data.profId == me().profId);
+      allow update: if isOps() || (meuProf() && only(['de','ate','motivo','obs','profNome','atualizado'])); allow delete: if isOps() || meuProf();
     }
 
     // Financeiro: só a administração. O profissional lê os próprios adiantamentos.
-    match /despesas/{id}      { allow read, write: if isAdmin(); }
-    match /adiantamentos/{id} { allow read: if isAdmin() || meuProf(); allow write: if isAdmin(); }
-    match /lancamentos/{id}   { allow read, write: if isAdmin(); }
-    match /extratoBanco/{id}  { allow read, write: if isAdmin(); }
-    match /conferencias/{id}  { allow read, write: if isAdmin(); }
+    match /despesas/{id}      { allow read, write: if isFin(); }
+    match /adiantamentos/{id} { allow read: if isFin() || meuProf(); allow write: if isFin(); }
+    match /lancamentos/{id}   { allow read, write: if isFin(); }
+    match /extratoBanco/{id}  { allow read, write: if isFin(); }
+    match /conferencias/{id}  { allow read, write: if isOps(); }
 
     // Auditoria do cliente: perfil/UID e horário do servidor verificados; não é prova independente da ação
     match /auditoria/{id}     { allow create: if temPerfil() && request.resource.data.keys().hasOnly(['id','em','uid','usuario','perfil','acao','colecao','docId','item','detalhe']) && request.resource.data.uid == request.auth.uid && request.resource.data.perfil == me().role && request.resource.data.usuario == me().nome && request.resource.data.em == request.time; allow read: if isAdmin(); }

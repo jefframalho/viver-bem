@@ -659,7 +659,8 @@ const Store = {
   async loadFor(session){
     if(this.mode==="demo") return;
     this.bloqueadas=[]; const get = async (c,q) => { try{ const s = await (q||this.fs.collection(c)).get(); this.data[c] = s.docs.map(d=>{ const v=d.data(); return {...v,em:v.em?.toDate?v.em.toDate().toISOString():v.em}; }); }catch(e){ this.data[c]=[]; this.bloqueadas.push(c); console.warn("Sem permissão para ler",c,e.message); } };
-    if(session.role==="admin") await Promise.all([...COLS.filter(c=>!["curriculos","documentos","auditoria"].includes(c)).map(c=>get(c)), get("auditoria", this.fs.collection("auditoria").orderBy("em","desc").limit(500))]);
+    if(session.role==="func"){ const nao=new Set(["curriculos","documentos","auditoria","candidatos","contratos","usuarios","funcionarios",...(session.acessoFin?[]:["lotes","mapTuss","operadoras","despesas","adiantamentos","lancamentos","extratoBanco"]),...(session.chat?[]:["mensagens"])]); await Promise.all(COLS.filter(c=>!nao.has(c)).map(c=>get(c))); }
+    else if(session.role==="admin") await Promise.all([...COLS.filter(c=>!["curriculos","documentos","auditoria"].includes(c)).map(c=>get(c)), get("auditoria", this.fs.collection("auditoria").orderBy("em","desc").limit(500))]);
     else if(session.role==="paciente"){ const q=(c,k,v)=>get(c,this.fs.collection(c).where(k,"==",v)); const paciente=session.pacId ? await this.fetchOne("pacientes",session.pacId) : null;
       this.data.pacientes=paciente ? [{...paciente,id:session.pacId}] : [];
       if(!paciente) return;
@@ -679,6 +680,14 @@ const Store = {
 
 /* =================== SESSÃO =================== */
 let S = null; // {role:"admin"|"prof", profId, nome}
+const isStaff=()=>S?.role==="admin"||S?.role==="func";
+const BLOQ_FUNC=["funcionarios","auditoria","config","recrutamento","solicitacoes","contratos","candidato"];
+const BLOQ_FIN=["financeiro","folha","faturamento","centros","relatorios","operadoras"];
+function funcBloqueado(r){ if(S?.role!=="func") return false; return BLOQ_FUNC.includes(r)||(!S.acessoFin&&BLOQ_FIN.includes(r))||(!S.chat&&r==="chat"); }
+function navFunc(){ return ADMIN_NAV.map(n=>{
+    if(n[0]!=="grp") return funcBloqueado(n[0])?null:n;
+    const subs=n[3].filter(x=>!funcBloqueado(x[0].split("-")[0]));
+    return subs.length?[n[0],n[1],n[2],subs]:null; }).filter(Boolean); }
 const SS_KEY="viverbem-sessao";
 function saveSession(){ try{ S ? sessionStorage.setItem(SS_KEY,JSON.stringify(S)) : sessionStorage.removeItem(SS_KEY); }catch(e){} }
 async function login(email, senha){
@@ -689,7 +698,7 @@ async function login(email, senha){
     await Store.auth.signOut();
     throw new Error("Use uma conta de profissional de saúde liberada pela administração.");
   }
-  S = {role:u.role, profId:u.profId||null, pacId:u.pacId||null, nome:u.nome||email};
+  S = {role:u.role, profId:u.profId||null, pacId:u.pacId||null, nome:u.nome||email, funId:u.funId||null, acessoFin:!!u.acessoFin, chat:!!u.chat};
   await Store.loadFor(S);
   Store._audit("Entrou","usuarios",{id:cred.user.uid,nome:S.nome});
   if(Store.bloqueadas&&Store.bloqueadas.length) setTimeout(()=>toast("Algumas áreas não carregaram por falta de permissão no banco ("+Store.bloqueadas.join(", ")+"). Atualize as regras do Firestore no console do Firebase."),600);
@@ -975,7 +984,7 @@ function counts(){
     teleSol: Store.all("consultas").filter(c=>c.status==="solicitada").length,
     estBaixo: Store.all("produtos").filter(p=>saldo(p.id)<=(+p.minimo||0)).length,
     semEvo: Store.all("plantoes").filter(p=>p.status==="realizado" && !p.evolucao && p.data>=addDays(t,-7)).length,
-    msgs: S?.role==="admin" ? Store.all("mensagens").filter(m=>m.de==="prof"&&!m.lida).length : 0,
+    msgs: isStaff() ? Store.all("mensagens").filter(m=>m.de==="prof"&&!m.lida).length : 0,
     msgsProf: S?.role==="prof" ? Store.all("mensagens").filter(m=>m.profId===S.profId&&m.de==="admin"&&!m.lida).length : 0,
     venc: Store.all("plantoes").filter(p=>p.data.startsWith(t.slice(0,7))&&["agendado","andamento"].includes(p.status)&&tEnd(p)<Date.now()-36e5).length,
     despVenc: Store.all("despesas").filter(d=>d.pago!=="sim"&&d.vencimento<t).length,
@@ -1047,10 +1056,11 @@ async function render(){
     root.innerHTML = appShell("inicio", `<section class="card"><h1>Vínculo com o paciente indisponível</h1><p>Peça à administração da Viver Bem para conferir o paciente associado a esta conta. Depois, saia e entre novamente para carregar a agenda e os avisos.</p></section>`);
     return;
   }
-  const table = {admin:ADMIN, prof:PROF, paciente:FAM}[S.role] || PROF;
-  const def = {admin:"painel", prof:"meus", paciente:"inicio"}[S.role] || "meus";
-  const fn = table[r] || table[def];
-  const cur = table[r] ? r : def;
+  const table = {admin:ADMIN, func:ADMIN, prof:PROF, paciente:FAM}[S.role] || PROF;
+  const def = {admin:"painel", func:"painel", prof:"meus", paciente:"inicio"}[S.role] || "meus";
+  const ok = table[r] && !funcBloqueado(r);
+  const fn = ok ? table[r] : table[def];
+  const cur = ok ? r : def;
   root.innerHTML = appShell(cur, fn(id));
   if(S.role==="paciente" && cur==="inicio" && Store.mode==="firebase") acompanharAvisosFamilia(S.pacId);
   if(cur==="perfil") carregaContrato();
@@ -1061,7 +1071,7 @@ window.addEventListener("hashchange", render);
 function appShell(cur, body){
   const c = counts();
   const badge = {escala:c.semPro, recrutamento:c.cand, solicitacoes:c.sol, contratos:c.ctPend, estoque:c.estBaixo, monitoramento:c.alertas, teleconsultas:c.teleSol, chat:c.msgs, mensagens:c.msgsProf, disponiveis:c.livres, perfil:c.docsFalta, conferencia:c.venc, "financeiro-despesas":c.despVenc};
-  const navItems = S.role==="admin" ? ADMIN_NAV : S.role==="paciente" ? FAM_NAV : PROF_NAV;
+  const navItems = S.role==="admin" ? ADMIN_NAV : S.role==="func" ? navFunc() : S.role==="paciente" ? FAM_NAV : PROF_NAV;
   const hash = decodeURIComponent(location.hash.slice(1));
   const chaves = navItems.flatMap(n => n[0]==="grp" ? n[3].map(x=>x[0]) : [n[0]]);
   const activeKey = {paciente:"pacientes",profissional:"profissionais",candidato:"recrutamento"}[cur] || cur;
@@ -1077,9 +1087,9 @@ function appShell(cur, body){
     <header class="topbar"><button data-act="menu" aria-label="Abrir menu">${ICON.menu} Menu</button><b>Viver Bem</b></header>
     <aside class="side" aria-label="Menu">
       <a class="brand" href="#"><img class="logo-wide" src="${LOGO}" alt="Viver Bem Atendimento Domiciliar"></a>
-      ${S.role==="admin"?`<form class="busca-side" id="fBusca" role="search"><input id="buscaGeral" type="search" placeholder="Buscar (Ctrl+K)" value="${esc(buscaTxt)}" aria-label="Busca geral"></form>`:""}
+      ${isStaff()?`<form class="busca-side" id="fBusca" role="search"><input id="buscaGeral" type="search" placeholder="Buscar (Ctrl+K)" value="${esc(buscaTxt)}" aria-label="Busca geral"></form>`:""}
       <nav class="nav">${nav}</nav>
-      <div class="side-foot"><div>${esc(S.nome)}</div><div class="small" style="color:#7FA0B6">${{admin:"Administração",prof:"Profissional",paciente:"Paciente e família"}[S.role]}${Store.mode==="demo"?" · demonstração":""}</div>
+      <div class="side-foot"><div>${esc(S.nome)}</div><div class="small" style="color:#7FA0B6">${{admin:"Administração",func:"Equipe administrativa",prof:"Profissional",paciente:"Paciente e família"}[S.role]}${Store.mode==="demo"?" · demonstração":""}</div>
       ${botaoInstalar("btn-sm btn-ghost-light")}
       <button class="btn btn-sm btn-ghost-light" data-act="logout">Sair</button></div>
     </aside>
@@ -1136,9 +1146,10 @@ function bindLogin(){
       const fam=Store.all("pacientes").find(x=>(x.acessoFamilia||"").toLowerCase()===email);
       if(email==="admin@viverbem.com"&&senha==="123456"){ S={role:"admin",nome:"Administração Viver Bem"}; }
       else if(fam){ if((fam.senhaDemo||"123456")!==senha) return showErr(f,"E-mail ou senha incorretos."); S={role:"paciente",pacId:fam.id,nome:(fam.responsavel||fam.nome).replace(/\s*\(.*\)/,"")}; }
+      else if(Store.all("funcionarios").some(x=>(x.acesso||"").toLowerCase()===email)){ const fu=Store.all("funcionarios").find(x=>(x.acesso||"").toLowerCase()===email); if((fu.senhaDemo||"123456")!==senha) return showErr(f,"E-mail ou senha incorretos."); if(fu.status==="desligado") return showErr(f,"Seu acesso está desativado. Fale com a administração."); S={role:"func",funId:fu.id,nome:fu.nome,acessoFin:!!fu.acessoFin,chat:!!fu.chat}; }
       else { const p=Store.all("profissionais").find(x=>(x.acesso||"").toLowerCase()===email); if(!p||(p.senhaDemo||"123456")!==senha) return showErr(f,"E-mail ou senha incorretos."); if(p.status!=="ativo") return showErr(f,"Seu acesso está desativado. Fale com a administração."); S={role:"prof",profId:p.id,nome:p.nome}; }
       if(portalProfissional && S.role!=="prof"){ S=null; return showErr(f,"Use uma conta de profissional de saúde."); }
-      saveSession(); location.hash={admin:"painel",prof:"meus",paciente:"inicio"}[S.role]; return render();
+      saveSession(); location.hash={admin:"painel",func:"painel",prof:"meus",paciente:"inicio"}[S.role]; return render();
     }
     const b=$("button.btn-primary",f); b.disabled=true;
     try{ await login(email, senha); saveSession(); location.hash={admin:"painel",prof:"meus",paciente:"inicio"}[S.role]||""; render(); }
@@ -1353,7 +1364,7 @@ function formPlantao(pre={}, id){
 }
 function plantaoView(id){
   const p=Store.get("plantoes",id); if(!p) return;
-  const pac=Store.get("pacientes",p.pacId)||{}, c=conflito(p), admin=S.role==="admin", e=p.evolucao||{};
+  const pac=Store.get("pacientes",p.pacId)||{}, c=conflito(p), admin=isStaff(), e=p.evolucao||{};
   const ch=regInfo(p.chegada,pac), sa=regInfo(p.saida,pac), at=atrasoMin(p);
   const regLine=(r,raw)=> r ? `${raw.manual?`<span class="pill p-warn">Lançado pela administração</span> <span class="small muted">${esc(raw.motivo||"")}</span> · `:""}<b>${r.hora}</b>${raw.acc?` <span class="small muted">(precisão ${raw.acc} m)</span>`:""} · ${r.semGeo?'<span class="pill p-mute">Sem localização</span>':r.d==null?'<span class="small muted">casa sem localização cadastrada</span>':r.longe?`<span class="pill p-bad">A ${fmtDist(r.d)} do endereço</span>`:`<span class="pill p-ok">No endereço (${fmtDist(r.d)})</span>`}${r.map?` · <a href="${r.map}" target="_blank" rel="noopener">mapa</a>`:""}` : "-";
   const presenca = `<div class="card" style="background:var(--surface-2)"><h3 style="margin-bottom:8px">Chegada e saída</h3><dl class="kv">
@@ -2344,10 +2355,10 @@ const ACT = {
     const record=Store.get(col,id),key=col==="candidatos"?"ownerUid":"signerUid";
     await Store.put(col,{...record,[key]:value}); closeModal(); toast("Vínculo salvo. O titular precisa confirmar o e-mail para acessar."); render();
   },
-  patientTeam(id){ if(S?.role!=="admin") return; const p=Store.get("pacientes",id);
+  patientTeam(id){ if(!isStaff()) return; const p=Store.get("pacientes",id);
     modal("Equipe autorizada do paciente",`<p>Somente estes profissionais poderão consultar o cadastro e o monitoramento deste paciente. Revise também os plantões e as consultas atribuídos.</p>${Store.all("profissionais").map(pro=>`<label class="consent"><input class="teamPro" type="checkbox" value="${esc(pro.id)}" ${(p.profIds||[]).includes(pro.id)?"checked":""}>${esc(pro.nome)}</label>`).join("")}<div class="actions"><button class="btn btn-primary" data-act="savePatientTeam" data-id="${esc(id)}">Salvar equipe</button></div>`);
   },
-  async savePatientTeam(id){ if(S?.role!=="admin") return; const p=Store.get("pacientes",id); await Store.put("pacientes",{...p,profIds:$$('.teamPro:checked').map(x=>x.value)}); closeModal(); toast("Equipe autorizada atualizada"); render(); },
+  async savePatientTeam(id){ if(!isStaff()) return; const p=Store.get("pacientes",id); await Store.put("pacientes",{...p,profIds:$$('.teamPro:checked').map(x=>x.value)}); closeModal(); toast("Equipe autorizada atualizada"); render(); },
   async instalarApp(){
     if(appInstalado()) return;
     if(pedidoInstalacao){
@@ -2401,7 +2412,7 @@ const ACT = {
   async delPlantao(id,b){ if(b.dataset.ok!=="1"){ b.dataset.ok="1"; b.textContent="Confirmar exclusão"; return; } await Store.del("plantoes",id); closeModal(); toast("Plantão excluído"); render(); },
   async saveEvo(id){ const b=$(".modal-b"), p=Store.get("plantoes",id); const ev=readEvo(); if(!ev) return showErr(b,"Descreva a evolução do plantão (mínimo de 10 caracteres).");
     if(tStart(p)>Date.now()+36e5) return showErr(b,"Este plantão ainda não começou. Registre a evolução durante ou depois do plantão.");
-    p.evolucao={...ev,por:S.role==="prof"?S.profId:(p.profId||"")}; if(S.role==="admin"&&p.status!=="andamento") p.status="realizado";
+    p.evolucao={...ev,por:S.role==="prof"?S.profId:(p.profId||"")}; if(isStaff()&&p.status!=="andamento") p.status="realizado";
     await Store.put("plantoes",p); closeModal(); toast("Evolução salva"); render(); },
   async checkin(id,b){ const p=Store.get("plantoes",id); if(!podeChegar(p)) return toast("Chegada indisponível para este plantão");
     const txt=b.innerHTML; b.disabled=true; b.textContent="Obtendo sua localização...";
@@ -2481,7 +2492,7 @@ const ACT = {
     closeModal(); famTele={esp:"",prof:""}; toast(S.role==="paciente"?"Pedido enviado. A central vai confirmar.":"Teleconsulta agendada"); render(); verTele(c.id); },
   async teleSt(id,b){ const c=Store.get("consultas",id), v=b.dataset.v; if(v==="cancelada"&&b.dataset.ok!=="1"){ b.dataset.ok="1"; b.textContent="Confirmar cancelamento"; return; }
     c.status=v; if(S.role==="paciente"&&Store.mode==="firebase"){ await Store.fs.collection("consultas").doc(id).update({status:v,atualizado:new Date().toISOString()}); } else await Store.put("consultas",c);
-    if(S.role==="admin") await syncOcupados(c.profId); closeModal(); toast(CONS_ST[v][0]); render(); },
+    if(isStaff()) await syncOcupados(c.profId); closeModal(); toast(CONS_ST[v][0]); render(); },
   async telePago(id){ const c=Store.get("consultas",id); c.pagamento="pago"; c.pagoEm=new Date().toISOString(); await Store.put("consultas",c); closeModal(); toast("Pagamento registrado"); render(); },
   async aceitaTermo(id){ if(!$("#tc_ok2").checked) return showErr($(".modal-b"),"Marque que leu e aceita o termo."); const c=Store.get("consultas",id); c.consentimento={em:new Date().toISOString()};
     if(Store.mode==="firebase") await Store.fs.collection("consultas").doc(id).update({consentimento:c.consentimento,atualizado:new Date().toISOString()}); else Store._local(); closeModal(); verTele(id); },
@@ -2642,6 +2653,19 @@ const ACT = {
 };
 /* ações da tela de auditoria */
 Object.assign(ACT,{
+  acessoFun(id){ const f=Store.get("funcionarios",id); if(!f) return;
+    modal("Login do funcionário", `<p>${esc(f.nome)} vai entrar no sistema com este e-mail e ver só o que as permissões do cadastro liberam.</p>
+      ${fields([{k:"uEmail",l:"E-mail de login",t:"email"},{k:"uSenha",l:"Senha inicial",h:"Mínimo de 6 caracteres"}],{uEmail:f.email||""})}
+      <div class="actions"><button class="btn btn-primary" data-act="saveAcessoFun" data-id="${id}">Criar login</button></div>`); },
+  async saveAcessoFun(id){ const b=$(".modal-b"), f=Store.get("funcionarios",id), email=$("#f_uEmail").value.trim().toLowerCase(), senha=$("#f_uSenha").value;
+    if(!/.+@.+\..+/.test(email)) return showErr(b,"Informe um e-mail válido."); if(senha.length<6) return showErr(b,"A senha precisa ter pelo menos 6 caracteres.");
+    try{ if(Store.mode==="firebase"){ const sec=firebase.apps.find(a=>a.name==="sec")||firebase.initializeApp(FIREBASE_CONFIG,"sec"); const cr=await sec.auth().createUserWithEmailAndPassword(email,senha);
+        await Store.put("usuarios",{id:cr.user.uid,role:"func",funId:id,nome:f.nome,email,acessoFin:!!f.acessoFin,chat:!!f.chat}); await sec.auth().signOut(); f.uid=cr.user.uid; }
+      else f.senhaDemo=senha;
+      f.acesso=email; await Store.put("funcionarios",f); closeModal(); render();
+      const msg=`Olá, ${first(f.nome)}! Seu acesso ao sistema da Viver Bem: ${baseURL()} · login ${email} · senha ${senha}`;
+      modal("Envie o acesso",`<p class="note" style="word-break:break-all">${esc(msg)}</p><div class="actions"><a class="btn btn-primary" target="_blank" rel="noopener" href="${wa(f.tel,msg)}">${ICON.wa}Enviar pelo WhatsApp</a></div>`,{nofocus:1});
+    }catch(err){ showErr(b, err.code==="auth/email-already-in-use"?"Este e-mail já tem acesso.":"Não foi possível criar o login: "+(err.message||err)); } },
   async funCadastrar(){
     const g=id=>document.getElementById(id), nome=g("fn_nome").value.trim(), cargo=g("fn_cargo").value.trim();
     if(!nome||!cargo) return toast("Informe nome e cargo");
@@ -2725,8 +2749,9 @@ async function addLanc(d){ return Store.put("lancamentos",{id:uid("lc"),concilia
 /* ---------- Cadastros genéricos ---------- */
 const CRUD={
   funcionarios:{t:"Funcionário",pre:"fun",spec:()=>[{k:"nome",l:"Nome completo",req:1,full:1},{k:"cpf",l:"CPF",im:"numeric"},{k:"cargo",l:"Cargo",req:1,ph:"Ex.: Recepcionista, Auxiliar administrativo"},{k:"vinculo",l:"Vínculo",t:"select",o:["CLT","Estágio","Pessoa jurídica","Autônomo","Sócio"]},{k:"setor",l:"Centro de custo",t:"select",o:lista("centros")},{k:"admissao",l:"Admissão",t:"date"},{k:"salario",l:"Salário ou pró-labore (R$)",t:"number",step:"0.01"},{k:"tel",l:"WhatsApp",im:"tel"},{k:"email",l:"E-mail",t:"email"},{k:"status",l:"Situação",t:"select",o:[["ativo","Ativo"],["desligado","Desligado"]]},{k:"obs",l:"Observações",t:"textarea",full:1}],
-    extra:o=>`<div class="f full"><span>Permissões</span><div class="checks"><label><input type="checkbox" name="fun_fin" ${o.acessoFin?"checked":""}>Liberar acesso financeiro completo</label><label><input type="checkbox" name="fun_chat" ${o.chat?"checked":""}>Liberar chat com profissionais</label></div></div>`,
-    read(o,root){ o.cpf=digits(o.cpf); o.salario=+o.salario||0; if(root&&root.querySelector){ o.acessoFin=!!root.querySelector('input[name="fun_fin"]:checked'); o.chat=!!root.querySelector('input[name="fun_chat"]:checked'); } }},
+    extra:o=>`<div class="f full"><span>Permissões</span><div class="checks"><label><input type="checkbox" name="fun_fin" ${o.acessoFin?"checked":""}>Liberar acesso financeiro completo</label><label><input type="checkbox" name="fun_chat" ${o.chat?"checked":""}>Liberar chat com profissionais</label></div></div>${o.id&&Store.get("funcionarios",o.id)?`<div class="f full"><span>Acesso ao sistema</span><p class="small muted">${o.acesso?"Login: "+esc(o.acesso)+". As permissões acima valem no próximo login do funcionário.":"Este funcionário ainda não tem login."}</p>${o.acesso?"":`<button type="button" class="btn btn-line" data-act="acessoFun" data-id="${o.id}">Criar login do funcionário</button>`}</div>`:""}`,
+    read(o,root){ o.cpf=digits(o.cpf); o.salario=+o.salario||0; if(root&&root.querySelector){ o.acessoFin=!!root.querySelector('input[name="fun_fin"]:checked'); o.chat=!!root.querySelector('input[name="fun_chat"]:checked'); }  },
+    async after(o){ if(o.uid&&Store.mode==="firebase"){ const u=Store.get("usuarios",o.uid); await Store.put("usuarios",{...(u||{id:o.uid,role:"func",funId:o.id,email:o.acesso||""}),nome:o.nome,acessoFin:!!o.acessoFin,chat:!!o.chat}); } }},
   coordenadores:{t:"Coordenador",pre:"crd",spec:()=>[{k:"nome",l:"Nome completo",req:1,full:1},{k:"funcao",l:"Função",ph:"Enfermeiro(a) coordenador(a)"},{k:"registro",l:"Registro no conselho",ph:"COREN-UF 000000"},{k:"tel",l:"WhatsApp",req:1,im:"tel"},{k:"email",l:"E-mail",t:"email"},{k:"status",l:"Situação",t:"select",o:[["ativo","Ativo"],["inativo","Inativo"]]}],
     extra:o=>`<div class="f full"><span>Pacientes sob coordenação</span><div class="checks">${pacOpts().map(p=>`<label><input type="checkbox" name="crd_pac" value="${p.id}" ${o.id&&p.coordId===o.id?"checked":""}>${esc(p.nome||p.responsavel)}</label>`).join("")||'<span class="small muted">Nenhum paciente ativo.</span>'}</div></div>`,
     async after(o,root){ const sel=new Set($$('input[name="crd_pac"]:checked',root).map(i=>i.value)); for(const p of Store.all("pacientes")){ const tem=p.coordId===o.id; if(sel.has(p.id)&&!tem){ p.coordId=o.id; await Store.put("pacientes",p); } else if(!sel.has(p.id)&&tem&&p.status!=="alta"){ p.coordId=""; await Store.put("pacientes",p); } } },
@@ -2751,7 +2776,7 @@ const CRUD={
     guard:id=>Store.all("mapTuss").some(m=>m.tussId===id)?"Este código está em um mapeamento. Remova o mapeamento antes.":""},
   mapTuss:{t:"Mapeamento",pre:"mp",spec:()=>[{k:"operadoraId",l:"Operadora",t:"select",req:1,o:[["","Selecione"],...Store.all("operadoras").map(o=>[o.id,o.nome])],full:1},{k:"servico",l:"Serviço do sistema",t:"select",req:1,o:[["","Selecione"],...SERV_FAT()]},{k:"tussId",l:"Código TUSS",t:"select",req:1,o:[["","Selecione"],...Store.all("tuss").map(t=>[t.id,`${t.codigo} · ${t.descricao}`])],full:1},{k:"valor",l:"Valor acordado (R$)",t:"number",step:"0.01",h:"Em branco usa o valor do plantão. Por hora: valor da hora."},{k:"obs",l:"Observação",full:1}],
     read(o){ o.valor=o.valor===""?"":+o.valor; if(Store.all("mapTuss").some(m=>m.id!==o.id&&m.operadoraId===o.operadoraId&&m.servico===o.servico)) return "Este serviço já está mapeado para esta operadora."; }},
-  indisponibilidades:{t:"Folga ou indisponibilidade",pre:"ind",spec:()=>[...(S?.role==="admin"?[{k:"profId",l:"Profissional",t:"select",o:proOpts(),req:1,full:1}]:[]),{k:"de",l:"De",t:"date",req:1},{k:"ate",l:"Até",t:"date",req:1},{k:"motivo",l:"Motivo",t:"select",o:["Folga","Férias","Atestado médico","Compromisso pessoal","Outro"]},{k:"obs",l:"Observação",full:1}],
+  indisponibilidades:{t:"Folga ou indisponibilidade",pre:"ind",spec:()=>[...(isStaff()?[{k:"profId",l:"Profissional",t:"select",o:proOpts(),req:1,full:1}]:[]),{k:"de",l:"De",t:"date",req:1},{k:"ate",l:"Até",t:"date",req:1},{k:"motivo",l:"Motivo",t:"select",o:["Folga","Férias","Atestado médico","Compromisso pessoal","Outro"]},{k:"obs",l:"Observação",full:1}],
     read(o){ if(S.role==="prof") o.profId=S.profId; if(o.ate<o.de) return "A data final deve ser igual ou depois da inicial."; o.profNome=proName(o.profId); }}
 };
 function crudForm(col,id,pre={}){
@@ -3355,7 +3380,7 @@ Object.assign(ACT, {
     if(!ev) return showErr(b, evoMsg||"Descreva a evolução do plantão (mínimo de 10 caracteres).");
     if(tStart(p)>Date.now()+36e5) return showErr(b,"Este plantão ainda não começou. Registre a evolução durante ou depois do plantão.");
     await assinaProf(ev,p);
-    p.evolucao={...ev,por:S.role==="prof"?S.profId:(p.profId||"")}; if(S.role==="admin"&&p.status!=="andamento") p.status="realizado";
+    p.evolucao={...ev,por:S.role==="prof"?S.profId:(p.profId||"")}; if(isStaff()&&p.status!=="andamento") p.status="realizado";
     await Store.put("plantoes",p); closeModal(); toast("Evolução salva"); render(); },
   async checkout(id,b){ const bd=$(".modal-b"), p=Store.get("plantoes",id), ev=readEvo();
     if(!ev && !p.evolucao) return showErr(bd, evoMsg||"Escreva a evolução do plantão antes de registrar a saída.");
@@ -3426,7 +3451,7 @@ document.addEventListener("submit", async e=>{
   if(e.target.id!=="fChat") return; e.preventDefault();
   const t=$("#chatTxt"), texto=t.value.trim(); if(!texto) return;
   t.value=""; t.focus();
-  await Store.put("mensagens",{id:uid("msg"),profId:e.target.dataset.pro,de:S.role==="admin"?"admin":"prof",nome:S.nome,texto,em:new Date().toISOString(),lida:false});
+  await Store.put("mensagens",{id:uid("msg"),profId:e.target.dataset.pro,de:isStaff()?"admin":"prof",nome:S.nome,texto,em:new Date().toISOString(),lida:false});
   render();
 });
 document.addEventListener("change", async e=>{
@@ -3710,7 +3735,7 @@ document.addEventListener("change", async e=>{
   try{
     await Store.init();
     if(Store.mode==="demo"){ try{ S=JSON.parse(sessionStorage.getItem(SS_KEY)); }catch(e){} }
-    else { const u=Store.auth.currentUser; if(u){ const d=await Store.fetchOne("usuarios",u.uid); if(d&&(!portalProfissional||(d.role==="prof"&&d.profId))){ S={role:d.role,profId:d.profId||null,pacId:d.pacId||null,nome:d.nome||u.email}; await Store.loadFor(S); } } }
+    else { const u=Store.auth.currentUser; if(u){ const d=await Store.fetchOne("usuarios",u.uid); if(d&&(!portalProfissional||(d.role==="prof"&&d.profId))){ S={role:d.role,profId:d.profId||null,pacId:d.pacId||null,nome:d.nome||u.email,funId:d.funId||null,acessoFin:!!d.acessoFin,chat:!!d.chat}; await Store.loadFor(S); } } }
   }catch(err){ $("#root").innerHTML=`<p class="empty" style="padding-top:30vh">${esc(err.message)}</p>`; return; }
   render();
   if(Store.bloqueadas&&Store.bloqueadas.length) toast("Algumas áreas não carregaram por falta de permissão no banco ("+Store.bloqueadas.join(", ")+"). Atualize as regras do Firestore no console do Firebase.");
