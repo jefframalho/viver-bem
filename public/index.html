@@ -392,6 +392,13 @@ a.pacard h2{font-size:1.1rem;margin:0}
 .lista-simples li{font-size:.92rem}
 
 /* auditoria */
+.fun-banner{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;padding:22px 24px;border-radius:16px;background:linear-gradient(120deg,#0f2f2a,#1d5a4f);color:#fff;margin-bottom:12px}
+.fun-banner h1{color:#fff;margin:0}
+.fun-banner p{margin:4px 0 0;color:rgba(255,255,255,.8);max-width:560px;font-size:.95rem}
+.fun-banner .btn-line{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.35)}
+.fun-kpis{margin-bottom:12px}
+.fun-form{margin-bottom:12px}
+.fun-perm{margin:12px 0}
 .aud-tabs{display:inline-flex;gap:4px;padding:4px;border:1px solid var(--line);border-radius:12px;background:var(--surface);margin:14px 0}
 .aud-tabs button{font:600 .95rem var(--f-body);padding:9px 16px;border-radius:9px;border:0;background:transparent;color:var(--muted);cursor:pointer}
 .aud-tabs button[aria-selected="true"]{background:var(--info-bg);color:var(--blue)}
@@ -2613,6 +2620,11 @@ const ACT = {
 };
 /* ações da tela de auditoria */
 Object.assign(ACT,{
+  async funCadastrar(){
+    const g=id=>document.getElementById(id), nome=g("fn_nome").value.trim(), cargo=g("fn_cargo").value.trim();
+    if(!nome||!cargo) return toast("Informe nome e cargo");
+    await Store.put("funcionarios",{id:uid("fun"),nome,cargo,cpf:digits(g("fn_cpf").value),tel:g("fn_tel").value.trim(),email:g("fn_email").value.trim(),vinculo:g("fn_vinculo").value,status:"ativo",salario:0,acessoFin:g("fn_fin").checked,chat:g("fn_chat").checked});
+    toast("Funcionário cadastrado"); render(); },
   audAba(id){ audAba=id; audSel="*"; return render(); },
   audSel(id){ audSel=id; return render(); },
   async audAtualizar(){
@@ -2690,7 +2702,8 @@ async function addLanc(d){ return Store.put("lancamentos",{id:uid("lc"),concilia
 /* ---------- Cadastros genéricos ---------- */
 const CRUD={
   funcionarios:{t:"Funcionário",pre:"fun",spec:()=>[{k:"nome",l:"Nome completo",req:1,full:1},{k:"cpf",l:"CPF",im:"numeric"},{k:"cargo",l:"Cargo",req:1,ph:"Ex.: Recepcionista, Auxiliar administrativo"},{k:"vinculo",l:"Vínculo",t:"select",o:["CLT","Estágio","Pessoa jurídica","Autônomo","Sócio"]},{k:"setor",l:"Centro de custo",t:"select",o:lista("centros")},{k:"admissao",l:"Admissão",t:"date"},{k:"salario",l:"Salário ou pró-labore (R$)",t:"number",step:"0.01"},{k:"tel",l:"WhatsApp",im:"tel"},{k:"email",l:"E-mail",t:"email"},{k:"status",l:"Situação",t:"select",o:[["ativo","Ativo"],["desligado","Desligado"]]},{k:"obs",l:"Observações",t:"textarea",full:1}],
-    read(o){ o.cpf=digits(o.cpf); o.salario=+o.salario||0; }},
+    extra:o=>`<div class="f full"><span>Permissões</span><div class="checks"><label><input type="checkbox" name="fun_fin" ${o.acessoFin?"checked":""}>Liberar acesso financeiro completo</label><label><input type="checkbox" name="fun_chat" ${o.chat?"checked":""}>Liberar chat com profissionais</label></div></div>`,
+    read(o,root){ o.cpf=digits(o.cpf); o.salario=+o.salario||0; if(root&&root.querySelector){ o.acessoFin=!!root.querySelector('input[name="fun_fin"]:checked'); o.chat=!!root.querySelector('input[name="fun_chat"]:checked'); } }},
   coordenadores:{t:"Coordenador",pre:"crd",spec:()=>[{k:"nome",l:"Nome completo",req:1,full:1},{k:"funcao",l:"Função",ph:"Enfermeiro(a) coordenador(a)"},{k:"registro",l:"Registro no conselho",ph:"COREN-UF 000000"},{k:"tel",l:"WhatsApp",req:1,im:"tel"},{k:"email",l:"E-mail",t:"email"},{k:"status",l:"Situação",t:"select",o:[["ativo","Ativo"],["inativo","Inativo"]]}],
     extra:o=>`<div class="f full"><span>Pacientes sob coordenação</span><div class="checks">${pacOpts().map(p=>`<label><input type="checkbox" name="crd_pac" value="${p.id}" ${o.id&&p.coordId===o.id?"checked":""}>${esc(p.nome||p.responsavel)}</label>`).join("")||'<span class="small muted">Nenhum paciente ativo.</span>'}</div></div>`,
     async after(o,root){ const sel=new Set($$('input[name="crd_pac"]:checked',root).map(i=>i.value)); for(const p of Store.all("pacientes")){ const tem=p.coordId===o.id; if(sel.has(p.id)&&!tem){ p.coordId=o.id; await Store.put("pacientes",p); } else if(!sel.has(p.id)&&tem&&p.status!=="alta"){ p.coordId=""; await Store.put("pacientes",p); } } },
@@ -2727,9 +2740,16 @@ function crudForm(col,id,pre={}){
 /* ---------- Funcionários, coordenadores, organizações ---------- */
 function pgFuncionarios(){
   const l=Store.all("funcionarios").slice().sort((a,b)=>a.nome.localeCompare(b.nome)), at=l.filter(f=>f.status!=="desligado");
-  return pageHead("Gestão de funcionários","Equipe administrativa e de apoio. Profissionais de saúde autônomos ficam em Profissionais.",`<div class="actions"><button class="btn btn-line" data-act="salariosDesp">Lançar salários de ${esc(mesLabel(curMes()))}</button><button class="btn btn-primary" data-act="crudNew" data-v="funcionarios">${ICON.plus}Novo funcionário</button></div>`)+
-  `<div class="kpis"><div class="kpi"><b>${at.length}</b><span>Funcionários ativos</span></div><div class="kpi"><b>${brl(sum(at,f=>f.salario))}</b><span>Salários por mês</span></div><div class="kpi"><b>${Store.all("coordenadores").filter(c=>c.status!=="inativo").length}</b><span>Coordenadores</span></div></div>`+
-  tabela(["Nome","Cargo","Vínculo","Centro de custo","Admissão","Salário|r","Situação"],l.map(f=>({act:"crudEdit",v:"funcionarios",id:f.id,cells:[`<b>${esc(f.nome)}</b>${ex(f)}<div class="small muted">${esc(f.tel||"")}</div>`,esc(f.cargo),esc(f.vinculo||"-"),esc(f.setor||"-"),fmtDay(f.admissao),brl(f.salario),`<span class="pill ${f.status==="desligado"?"p-mute":"p-ok"}">${f.status==="desligado"?"Desligado":"Ativo"}</span>`]})),"Nenhum funcionário cadastrado.");
+  const coords=Store.all("coordenadores").filter(c=>c.status!=="inativo").length;
+  const vinc=CRUD.funcionarios.spec().find(f=>f.k==="vinculo").o;
+  return `<section class="fun-banner"><div><h1>Gestão de funcionários</h1><p>Cadastre a equipe administrativa e de apoio e defina o que cada pessoa pode acessar. Profissionais de saúde ficam em Profissionais.</p></div><button class="btn btn-line" data-act="salariosDesp">Lançar salários de ${esc(mesLabel(curMes()))}</button></section>
+  <div class="kpis fun-kpis"><div class="kpi k-blue"><span class="kl">Ativos</span><b>${at.length}</b><span>funcionários em atividade</span></div><div class="kpi k-green"><span class="kl">Folha mensal</span><b>${brl(sum(at,f=>f.salario))}</b><span>salários e pró-labore</span></div><div class="kpi"><span class="kl">Coordenadores</span><b>${coords}</b><span>acompanhando pacientes</span></div></div>
+  <section class="card fun-form"><h2>Cadastrar funcionário</h2><p class="small muted">Preencha o essencial. Salário, admissão e demais dados ficam disponíveis ao editar.</p>
+  <div class="fgrid"><label class="f"><span>Nome completo *</span><input id="fn_nome" autocomplete="off"></label><label class="f"><span>Cargo *</span><input id="fn_cargo" placeholder="Ex.: Recepcionista"></label><label class="f"><span>CPF</span><input id="fn_cpf" inputmode="numeric"></label><label class="f"><span>Telefone</span><input id="fn_tel" inputmode="tel"></label><label class="f"><span>E-mail</span><input id="fn_email" type="email"></label><label class="f"><span>Vínculo</span><select id="fn_vinculo">${vinc.map(v=>`<option>${esc(v)}</option>`).join("")}</select></label></div>
+  <div class="checks fun-perm"><label><input type="checkbox" id="fn_fin">Liberar acesso financeiro completo</label><label><input type="checkbox" id="fn_chat">Liberar chat com profissionais</label></div>
+  <div class="actions"><button class="btn btn-primary" data-act="funCadastrar">${ICON.plus}Cadastrar funcionário</button></div></section>
+  <section class="card"><h2>Funcionários cadastrados</h2>`+
+  tabela(["Nome","CPF","Telefone","E-mail","Status","Financeiro","Ações"],l.map(f=>({cells:[`<b>${esc(f.nome)}</b>${ex(f)}<div class="small muted">${esc(f.cargo||"")}${f.vinculo?" · "+esc(f.vinculo):""}</div>`,esc(fmtCPF(f.cpf)||"-"),esc(f.tel||"-"),esc(f.email||"-"),`<span class="pill ${f.status==="desligado"?"p-mute":"p-ok"}">${f.status==="desligado"?"Desligado":"Ativo"}</span>`,`<span class="pill ${f.acessoFin?"p-ok":"p-mute"}">${f.acessoFin?"Liberado":"Restrito"}</span>`,`<button class="btn btn-sm btn-line" data-act="crudEdit" data-v="funcionarios" data-id="${f.id}">Editar</button>`]})),"Nenhum funcionário cadastrado.")+`</section>`;
 }
 function pgCoordenadores(){
   const l=Store.all("coordenadores").slice().sort((a,b)=>a.nome.localeCompare(b.nome)), t=today();
