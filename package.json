@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Testes locais das regras e do controle de acesso do Viver Bem",
   "scripts": {
-    "test": "node --test tests/browser-flow.test.cjs tests/demo-mode.test.cjs &&firebase emulators:exec --only firestore --project demo-viver-bem-security --config firebase.test.json \"node --test tests/security.test.cjs\""
+    "test": "node --test tests/browser-flow.test.cjs tests/demo-mode.test.cjs tests/moldura.test.cjs && firebase emulators:exec --only firestore --project demo-viver-bem-security --config firebase.test.json \"node --test tests/security.test.cjs\""
   },
   "keywords": [],
   "author": "",
