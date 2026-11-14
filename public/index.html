@@ -213,13 +213,50 @@ a.kpi:hover{border-color:var(--blue)}
 .ex{display:inline-block;font-size:var(--fs-2xs);font-weight:500;color:var(--muted);border:1px dashed var(--line-strong);border-radius:var(--r-xs);padding:0 4px;margin-left:6px;vertical-align:1px;line-height:16px;text-transform:lowercase}
 .ex::first-letter{text-transform:uppercase}
 
-.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+.tablewrap{overflow-x:auto;max-width:100%;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
 table{width:100%;border-collapse:collapse;font-size:var(--fs-md)}
-th{text-align:left;font-weight:600;color:var(--muted);font-size:var(--fs-sm);text-transform:uppercase;letter-spacing:var(--ls-caps);padding:8px 12px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--surface-2)}
-td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{text-align:left;font-weight:600;color:var(--muted);font-size:var(--fs-xs);text-transform:uppercase;letter-spacing:var(--ls-caps);padding:var(--sp-2) var(--sp-3);height:36px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--surface-2);vertical-align:middle}
+td{padding:var(--sp-2) var(--sp-3);border-bottom:1px solid var(--line);vertical-align:middle;line-height:1.4}
+td .small{margin-top:2px}
 tr:last-child td{border-bottom:0}
+tbody tr:hover td{background:color-mix(in srgb,var(--surface-2) 70%,transparent)}
 tr.click{cursor:pointer} tr.click:hover td{background:var(--surface-2)}
-td.r,th.r{text-align:right;font-variant-numeric:tabular-nums}
+tr.click:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+tr.click:focus-visible td{background:var(--surface-2)}
+td.r,th.r{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+/* Coluna de ações: à direita, sem quebrar os botões */
+td.t-acoes{text-align:right;white-space:nowrap;width:1%}
+td.t-acoes .actions{justify-content:flex-end;flex-wrap:nowrap}
+/* Matrizes (financeiro, DRE, frequência, relatórios): rolagem dentro do componente e 1ª coluna fixa */
+table.t-matriz{min-width:max-content}
+table.t-matriz td,table.t-matriz th{white-space:nowrap}
+table.t-matriz th:first-child,table.t-matriz td:first-child{position:sticky;left:0;z-index:1;background:var(--surface);box-shadow:inset -1px 0 0 var(--line)}
+table.t-matriz th:first-child{background:var(--surface-2)}
+table.t-matriz tfoot td:first-child{background:var(--surface-2)}
+/* Celular: tabelas operacionais viram cartões com rótulo e valor */
+@media (max-width:720px){
+  .tablewrap:has(>table.t-cards){border:0;background:none;overflow:visible;border-radius:0}
+  table.t-cards,table.t-cards>tbody,table.t-cards>tfoot,table.t-cards tr,table.t-cards td{display:block;width:100%}
+  table.t-cards>thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+  table.t-cards>tbody{display:grid;gap:var(--sp-2)}
+  table.t-cards tr{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:var(--sp-3) var(--sp-4)}
+  table.t-cards>tfoot tr{margin-top:var(--sp-2);background:var(--surface-2)}
+  table.t-cards tbody tr:hover td,table.t-cards tr.click:hover td,table.t-cards tr.click:focus-visible td{background:none}
+  table.t-cards tr.click:focus-visible{outline-offset:2px}
+  table.t-cards td{border:0;padding:6px 0;display:grid;grid-template-columns:minmax(92px,36%) minmax(0,1fr);column-gap:var(--sp-3);align-items:baseline;text-align:left;white-space:normal;width:auto;overflow-wrap:anywhere}
+  /* todo o conteúdo da célula fica na coluna de valor, alinhado à esquerda (selos não esticam) */
+  table.t-cards td>*{grid-column:2;justify-self:start;max-width:100%}
+  table.t-cards td::before{content:attr(data-label);color:var(--muted);font-size:var(--fs-sm);font-weight:500;overflow-wrap:normal}
+  /* 1ª coluna = título do cartão (informação principal) */
+  table.t-cards td:first-child{display:block;padding:0 0 var(--sp-2);margin-bottom:var(--sp-1);border-bottom:1px solid var(--line);font-size:var(--fs-base)}
+  table.t-cards td:first-child::before,table.t-cards td[data-label=""]::before,table.t-cards td:not([data-label])::before{content:none}
+  table.t-cards td[data-label=""],table.t-cards td:not([data-label]){display:block}
+  table.t-cards td.t-acoes{padding-top:var(--sp-2);text-align:left;white-space:normal}
+  table.t-cards td.t-acoes .actions{justify-content:flex-start;flex-wrap:wrap}
+  table.t-cards td.empty{text-align:center;padding:var(--sp-4) 0}
+  table.t-cards td.r{text-align:left}
+}
 td b{font-weight:600}
 
 .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
@@ -482,7 +519,7 @@ label.btn>.sr{left:0;top:0}
 .cd .ev.s-andamento{background:var(--copper-soft);color:var(--st-prog-ink)}
 /* --- frequência --- */
 table.freq td,table.freq th{padding:4px 4px;text-align:center}
-table.freq td:first-child,table.freq th:first-child{text-align:left;padding-left:12px;position:sticky;left:0;background:var(--surface);z-index:1}
+table.freq td:first-child,table.freq th:first-child{text-align:left;padding-left:12px;position:sticky;left:0;background:var(--surface);z-index:1;box-shadow:inset -1px 0 0 var(--line)}
 table.freq th:first-child{background:var(--surface-2)}
 table.freq th{font-size:var(--fs-2xs)}
 table.freq .we{background:var(--surface-2)}
@@ -3919,6 +3956,43 @@ document.addEventListener("change", async e=>{
     toast(DOC_NAME[k]+" enviado"); render();
   }catch(err){ lbl.textContent=txt; input.value=""; toast(err.message||"Não foi possível enviar"); }
 });
+
+/* =================== TABELAS (apresentação) ===================
+   Só aparência e acessibilidade: rótulos para o modo cartão no celular, marcação de
+   matrizes (rolagem com 1ª coluna fixa), coluna de ações e foco por teclado em linhas
+   clicáveis. Não altera dados, regras nem ações: Enter/Espaço disparam o mesmo clique. */
+function prepararTabela(t){
+  // Classificação: uma vez por tabela
+  if(!t.dataset.prep){
+    t.dataset.prep="1";
+    const ths=[...t.querySelectorAll(":scope>thead>tr:last-child>th")];
+    const numericas=ths.filter(th=>th.classList.contains("r")).length;
+    // Matriz: frequência/DRE, relatórios extensos (9+ colunas) ou numéricas cujas linhas não abrem um registro.
+    // Listas em que a linha abre um registro (ex.: Estoque) viram cartões no celular.
+    const linhasAbrem=!!t.querySelector(":scope>tbody tr.click[data-act]");
+    const matriz=t.matches(".freq,.dre")||ths.length>=9||(numericas>=3&&numericas/Math.max(ths.length,1)>=.6&&!linhasAbrem);
+    t.classList.add(matriz?"t-matriz":"t-cards");
+  }
+  // Linhas: toda linha ainda não preparada (inclusive as inseridas depois por filtros/atualizações)
+  const cartoes=t.classList.contains("t-cards");
+  const nomes=cartoes?[...t.querySelectorAll(":scope>thead>tr:last-child>th")].map(th=>th.textContent.trim()):[];
+  for(const tr of t.querySelectorAll(":scope>tbody>tr:not([data-prep]),:scope>tfoot>tr:not([data-prep])")){
+    tr.dataset.prep="1";
+    if(cartoes) [...tr.children].forEach((td,i)=>{
+      if(td.hasAttribute("colspan")) return;
+      td.dataset.label=nomes[i]||"";
+      if(!nomes[i]&&td.querySelector("button,a.btn,label.btn")) td.classList.add("t-acoes");
+    });
+    if(tr.matches("tr.click[data-act]")&&!tr.hasAttribute("tabindex")) tr.tabIndex=0;
+  }
+}
+if(typeof MutationObserver!=="undefined"&&typeof document!=="undefined"&&document.body){
+  const prepararTabelas=()=>document.querySelectorAll("table").forEach(prepararTabela);
+  new MutationObserver(prepararTabelas).observe(document.body,{childList:true,subtree:true});
+  document.addEventListener("keydown",e=>{
+    if((e.key==="Enter"||e.key===" ")&&e.target?.matches?.("tr.click[data-act]")){ e.preventDefault(); e.target.click(); }
+  });
+}
 
 /* =================== INÍCIO =================== */
 (async()=>{
