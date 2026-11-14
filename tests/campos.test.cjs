@@ -31,6 +31,8 @@ const ALTERADAS_DE_PROPOSITO={
   'function pgPainel':'Entrega 4: fileira única de indicadores do dia e cabeçalhos de seção (só HTML)',
   'function painelBreak':'Entrega 4: devolve os indicadores sem contêiner; Atrasados/Em andamento como links (só HTML)',
   'function painelMes':'Entrega 4: cabeçalhos de seção leves no lugar de faixas (só HTML)',
+  'function pgLogin':'Entrega 9: logotipo horizontal no login (só o src da imagem)',
+  'function pubShell':'Entrega 9: logotipo horizontal no cabeçalho público (só o src da imagem)',
 };
 
 test('lógica de negócio idêntica ao commit-base (exceto interface listada)',()=>{

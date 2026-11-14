@@ -89,7 +89,7 @@ a{color:var(--blue)}
 /* Logotipo: tamanho contido, proporção original preservada (object-fit:contain + largura automática) */
 .brand img.logo-wide{width:100%;max-width:210px;height:auto;border-radius:var(--r-lg);object-fit:contain;background:var(--on-dark);box-shadow:var(--shadow-pop)}
 .side .brand img.logo-wide{width:100%;max-width:184px;height:auto;aspect-ratio:900/457;border-radius:var(--r-md);box-shadow:none}
-.pub-top .brand img.logo-wide{max-width:170px}
+.pub-top .brand img.logo-wide{width:auto;max-width:none;height:44px;aspect-ratio:900/457;border-radius:var(--r-sm);box-shadow:none}
 .brand b{display:block;font-family:var(--f-display);font-weight:600;font-size:var(--fs-xl);line-height:1.1}
 .brand small{font-size:var(--fs-2xs);color:var(--side-accent)}
 
@@ -724,6 +724,25 @@ a.kpi:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 .evo b{line-height:1.35}
 @media (max-width:600px){
   .welcome .actions .btn{flex:1 1 100%}
+}
+
+/* ===== Login e páginas públicas (Entrega 9) ===== */
+.login-art .brand img.logo-wide{width:220px;max-width:100%;height:auto;aspect-ratio:900/457;border-radius:var(--r-md);box-shadow:none}
+.login-art h1{font-weight:600;letter-spacing:var(--ls-tight)}
+.login-form h2{font-size:var(--fs-2xl)}
+/* "Instalar app" é ação secundária: discreta, sem competir com "Entrar" */
+.login-form .btn[data-act="instalarApp"]{background:transparent;border-color:transparent;color:var(--st-info-ink);min-height:40px}
+.login-form .btn[data-act="instalarApp"]:hover{background:var(--info-bg)}
+.login-form .demo-strip+.actions .btn{flex:1 1 auto}
+@media (max-width:760px){
+  /* Faixa do login compacta: o formulário aparece já na primeira tela */
+  .login-art{padding:var(--sp-5) var(--sp-4);gap:var(--sp-3);justify-content:flex-start}
+  .login-art .brand img.logo-wide{width:150px}
+  .login-art h1{font-size:var(--fs-xl);max-width:none}
+  .login-art p{font-size:var(--fs-sm);margin-top:var(--sp-1)}
+  .login-art svg{display:none}
+  .login-form{align-items:flex-start;padding-top:var(--sp-5)}
+  .pub-top .brand img.logo-wide{height:36px}
 }
 </style>
 
@@ -1392,7 +1411,7 @@ function appShell(cur, body){
   </div>`;
 }
 function pubShell(body){
-  return `<div class="pub"><header class="pub-top"><div class="in"><span class="brand" style="padding:0"><img class="logo-wide" src="${LOGO}" alt="Viver Bem Atendimento Domiciliar"></span></div></header><main class="pub-main">${body}</main></div>`;
+  return `<div class="pub"><header class="pub-top"><div class="in"><span class="brand" style="padding:0"><img class="logo-wide" src="${LOGO_MENU}" width="900" height="457" alt="Viver Bem Atendimento Domiciliar"></span></div></header><main class="pub-main">${body}</main></div>`;
 }
 
 /* =================== INSTALAÇÃO DO APP =================== */
@@ -1415,7 +1434,7 @@ function botaoInstalar(classes){
 function pgLogin(){
   const demo = Store.mode==="demo";
   return `<div class="login">
-    <section class="login-art"><span class="brand" style="padding:0"><img class="logo-wide" src="${LOGO}" alt="Viver Bem Atendimento Domiciliar"></span>
+    <section class="login-art"><span class="brand" style="padding:0"><img class="logo-wide" src="${LOGO_MENU}" width="900" height="457" alt="Viver Bem Atendimento Domiciliar"></span>
       <div><h1>Gestão do cuidado domiciliar em um só lugar.</h1><p>Administração, profissionais de saúde, pacientes e famílias entram pelo mesmo endereço. Cada um vê só o que é seu.</p></div><span></span>${LINES}</section>
     <section class="login-form">
       <form id="fLogin" novalidate>
