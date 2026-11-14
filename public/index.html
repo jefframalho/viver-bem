@@ -15,6 +15,8 @@ document.write('<link rel="manifest" href="' + (portalProfissional ? 'profission
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Viver Bem">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <style>
 /* Layout: sistema de gestão com barra lateral fixa (desktop) que vira gaveta no celular; telas públicas centralizadas sem barra */
@@ -22,11 +24,11 @@ document.write('<link rel="manifest" href="' + (portalProfissional ? 'profission
   /* Marca Viver Bem: azul-marinho como âncora, azul para ações, cobre só como destaque */
   --blue:#1F648D; --blue-deep:#0F3550; --copper:#B46E43; --copper-soft:#F5E4D8;
   /* Superfícies e texto */
-  --bg:#F1F5F8; --surface:#FFFFFF; --surface-2:#F7FAFC; --ink:#13293A; --muted:#5A7287; --line:#D8E3EB;
+  --bg:#F1F5F8; --surface:#FFFFFF; --surface-2:#F7FAFC; --ink:#13293A; --muted:#52697D; --line:#D8E3EB;
   /* Situações */
-  --ok:#2C7A52; --ok-bg:#E0F2E7; --warn:#93650E; --warn-bg:#FBF0D3; --bad:#A63D3D; --bad-bg:#F8E1E1; --info-bg:#E1EDF5;
+  --ok:#2C7A52; --ok-bg:#E0F2E7; --warn:#835A0B; --warn-bg:#FBF0D3; --bad:#A63D3D; --bad-bg:#F8E1E1; --info-bg:#E1EDF5;
   /* Menu lateral e áreas escuras (iguais no modo claro e escuro) */
-  --blue-hover:#195578; --blue-press:#144763; --line-strong:#C3D1DC; --focus:#1F648D;
+  --blue-hover:#195578; --blue-press:#144763; --line-strong:#C3D1DC; --focus:#1F648D; --field-border:#8193A3;
   /* Selos de situação: texto (ink) e fundo; o ponto usa a cor do texto */
   --st-ok-ink:#21603F; --st-warn-ink:#75500A; --st-bad-ink:#962F2F; --st-info-ink:#195577; --st-prog-ink:#87491F; --st-mute-ink:#4F6477; --st-mute-bg:#EDF1F5;
   --on-blue:#FFFFFF; --side:#0F3550; --side-ink:#C9DCE8; --side-active:rgba(255,255,255,.12);
@@ -60,14 +62,14 @@ document.write('<link rel="manifest" href="' + (portalProfissional ? 'profission
   --blue:#62A8D8; --blue-deep:#0A2230; --copper:#E3A57C; --copper-soft:#3B2A1F;
   --bg:#0B161D; --surface:#12212B; --surface-2:#0F1C25; --ink:#E3EDF3; --muted:#93AABB; --line:#23384A;
   --ok:#7DCC9F; --ok-bg:#153226; --warn:#E5C06B; --warn-bg:#382D13; --bad:#EF9B9B; --bad-bg:#3C1C1C; --info-bg:#163246;
-  --blue-hover:#7DB8E2; --blue-press:#97C7E8; --line-strong:#34506A; --focus:#7DB8E2;
+  --blue-hover:#7DB8E2; --blue-press:#97C7E8; --line-strong:#34506A; --focus:#7DB8E2; --field-border:#5F7A8F;
   --st-ok-ink:var(--ok); --st-warn-ink:var(--warn); --st-bad-ink:var(--bad); --st-info-ink:var(--blue); --st-prog-ink:var(--copper); --st-mute-ink:var(--muted); --st-mute-bg:#1A2C39;
   --on-blue:#0B161D; --side:#081A25; --side-ink:#A9C2D3; --side-active:rgba(255,255,255,.08); color-scheme:dark}}
 :root[data-theme="dark"]{
   --blue:#62A8D8; --blue-deep:#0A2230; --copper:#E3A57C; --copper-soft:#3B2A1F;
   --bg:#0B161D; --surface:#12212B; --surface-2:#0F1C25; --ink:#E3EDF3; --muted:#93AABB; --line:#23384A;
   --ok:#7DCC9F; --ok-bg:#153226; --warn:#E5C06B; --warn-bg:#382D13; --bad:#EF9B9B; --bad-bg:#3C1C1C; --info-bg:#163246;
-  --blue-hover:#7DB8E2; --blue-press:#97C7E8; --line-strong:#34506A; --focus:#7DB8E2;
+  --blue-hover:#7DB8E2; --blue-press:#97C7E8; --line-strong:#34506A; --focus:#7DB8E2; --field-border:#5F7A8F;
   --st-ok-ink:var(--ok); --st-warn-ink:var(--warn); --st-bad-ink:var(--bad); --st-info-ink:var(--blue); --st-prog-ink:var(--copper); --st-mute-ink:var(--muted); --st-mute-bg:#1A2C39;
   --on-blue:#0B161D; --side:#081A25; --side-ink:#A9C2D3; --side-active:rgba(255,255,255,.08); color-scheme:dark}
 
@@ -281,7 +283,7 @@ td b{font-weight:600}
 .f.full{grid-column:1/-1}
 .f small{font-weight:400;font-size:var(--fs-sm);color:var(--muted);margin-top:-2px}
 .req{color:var(--bad);font-style:normal;font-weight:600}
-input,select,textarea{font:inherit;font-weight:400;color:var(--ink);background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--r-md);padding:0 var(--sp-3);width:100%;min-height:40px;transition:border-color .12s,box-shadow .12s}
+input,select,textarea{font:inherit;font-weight:400;color:var(--ink);background:var(--surface);border:1px solid var(--field-border);border-radius:var(--r-md);padding:0 var(--sp-3);width:100%;min-height:40px;transition:border-color .12s,box-shadow .12s}
 textarea{padding:var(--sp-2) var(--sp-3);line-height:1.5}
 input::placeholder,textarea::placeholder{color:var(--muted);opacity:.85}
 input:hover:not(:disabled):not(:focus),select:hover:not(:disabled):not(:focus),textarea:hover:not(:disabled):not(:focus){border-color:var(--muted)}
@@ -744,6 +746,18 @@ a.kpi:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
   .login-form{align-items:flex-start;padding-top:var(--sp-5)}
   .pub-top .brand img.logo-wide{height:36px}
 }
+
+/* ===== Impressão (acabamento) ===== */
+@media print{
+  /* Com um modal aberto (ex.: contrato), imprime só o modal */
+  body:has(>.overlay) > :not(.overlay):not(script){display:none!important}
+  /* Contrato sai inteiro, sem a caixa de rolagem da tela */
+  .contract{max-height:none!important;overflow:visible!important;border:0;padding:0}
+  /* Botões e filtros não vão para o papel */
+  .btn,.chipbtn,.x,.chips:has(.chipbtn){display:none!important}
+  .pagehead,.welcome{border:0;padding:0}
+  table.t-matriz{min-width:0}
+}
 </style>
 
 <style>:root{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
@@ -767,7 +781,7 @@ const FIREBASE_CONFIG = {
 /* ================================================================== */
 
 const LOGO = "../logo-viverbem-nova.jpeg";
-const LOGO_MENU = "../logo-viverbem.png"; // versão horizontal, usada no menu e na barra do celular
+const LOGO_MENU = "../logo-viverbem-horizontal.jpg"; // versão horizontal otimizada (640px, 47 KB; original logo-viverbem.png mantido)
 const $ = (s, el=document) => el.querySelector(s);
 const $$ = (s, el=document) => [...el.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));

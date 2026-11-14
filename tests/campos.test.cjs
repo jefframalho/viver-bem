@@ -61,7 +61,7 @@ test('asterisco fica na mesma linha do rótulo; campo e ajuda abaixo',()=>{
 
 test('campos padronizados: borda 1px, 40px, foco com anel azul, desabilitado e erro',()=>{
   const c=decl('input');
-  assert.match(c,/border:1px solid var\(--line-strong\)/); assert.match(c,/min-height:40px/);
+  assert.match(c,/border:1px solid var\(--field-border\)/); assert.match(c,/min-height:40px/);
   assert.match(decl('input:focus'),/box-shadow:0 0 0 3px color-mix\(in srgb,var\(--focus\)/);
   assert.match(decl('input:disabled'),/cursor:not-allowed/);
   assert.match(decl('input[aria-invalid="true"]'),/border-color:var\(--bad\)/);
