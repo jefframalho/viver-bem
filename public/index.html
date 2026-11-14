@@ -650,7 +650,8 @@ const Store = {
   async init(){
     if(this.mode==="demo"){
       try{ this.data = JSON.parse(localStorage.getItem(LS_KEY)) || null; }catch(e){ this.data=null; }
-      if(!this.data){ this.data = seed(); this._local(); }
+      // seed() consulta o Store (ex.: candidatos ao gerar contratos); começa com coleções vazias.
+      if(!this.data){ this.data = Object.fromEntries(COLS.map(c=>[c,[]])); this.data = seed(); this._local(); }
       return;
     }
     const v="10.12.2";
