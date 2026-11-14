@@ -174,6 +174,17 @@ a{color:var(--blue)}
   .agora .actions>.btn-copper{flex:1 1 100%}
 }
 @media (prefers-reduced-motion:reduce){.btn{transition:none}}
+/* Celular: controles visualmente menores ganham área de toque invisível de 44px */
+@media (max-width:899px),(pointer:coarse){
+  input,select{min-height:44px}
+  .btn-sm,.chipbtn,.x{position:relative}
+  .btn-sm::after,.chipbtn::after{content:"";position:absolute;inset:-4px 0;min-height:44px}
+  .x{width:44px;height:44px}
+  .checks label,.consent{min-height:44px;align-items:center}
+  .checks input,.consent input{margin-top:0}
+  .nav a,.nav-grp>summary{min-height:44px}
+  .nav-grp>a{min-height:40px}
+}
 :focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 /* botões de envio de arquivo: o contorno aparece no botão quando o campo interno recebe foco */
 label.btn:has(input:focus-visible){outline:2px solid var(--focus);outline-offset:2px}
@@ -214,20 +225,40 @@ td b{font-weight:600}
 .empty{padding:24px 16px;text-align:center;color:var(--muted)}
 
 /* formulários */
-.fgrid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))}
-.f{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:var(--fs-md);min-width:0}
+.fgrid{display:grid;gap:var(--sp-4) var(--sp-3);align-items:end;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))}
+/* campos com ajuda ou caixas de seleção não devem puxar a linha: alinhamento pela base */
+.fgrid>.f:has(.checks){align-self:start}
+.f{display:flex;flex-direction:row;flex-wrap:wrap;align-items:baseline;column-gap:var(--sp-1);row-gap:6px;font-weight:500;font-size:var(--fs-md);color:var(--ink);min-width:0}
+.f>:not(.req):not(span):not(b):not(a):not(em){flex:1 1 100%;min-width:0}
+.f>span{flex:0 1 auto}
+.f.full>.checks,.f>.checks{flex-basis:100%}
 .f.full{grid-column:1/-1}
-.f small{font-weight:400;color:var(--muted)}
-.req{color:var(--copper);font-style:normal}
-input,select,textarea{font:inherit;font-weight:400;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:var(--r-md);padding:8px 12px;width:100%;min-height:42px}
+.f small{font-weight:400;font-size:var(--fs-sm);color:var(--muted);margin-top:-2px}
+.req{color:var(--bad);font-style:normal;font-weight:600}
+input,select,textarea{font:inherit;font-weight:400;color:var(--ink);background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--r-md);padding:0 var(--sp-3);width:100%;min-height:40px;transition:border-color .12s,box-shadow .12s}
+textarea{padding:var(--sp-2) var(--sp-3);line-height:1.5}
+input::placeholder,textarea::placeholder{color:var(--muted);opacity:.85}
+input:hover:not(:disabled):not(:focus),select:hover:not(:disabled):not(:focus),textarea:hover:not(:disabled):not(:focus){border-color:var(--muted)}
+input:disabled,select:disabled,textarea:disabled{background:var(--surface-2);color:var(--muted);cursor:not-allowed;opacity:1}
+input[readonly],textarea[readonly]{background:var(--surface-2)}
+input[aria-invalid="true"],select[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:var(--bad);box-shadow:0 0 0 3px color-mix(in srgb,var(--bad) 18%,transparent)}
+/* Seletor com seta própria, que acompanha o tema claro/escuro */
+select:not([multiple]){appearance:none;-webkit-appearance:none;padding-right:36px;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 18px) 52%,calc(100% - 13px) 52%;background-size:5px 5px;background-repeat:no-repeat}
+input[type="checkbox"],input[type="radio"]{width:18px;height:18px;min-height:0;padding:0;accent-color:var(--blue);flex:none}
+input[type="file"]{padding:var(--sp-2)}
 textarea{resize:vertical}
 @media (max-width:899px){input,select,textarea{font-size:var(--fs-lg)}}
-input:focus,select:focus,textarea:focus{border-color:var(--blue);outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--blue);outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--focus) 28%,transparent)}
 .checks{display:grid;gap:4px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));font-weight:400}
 .checks label,.consent{display:flex;gap:8px;align-items:flex-start;font-weight:400;cursor:pointer}
-.checks input,.consent input{width:18px;height:18px;min-height:0;flex:none;margin-top:3px;accent-color:var(--blue)}
+.checks input,.consent input{width:18px;height:18px;min-height:0;flex:none;margin-top:2px;accent-color:var(--blue)}
 .consent{padding:12px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface)}
-.err{color:var(--bad);font-weight:600;font-size:var(--fs-md)}
+.err{display:flex;gap:var(--sp-2);align-items:flex-start;color:var(--bad);font-weight:600;font-size:var(--fs-md);background:var(--bad-bg);border:1px solid color-mix(in srgb,var(--bad) 35%,transparent);border-radius:var(--r-md);padding:var(--sp-2) var(--sp-3)}
+.err[hidden]{display:none}
+.err::before{content:"!";flex:none;display:inline-grid;place-items:center;width:18px;height:18px;margin-top:1px;border-radius:50%;background:var(--bad);color:var(--surface);font-size:var(--fs-xs);font-weight:700;line-height:1}
+/* Título de seção dentro de formulários longos */
+.fsec{font-size:var(--fs-lg);font-weight:600;color:var(--ink);padding-top:var(--sp-4);border-top:1px solid var(--line)}
+.fsec:first-child{padding-top:0;border-top:0}
 .note{background:var(--info-bg);border-radius:var(--r-md);padding:8px 12px;font-size:var(--fs-md)}
 .note.warn{background:var(--warn-bg)}
 
@@ -324,6 +355,8 @@ tfoot td{background:var(--surface-2);border-top:1px solid var(--line)}
 }
 /* documentos */
 .sr{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+label.btn{position:relative}
+label.btn>.sr{left:0;top:0}
 .docgrid{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr))}
 .docslot{position:relative;display:flex;gap:12px;align-items:center;padding:12px;border:1.5px dashed var(--line);border-radius:var(--r-lg);background:var(--surface);cursor:pointer}
 .docslot:hover,.docslot:focus-within{border-color:var(--blue)}
@@ -972,19 +1005,19 @@ const contratoLink = c => baseURL()+"#assinar-"+c.id;
 
 /* =================== FORMULÁRIOS =================== */
 function field(f, v){
-  const id="f_"+f.k, cls="f"+(f.full?" full":"");
+  const id="f_"+f.k, cls="f"+(f.full?" full":""), obr=f.req?' aria-required="true"':"";
   const lab=`${esc(f.l)}${f.req?' <i class="req">*</i>':""}${f.h?`<small>${esc(f.h)}</small>`:""}`;
   if(f.t==="checks") return `<div class="${cls}"><span>${lab}</span><div class="checks">${f.o.map(o=>`<label><input type="checkbox" name="${id}" value="${esc(o)}" ${(v||[]).includes(o)?"checked":""}>${esc(o)}</label>`).join("")}</div></div>`;
   let input;
-  if(f.t==="select") input=`<select id="${id}">${f.o.map(o=>{const [val,l]=Array.isArray(o)?o:[o,o];return `<option value="${esc(val)}" ${String(v??f.d??"")===String(val)?"selected":""}>${esc(l)}</option>`}).join("")}</select>`;
-  else if(f.t==="textarea") input=`<textarea id="${id}" rows="${f.rows||3}" ${f.ph?`placeholder="${esc(f.ph)}"`:""}>${esc(v??"")}</textarea>`;
-  else input=`<input id="${id}" type="${f.t||"text"}" value="${esc(v??f.d??"")}" ${f.ph?`placeholder="${esc(f.ph)}"`:""} ${f.im?`inputmode="${f.im}"`:""} ${f.step?`step="${f.step}"`:""} ${f.ac?`autocomplete="${f.ac}"`:""}>`;
+  if(f.t==="select") input=`<select id="${id}"${obr}>${f.o.map(o=>{const [val,l]=Array.isArray(o)?o:[o,o];return `<option value="${esc(val)}" ${String(v??f.d??"")===String(val)?"selected":""}>${esc(l)}</option>`}).join("")}</select>`;
+  else if(f.t==="textarea") input=`<textarea id="${id}"${obr} rows="${f.rows||3}" ${f.ph?`placeholder="${esc(f.ph)}"`:""}>${esc(v??"")}</textarea>`;
+  else input=`<input id="${id}"${obr} type="${f.t||"text"}" value="${esc(v??f.d??"")}" ${f.ph?`placeholder="${esc(f.ph)}"`:""} ${f.im?`inputmode="${f.im}"`:""} ${f.step?`step="${f.step}"`:""} ${f.ac?`autocomplete="${f.ac}"`:""}>`;
   return `<label class="${cls}">${lab}${input}</label>`;
 }
 const fields = (spec,obj={}) => `<div class="fgrid">${spec.map(f=>field(f,obj[f.k])).join("")}</div>`;
 function readFields(spec, root=document){ const o={}; for(const f of spec){ if(f.t==="checks") o[f.k]=$$(`input[name="f_${f.k}"]:checked`,root).map(i=>i.value); else { const el=$("#f_"+f.k,root); const v=el?el.value.trim():""; o[f.k]= f.t==="number" ? (v===""?"":+v) : v; } } return o; }
 const missing = (spec,o) => { const f=spec.find(f=>f.req && (Array.isArray(o[f.k])?!o[f.k].length:o[f.k]===""||o[f.k]==null)); return f?`Preencha o campo "${f.l}".`:""; };
-function showErr(root,msg){ let e=$(".err",root); if(!e){ e=document.createElement("p"); e.className="err"; root.appendChild(e); } e.textContent=msg; e.hidden=!msg; if(msg) e.scrollIntoView({block:"nearest"}); }
+function showErr(root,msg){ let e=$(".err",root); if(!e){ e=document.createElement("p"); e.className="err"; root.appendChild(e); } e.setAttribute("role","alert"); e.textContent=msg; e.hidden=!msg; if(msg) e.scrollIntoView({block:"nearest"}); }
 
 function modal(title, body, opts={}){
   closeModal();
@@ -1377,7 +1410,7 @@ let pacFiltro="ativo", pacBusca="";
 function pgPacientes(){
   const list = Store.all("pacientes").filter(p=>(pacFiltro==="todos"||p.status===pacFiltro) && norm(p.nome+" "+p.cidade+" "+p.responsavel).includes(norm(pacBusca))).sort((a,b)=>a.nome.localeCompare(b.nome));
   const cnt = s => Store.all("pacientes").filter(p=>s==="todos"||p.status===s).length;
-  return `<div class="pagehead"><div><h1>Pacientes</h1><p class="sub">${cnt("ativo")} em atendimento</p></div><div class="actions"><label class="btn btn-line">Importar planilha (CSV)<input type="file" id="pacFile" accept=".csv,.txt" hidden></label><button class="btn btn-primary" data-act="novoPaciente">${ICON.plus}Novo paciente</button></div></div>
+  return `<div class="pagehead"><div><h1>Pacientes</h1><p class="sub">${cnt("ativo")} em atendimento</p></div><div class="actions"><label class="btn btn-line">Importar planilha (CSV)<input type="file" id="pacFile" accept=".csv,.txt" class="sr"></label><button class="btn btn-primary" data-act="novoPaciente">${ICON.plus}Novo paciente</button></div></div>
   <div class="toolbar"><input id="pacBusca" type="search" placeholder="Buscar por nome, cidade ou responsável" value="${esc(pacBusca)}" aria-label="Buscar paciente">
     <div class="chips">${[["ativo","Ativos"],["avaliacao","Em avaliação"],["alta","Alta"],["todos","Todos"]].map(([k,l])=>`<button class="chipbtn" data-act="pacFiltro" data-id="${k}" aria-pressed="${pacFiltro===k}">${l} · ${cnt(k)}</button>`).join("")}</div></div>
   <div class="tablewrap"><table><thead><tr><th>Paciente</th><th>Idade</th><th>Cidade</th><th>Complexidade</th><th>Responsável</th><th>Atendimento</th><th>Situação</th></tr></thead><tbody>
@@ -1415,7 +1448,7 @@ function pgPaciente(id){
 function formPaciente(id){
   const p=id?{...Store.get("pacientes",id)}:{tipo:"particular",status:"avaliacao"};
   if(!p.rua&&p.endereco) p.rua=p.endereco;
-  const bd=modal(id?"Editar paciente":"Novo paciente", PAC_SECTIONS().map(([t,sp])=>`<h3 style="margin-top:6px;color:var(--copper)">${t}</h3>${fields(sp,p)}`).join("")
+  const bd=modal(id?"Editar paciente":"Novo paciente", PAC_SECTIONS().map(([t,sp])=>`<h3 class="fsec">${t}</h3>${fields(sp,p)}`).join("")
     +`<div class="actions"><button class="btn btn-primary" data-act="savePaciente" data-id="${id||""}">Salvar</button>${id?`<button class="btn btn-danger" data-act="delPaciente" data-id="${id}">Excluir</button>`:""}</div>`,{wide:1});
   $("#f_geo",bd).closest("label").insertAdjacentHTML("afterend",`<div class="actions" style="grid-column:1/-1"><button type="button" class="btn btn-sm btn-line" data-act="geoEndereco">${ICON.ponto}Localizar pelo endereço</button><button type="button" class="btn btn-sm btn-line" data-act="geoAqui">Estou na casa do paciente</button><a id="geoMapa" class="btn btn-sm btn-line" target="_blank" rel="noopener" hidden>Ver no mapa</a></div>`);
   geoLink(bd);
@@ -3160,7 +3193,7 @@ function pgConciliacao(){
   const sist=Store.all("lancamentos").filter(x=>x.data.startsWith(mes)&&!x.conciliado);
   const conc=bk.filter(b=>b.lancId).length;
   return pageHead("Conciliação bancária",`${mesCap(mes)} · confira o extrato do banco com os lançamentos do sistema`,mesBar())+
-  `<div class="toolbar"><label class="btn btn-primary">Importar extrato do banco (OFX ou CSV)<input type="file" id="bkFile" accept=".ofx,.csv,.txt" hidden></label><a class="btn btn-line" href="#financeiro-extrato">Ver extrato do sistema</a></div>
+  `<div class="toolbar"><label class="btn btn-primary">Importar extrato do banco (OFX ou CSV)<input type="file" id="bkFile" accept=".ofx,.csv,.txt" class="sr"></label><a class="btn btn-line" href="#financeiro-extrato">Ver extrato do sistema</a></div>
   <p class="small muted">No aplicativo ou site do banco, exporte o extrato em OFX (Money) ou CSV e importe aqui. Movimentações repetidas são ignoradas.</p>
   <div class="kpis"><div class="kpi"><small class="kl">Linhas do banco</small><b>${bk.length}</b></div><div class="kpi k-green"><small class="kl">Conciliadas</small><b>${conc}</b></div><div class="kpi ${bk.length-conc?"k-red":""}"><small class="kl">Pendentes no banco</small><b>${bk.length-conc}</b></div><div class="kpi"><small class="kl">Pendentes no sistema</small><b>${sist.length}</b></div></div>
   <section class="card"><h2>Extrato do banco</h2>${tabela(["Data","Descrição no banco","Valor|r","No sistema",""],bk.map(b=>{ const l=b.lancId?Store.get("lancamentos",b.lancId):null, c=l?[]:cand(b);
@@ -3330,7 +3363,7 @@ function evoExtras(p){
   const prof=e.assProf?`<p class="small muted" style="margin-top:8px">Assinado eletronicamente por ${esc(e.assProf.nome)}${e.assProf.registro?" · "+esc(e.assProf.registro):""} em ${fmtDT(e.assProf.em)} · código ${esc(e.assProf.hash||"")}</p>`:"";
   evoFotos=[...(e.fotos||[])];
   const fot=`<h3>Fotos do curativo e da evolução</h3><p class="small muted">Até ${MAX_FOTOS} fotos. Ficam só no prontuário e a família só vê se a administração liberar.</p><div id="evFotosBox">${fotosThumbs(evoFotos,true)}</div>
-    <label class="btn btn-line btn-sm">${ICON.plus}Tirar ou anexar foto<input type="file" id="evFotoIn" accept="image/*" multiple hidden></label>`;
+    <label class="btn btn-line btn-sm">${ICON.plus}Tirar ou anexar foto<input type="file" id="evFotoIn" accept="image/*" multiple class="sr"></label>`;
   return fs+fot+sig+prof;
 }
 const MAX_FOTOS=4; let evoFotos=[];
