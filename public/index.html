@@ -577,7 +577,7 @@ table.dre tr.res td{border-top:2px solid var(--ink);font-weight:700;font-size:va
 
 
 /* --- app do profissional --- */
-.agora{border-color:var(--copper);display:flex;flex-direction:column;gap:12px}
+.agora{border-color:color-mix(in srgb,var(--blue) 40%,var(--line));box-shadow:inset 4px 0 0 var(--blue);display:flex;flex-direction:column;gap:var(--sp-3)}
 .agora h2{margin:8px 0 2px;font-size:var(--fs-2xl)}
 .atalhos{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr))}
 .atalho{display:grid;gap:2px;padding:12px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);text-decoration:none;color:inherit}
@@ -702,6 +702,19 @@ a.kpi:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 .evo{padding:var(--sp-1) 0 var(--sp-1) var(--sp-3)}
 .evo + .evo{margin-top:var(--sp-3);padding-top:var(--sp-3);border-top:0}
 .vitals span{background:var(--surface-2)}
+
+/* ===== Portal do profissional (Entrega 7) ===== */
+.atalho{transition:border-color .12s}
+.atalho:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+@media (max-width:600px){
+  /* Atalhos em grade 2x2 compacta: pendências e próximos plantões ficam mais perto do topo */
+  .atalhos{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--sp-2)}
+  .atalho{padding:var(--sp-3);min-height:84px;align-content:start}
+  .atalho svg{width:20px;height:20px;margin-bottom:2px}
+  .atalho b{font-size:var(--fs-md)}
+  .atalho span{font-size:var(--fs-xs)}
+  .agora h2{font-size:var(--fs-xl)}
+}
 </style>
 
 <style>:root{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
