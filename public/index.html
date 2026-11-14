@@ -307,7 +307,8 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);outline:none;bo
 .note.warn{background:var(--warn-bg)}
 
 dl.kv{display:grid;grid-template-columns:minmax(110px,max-content) 1fr;gap:4px 12px;margin:0}
-dl.kv dt{color:var(--muted);font-size:var(--fs-md)} dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
+dl.kv dt{color:var(--muted);font-size:var(--fs-sm);padding-top:1px} dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
+@media (max-width:480px){dl.kv{grid-template-columns:minmax(92px,34%) 1fr}}
 
 /* escala */
 .week{display:grid;gap:8px}
@@ -319,17 +320,30 @@ span.data-dia,b.data-dia{display:inline-block}
 .data-dia::first-letter{text-transform:uppercase}
 .day-h{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--surface-2);border-bottom:1px solid var(--line);font-weight:600}
 .day.today .day-h{background:var(--info-bg)}
-.shift{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:8px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line);cursor:pointer;width:100%;background:none;border-left:4px solid transparent;font:inherit;color:inherit;text-align:left}
+.shift{display:grid;grid-template-columns:minmax(120px,max-content) minmax(0,1fr) auto;gap:var(--sp-3);align-items:center;padding:var(--sp-2) var(--sp-3);min-height:52px;border:0;border-bottom:1px solid var(--line);border-left:3px solid transparent;cursor:pointer;width:100%;background:none;font:inherit;color:inherit;text-align:left;transition:background-color .12s}
 .shift:last-child{border-bottom:0}
 .shift:hover{background:var(--surface-2)}
+.shift:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+.shift>span:last-child{justify-self:end}
 .shift.s-agendado{border-left-color:var(--blue)} .shift.s-realizado{border-left-color:var(--ok)}
 .shift.s-falta{border-left-color:var(--bad)} .shift.s-cancelado{border-left-color:var(--line);opacity:.6}
-.shift.nopro{border-left-color:var(--copper);background:var(--copper-soft)}
+.shift.nopro{border-left-color:var(--copper);background:color-mix(in srgb,var(--copper-soft) 60%,var(--surface))}
 .shift .t{font-variant-numeric:tabular-nums;font-weight:600;font-size:var(--fs-md)}
-.shift .t small{display:block;font-weight:400;color:var(--muted)}
+.shift .t small{display:block;font-weight:400;font-size:var(--fs-xs);color:var(--muted);margin-top:1px}
 .shift .w{min-width:0}
 .shift .w b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
 .shift .w span{font-size:var(--fs-sm);color:var(--muted)}
+/* Celular: horário e situação em cima, paciente e detalhes embaixo (sem texto espremido) */
+@media (max-width:720px){
+  .shift{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"t s" "w w";row-gap:var(--sp-1);padding:var(--sp-3)}
+  .shift>.t{grid-area:t;min-width:0}
+  .shift>.w{grid-area:w}
+  .shift>span:last-child{grid-area:s;align-self:start}
+  /* data (quando houver) ao lado do horário; modalidade na linha de baixo */
+  .shift .t small:first-child{display:inline;margin:0 6px 0 0;font-size:var(--fs-sm)}
+  .shift .t small:last-child{display:block;margin:2px 0 0}
+  .shift .w b{white-space:normal;overflow:visible}
+}
 
 .timeline{list-style:none;margin:0;padding:0}
 .timeline li{display:flex;gap:12px;padding:8px 0;position:relative}
@@ -353,7 +367,23 @@ span.data-dia,b.data-dia{display:inline-block}
 .modal{background:var(--surface);border-radius:var(--r-lg);width:100%;max-width:640px;border:1px solid var(--line);box-shadow:var(--shadow-overlay)}
 .modal.wide{max-width:860px}
 .modal-h{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line)}
-.modal-b{padding:16px;display:flex;flex-direction:column;gap:12px}
+.modal-b{padding:var(--sp-4);display:flex;flex-direction:column;gap:var(--sp-4)}
+/* Cartões dentro do modal viram seções planas com divisória */
+.modal-b .card{border:0;border-top:1px solid var(--line);border-radius:0;padding:var(--sp-4) 0 0;background:transparent!important;box-shadow:none}
+.modal-b .card h3{font-size:var(--fs-base)}
+/* Blocos expansíveis (plano de cuidados, estado clínico) com o mesmo estilo */
+.modal-b details{border:1px solid var(--line);border-radius:var(--r-md);padding:0 var(--sp-3);background:var(--surface)}
+.modal-b details>summary{padding:var(--sp-3) 0;min-height:44px;display:flex;align-items:center;gap:var(--sp-2);list-style:none;font-weight:600}
+.modal-b details>summary::-webkit-details-marker{display:none}
+.modal-b details>summary::before{content:"";flex:none;width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(-45deg);opacity:.6;transition:transform .15s}
+.modal-b details[open]>summary::before{transform:rotate(45deg)}
+.modal-b details[open]{padding-bottom:var(--sp-3)}
+@media (max-width:720px){
+  .modal-b{padding:var(--sp-3) var(--sp-4) var(--sp-4)}
+  /* Ações de campo (chegada/saída) fixas no rodapé enquanto se rola o formulário */
+  .modal-b>.actions:has([data-act="checkin"],[data-act="checkout"]){position:sticky;bottom:0;z-index:2;background:var(--surface);margin:0 calc(var(--sp-4) * -1);padding:var(--sp-3) var(--sp-4) calc(var(--sp-3) + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);box-shadow:0 -6px 12px -10px rgba(15,53,80,.35)}
+  .modal-b>.actions:has([data-act="checkin"],[data-act="checkout"])>.btn{flex:1 1 auto}
+}
 .x{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;background:none;border:0;font-size:var(--fs-2xl);line-height:1;color:var(--muted);cursor:pointer;padding:0;border-radius:var(--r-md)}
 .x:hover{background:var(--surface-2);color:var(--ink)}
 
@@ -554,10 +584,15 @@ table.dre tr.res td{border-top:2px solid var(--ink);font-weight:700;font-size:va
 .aviso p{margin:4px 0;white-space:pre-line}
 .aviso.velho{opacity:.55;border-left-color:var(--line)}
 a.pacard{text-decoration:none;color:inherit;display:block}
+a.pacard{transition:border-color .12s}
 a.pacard:hover{border-color:var(--blue)}
+a.pacard:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+a.pacard .card-h{margin-bottom:var(--sp-2)}
 a.pacard h2{font-size:var(--fs-xl);margin:0}
 .tarefas{list-style:none;margin:0;padding:0;display:grid;gap:2px}
-.tarefas li{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:8px 8px;border-radius:var(--r-md);border:1px solid transparent}
+.tarefas li{display:flex;align-items:center;gap:var(--sp-2);justify-content:space-between;padding:6px var(--sp-2);min-height:36px;border-radius:var(--r-md);border:1px solid transparent}
+.tarefas li+li{border-top-color:var(--line);border-radius:0}
+@media (max-width:899px),(pointer:coarse){.tarefas li{min-height:44px}}
 .tarefas li:hover{background:var(--surface)}
 .tarefas li.ok>label span{text-decoration:line-through;color:var(--muted)}
 .tarefas label{display:flex;align-items:center;gap:8px;cursor:pointer;flex:1;margin:0}
