@@ -202,7 +202,8 @@ label.btn:has(input:focus-visible){outline:2px solid var(--focus);outline-offset
 a.kpi:hover{border-color:var(--blue)}
 .kpi b{display:block;font-family:var(--f-display);font-weight:600;font-size:var(--fs-2xl);font-variant-numeric:tabular-nums;line-height:1.2}
 .kpi span{font-size:var(--fs-sm);color:var(--muted)}
-.kpi.alert{border-color:var(--copper);background:var(--copper-soft)}
+.kpi.alert{border-color:color-mix(in srgb,var(--warn) 45%,var(--line));background:var(--warn-bg)}
+.kpi.alert b{color:var(--st-warn-ink)}
 
 .pill{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 8px;border-radius:var(--r-sm);font-size:var(--fs-xs);font-weight:600;line-height:1;white-space:nowrap;vertical-align:middle;box-shadow:inset 0 0 0 1px color-mix(in srgb,currentColor 18%,transparent)}
 .pill::before{content:"";flex:none;width:6px;height:6px;border-radius:50%;background:currentColor}
@@ -261,6 +262,7 @@ td b{font-weight:600}
 
 .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .toolbar input,.toolbar select{width:auto;min-width:0;flex:1 1 180px;max-width:320px}
+@media (max-width:600px){.toolbar input,.toolbar select{flex-basis:100%;max-width:none}}
 .chips{display:flex;flex-wrap:wrap;gap:4px}
 .chipbtn{display:inline-flex;align-items:center;min-height:32px;font:600 var(--fs-sm) var(--f-body);border:1px solid var(--line-strong);background:var(--surface);color:var(--muted);padding:0 var(--sp-3);border-radius:var(--r-full);cursor:pointer;transition:background-color .12s,border-color .12s,color .12s}
 .chipbtn:hover{border-color:var(--muted);color:var(--ink)}
@@ -393,6 +395,7 @@ span.data-dia,b.data-dia{display:inline-block}
 .trends{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr))}
 .trend{margin:0;border:1px solid var(--line);border-radius:var(--r-lg);padding:8px 12px;background:var(--surface)}
 .trend figcaption{font-weight:600;font-size:var(--fs-md);margin-bottom:4px}
+.trend svg text{font-size:11px!important}
 /* painel diário */
 .welcome{border:1px solid var(--line);border-radius:var(--r-lg);padding:var(--sp-6);background:var(--surface);color:var(--ink);display:flex;flex-wrap:wrap;gap:var(--sp-4);align-items:flex-end;justify-content:space-between}
 .welcome>div:first-child{min-width:0;flex:1 1 320px}
@@ -537,7 +540,9 @@ label.btn>.sr{left:0;top:0}
 .calwrap{overflow:auto}
 .cal-h,.cal{display:grid;grid-template-columns:repeat(7,minmax(92px,1fr));gap:4px;min-width:680px}
 .cal-h span{font-size:var(--fs-2xs);letter-spacing:var(--ls-caps);text-transform:uppercase;color:var(--muted);padding:4px 4px}
-.cd{min-height:86px;border:1px solid var(--line);border-radius:var(--r-md);padding:4px;display:flex;flex-direction:column;gap:3px;background:var(--surface)}
+.cd{min-height:86px;border:1px solid var(--line);border-radius:var(--r-md);padding:var(--sp-1);display:flex;flex-direction:column;gap:3px;background:var(--surface)}
+.cd .ev{min-height:22px}
+.cd .ev:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
 .cd.out{opacity:.4}
 .cd.hoje{border-color:var(--blue);box-shadow:inset 0 0 0 1px var(--blue)}
 .cd.off{background:var(--warn-bg)}
@@ -681,6 +686,18 @@ a.kpi:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
   .welcome .actions{width:100%}
   .welcome .actions .btn{flex:1 1 auto}
 }
+
+/* ===== Telas operacionais (Entrega 5) ===== */
+/* Listas de plantões: coluna de horário com largura fixa, nomes alinhados entre as linhas */
+@media (min-width:721px){.shift{grid-template-columns:148px minmax(0,1fr) auto}}
+/* Fichas: o caminho ("Pacientes", "Profissionais") vira um "voltar" com área de toque confortável */
+.pagehead .small a{display:inline-flex;align-items:center;gap:2px;min-height:28px}
+.pagehead .small a::before{content:"‹";font-size:1.2em;line-height:1;margin-right:2px}
+@media (max-width:899px){.pagehead .small a{min-height:36px}}
+/* Evolução do paciente: blocos com respiro e sinais vitais alinhados */
+.evo{padding:var(--sp-1) 0 var(--sp-1) var(--sp-3)}
+.evo + .evo{margin-top:var(--sp-3);padding-top:var(--sp-3);border-top:0}
+.vitals span{background:var(--surface-2)}
 </style>
 
 <style>:root{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
