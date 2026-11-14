@@ -1,0 +1,17 @@
+{
+ "origem": "commit-base d4de5e8 (tag base-premium-ui-20261114)",
+ "gerado": "2026-11-14",
+ "nota": "definições originais dos estados de negócio e da formatação de datas",
+ "definicoes": {
+  "PL_ST": "const PL_ST = {agendado:[\"Agendado\",\"p-blue\"],andamento:[\"Em andamento\",\"p-cop\"],realizado:[\"Realizado\",\"p-ok\"],falta:[\"Falta\",\"p-bad\"],cancelado:[\"Cancelado\",\"p-mute\"]}",
+  "PAC_ST": "const PAC_ST = {avaliacao:[\"Em avaliação\",\"p-warn\"],ativo:[\"Ativo\",\"p-ok\"],alta:[\"Alta\",\"p-mute\"]}",
+  "CONS_ST": "const CONS_ST={solicitada:[\"Aguardando confirmação\",\"p-warn\"],agendada:[\"Agendada\",\"p-blue\"],realizada:[\"Realizada\",\"p-ok\"],cancelada:[\"Cancelada\",\"p-mute\"],falta:[\"Paciente faltou\",\"p-bad\"]}",
+  "ST_DIA": "const ST_DIA = {nao:[\"Não iniciados\",\"var(--blue)\"],atrasado:[\"Atrasados\",\"var(--bad)\"],andamento:[\"Em andamento\",\"var(--copper)\"],concluido:[\"Concluídos\",\"var(--ok)\"],falta:[\"Faltas\",\"var(--muted)\"]}",
+  "OP_ST": "const OP_ST={prospeccao:[\"Em negociação\",\"p-warn\"],credenciada:[\"Credenciada\",\"p-ok\"],inativa:[\"Inativa\",\"p-mute\"]}",
+  "LOTE_ST": "const LOTE_ST={aberto:[\"Em aberto\",\"p-blue\"],enviado:[\"Enviado à operadora\",\"p-warn\"],pago:[\"Pago\",\"p-ok\"]}",
+  "ST": "const ST={ativa:[\"Ativa\",\"p-ok\"],prospeccao:[\"Em negociação\",\"p-warn\"],inativa:[\"Inativa\",\"p-mute\"]}",
+  "fmtDayW": "const fmtDayW = s => new Date(s+\"T12:00\").toLocaleDateString(\"pt-BR\",{weekday:\"long\",day:\"2-digit\",month:\"long\"});",
+  "fmtDay": "const fmtDay = s => s ? new Date(s+\"T12:00\").toLocaleDateString(\"pt-BR\",{day:\"2-digit\",month:\"2-digit\",year:\"numeric\"}) : \"-\";",
+  "ex": "const ex = o => o?.exemplo ? '<span class=\"ex\">EXEMPLO</span>' : \"\";"
+ }
+}

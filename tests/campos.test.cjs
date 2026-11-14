@@ -21,6 +21,13 @@ const ALTERADAS_DE_PROPOSITO={
   'function pgPacientes':'Entrega 3b: upload "Importar planilha" acessível',
   'function pgConciliacao':'Entrega 3b: upload "Importar extrato" acessível',
   'function evoExtras':'Entrega 3b: upload "Tirar ou anexar foto" acessível',
+  'function pgEscala':'Entrega 3c: data do dia com classe .data-dia (só apresentação)',
+  'function pgFamAgenda':'Entrega 3c: data do dia com classe .data-dia (só apresentação)',
+  'function pgFamInicio':'Entrega 3c: data no início da linha com classe .data-dia',
+  'function pgMeus':'Entrega 3c: data no cabeçalho do profissional com classe .data-dia',
+  'function pgPacienteProf':'Entrega 3c: data do próximo plantão com classe .data-dia',
+  'function pgDisponiveis':'Entrega 3c: data no título do plantão disponível com classe .data-dia',
+  'function verTele':'Entrega 3c: data da teleconsulta com classe .data-dia',
 };
 
 test('lógica de negócio idêntica ao commit-base (exceto interface listada)',()=>{
