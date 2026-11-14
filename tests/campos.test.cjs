@@ -28,6 +28,9 @@ const ALTERADAS_DE_PROPOSITO={
   'function pgPacienteProf':'Entrega 3c: data do próximo plantão com classe .data-dia',
   'function pgDisponiveis':'Entrega 3c: data no título do plantão disponível com classe .data-dia',
   'function verTele':'Entrega 3c: data da teleconsulta com classe .data-dia',
+  'function pgPainel':'Entrega 4: fileira única de indicadores do dia e cabeçalhos de seção (só HTML)',
+  'function painelBreak':'Entrega 4: devolve os indicadores sem contêiner; Atrasados/Em andamento como links (só HTML)',
+  'function painelMes':'Entrega 4: cabeçalhos de seção leves no lugar de faixas (só HTML)',
 };
 
 test('lógica de negócio idêntica ao commit-base (exceto interface listada)',()=>{

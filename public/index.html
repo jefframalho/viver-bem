@@ -646,6 +646,41 @@ a.pacard h2{font-size:var(--fs-xl);margin:0}
 .aud-dl{display:grid;grid-template-columns:max-content 1fr;gap:3px 12px;margin:8px 0 0;padding:8px 12px;border-radius:var(--r-md);background:var(--bg);font-size:var(--fs-sm)}
 .aud-dl dt{color:var(--muted)} .aud-dl dd{margin:0;word-break:break-word}
 @media (max-width:860px){.aud-grid{grid-template-columns:1fr}.aud-list{max-height:320px}}
+
+/* ===== Dashboard (Entrega 4) ===== */
+.sec-h{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:var(--sp-3) var(--sp-4);margin-top:var(--sp-3)}
+.sec-h h2{font-size:var(--fs-xl)}
+.sec-h p{color:var(--muted);font-size:var(--fs-sm);margin-top:2px;max-width:680px}
+.kpis-hoje{grid-template-columns:repeat(6,minmax(0,1fr))}
+.kpi{padding:var(--sp-4);transition:border-color .12s}
+.kpi b{font-size:var(--fs-2xl)}
+a.kpi:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.kpi .kl{margin-bottom:var(--sp-1)}
+.kpi-destaque{background:var(--surface)}
+.kpi-receita b{color:var(--st-ok-ink)}
+.kpi-st .meter{margin-top:var(--sp-3)}
+.kpi-atrasado .kpi-row b{color:var(--st-bad-ink)}
+.kpi-andamento .kpi-row b{color:var(--st-prog-ink)}
+.kpis-mini{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+.kpis-mini .kpi{padding:var(--sp-3)}
+.kpis-mini .kpi b{font-size:var(--fs-xl)}
+.num-destaque{font-size:var(--fs-3xl);font-weight:600;line-height:1.1}
+.lista-atencao{list-style:none;margin:0;padding:0}
+.lista-atencao li{padding:var(--sp-2) 0 var(--sp-2) var(--sp-4);position:relative;border-top:1px solid var(--line);line-height:1.45}
+.lista-atencao li:first-child{border-top:0;padding-top:0}
+.lista-atencao li::before{content:"";position:absolute;left:2px;top:calc(var(--sp-2) + .55em);width:6px;height:6px;border-radius:50%;background:var(--warn)}
+.lista-atencao li:first-child::before{top:.55em}
+.b7bar{height:110px}
+.b7bar i{background:var(--blue)}
+.card.base{border-top-width:3px}
+@media (max-width:1180px){.kpis-hoje{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:600px){
+  .kpis,.kpis-hoje{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .kpi{padding:var(--sp-3)}
+  .kpi b{font-size:var(--fs-xl);overflow-wrap:anywhere}
+  .welcome .actions{width:100%}
+  .welcome .actions .btn{flex:1 1 auto}
+}
 </style>
 
 <style>:root{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
@@ -1400,14 +1435,12 @@ function pgPainel(){
   const links=[["Link da bio do Instagram","links"],["Trabalhe conosco","trabalhe"],["Solicitar atendimento","solicitar"],["Acompanhar candidatura","acompanhar"]];
   return `<section class="welcome"><div><span class="eyebrow-pill">Gestão de home care</span><h1>${esc(cfg.nome||"Viver Bem Atendimento Domiciliar")}</h1><p>Sua operação em um só lugar · ${fmtDayW(t)}</p></div>
     <div class="actions"><button class="btn btn-copper" data-act="novoPlantao">${ICON.plus}Novo plantão</button><button class="btn btn-ghost-light" data-act="novoPaciente">${ICON.plus}Novo paciente</button></div></section>
-  <div><p class="eyebrow-line">Operação de hoje</p><h2 style="font-size:1.3rem">Painel diário</h2><p class="muted small">Acompanhe o que exige ação agora e mantenha a agenda do dia sob controle.</p></div>
-  <div class="kpis">
-    <a class="kpi" href="#escala"><small class="kl">Total do dia</small><b>${hoje.length}</b><span>Atendimentos previstos</span></a>
-    <a class="kpi k-blue" href="#ponto"><small class="kl">Em andamento</small><b>${grp.andamento.n}</b><span>Profissionais em campo</span></a>
-    <a class="kpi k-red" href="#ponto"><small class="kl">Atrasados</small><b>${grp.atrasado.n}</b><span>Exigem atenção imediata</span></a>
-    <div class="kpi k-green"><small class="kl">Receita prevista</small><b>${brl(receita)}</b><span>Estimativa do dia</span></div>
+  <div class="sec-h"><div><h2>Operação de hoje</h2><p>Acompanhe o que exige ação agora e mantenha a agenda do dia sob controle.</p></div></div>
+  <div class="kpis kpis-hoje">
+    <a class="kpi kpi-destaque" href="#escala"><small class="kl">Total do dia</small><b>${hoje.length}</b><span>Atendimentos previstos</span></a>
+    ${painelBreak(hoje,grp)}
+    <div class="kpi kpi-destaque kpi-receita"><small class="kl">Receita prevista</small><b>${brl(receita)}</b><span>Estimativa do dia</span></div>
   </div>
-  ${painelBreak(hoje,grp)}
   ${painel7dias()}
   <div class="grid3">
     <section class="card"><div class="card-h"><h2>Atendimentos do dia</h2><a href="#escala" class="small">Agenda completa</a></div>
@@ -1418,9 +1451,9 @@ function pgPainel(){
   </div>
   <div class="grid2">
     <section class="card"><div class="card-h"><h2>Pontos de atenção</h2></div>
-      ${alerts.length?`<ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:8px">${alerts.join("")}</ul>`:`<p class="empty">Tudo em dia.</p>`}</section>
+      ${alerts.length?`<ul class="lista-atencao">${alerts.join("")}</ul>`:`<p class="empty">Tudo em dia.</p>`}</section>
     <section class="card"><div class="card-h"><h2>Captação</h2></div>
-      <div class="kpis" style="grid-template-columns:repeat(auto-fit,minmax(120px,1fr))">
+      <div class="kpis kpis-mini">
         <a class="kpi" href="#recrutamento"><b>${c.cand}</b><span>Currículos para analisar</span></a>
         <a class="kpi" href="#solicitacoes"><b>${c.sol}</b><span>Solicitações novas</span></a>
         <a class="kpi" href="#contratos"><b>${c.ctPend}</b><span>Contratos pendentes</span></a>
@@ -3133,7 +3166,9 @@ function ring(pct,label){ const R=46,C=2*Math.PI*R;
 function progRow(l,n,t,extra){ const pc=t?Math.round(n/t*100):0; return `<div class="prog"><div><span>${l}</span>${extra||`<b class="num">${n}/${t}</b>`}</div>${extra?"":`<div class="meter"><i style="width:${pc}%;background:var(--ok)"></i></div>`}</div>`; }
 function painelBreak(hoje,grp){
   const tot=hoje.length, it=[["nao","Não iniciados","Aguardando o profissional","var(--blue)"],["atrasado","Atrasados","Precisam de atenção","var(--bad)"],["andamento","Em andamento","Profissional em campo","var(--copper)"],["concluido","Concluídos","Atendimentos finalizados","var(--ok)"]];
-  return `<div class="kpis">${it.map(([k,l,s,c])=>{ const n=grp[k].n, pc=tot?Math.round(n/tot*100):0; return `<div class="kpi"><small class="kl">${l}</small><div class="kpi-row"><b>${n}</b><span class="num">${pc}%</span></div><span>${s}</span><div class="meter"><i style="width:${pc}%;background:${c}"></i></div></div>`; }).join("")}</div>`;
+  // Só apresentação: Atrasados e Em andamento continuam levando a Chegadas e saídas (#ponto), como no painel original.
+  return it.map(([k,l,s,c])=>{ const n=grp[k].n, pc=tot?Math.round(n/tot*100):0, tag=(k==="atrasado"||k==="andamento")?"a":"div", href=tag==="a"?' href="#ponto"':"";
+    return `<${tag} class="kpi kpi-st kpi-${k}"${href}><small class="kl">${l}</small><div class="kpi-row"><b>${n}</b><span class="num">${pc}%</span></div><span>${s}</span><div class="meter"><i style="width:${pc}%;background:${c}"></i></div></${tag}>`; }).join("");
 }
 function painelMes(){
   const mes=today().slice(0,7), st=prontStats(mes), nF=st.fin.length, pct=nF?Math.round(st.completos.length/nF*100):100;
@@ -3143,12 +3178,12 @@ function painelMes(){
     ["Pacientes",Store.all("pacientes").filter(p=>p.status==="ativo").length,"ativos neste momento",`<button class="btn btn-sm btn-line" data-act="novoPaciente">Cadastrar</button>`,"var(--ok)"],
     ["Rotas de atendimento",Store.all("rotas").length,"rotas cadastradas",`<button class="btn btn-sm btn-line" data-act="crudNew" data-v="rotas">Cadastrar</button>`,"var(--copper)"],
     ["Funcionários",Store.all("funcionarios").filter(f=>f.status!=="desligado").length,"na equipe de apoio",`<a class="btn btn-sm btn-line" href="#funcionarios">Gerenciar</a>`,"var(--muted)"]];
-  return `<div class="pagehead" style="margin-top:6px"><div><p class="eyebrow-line">Conferência mensal</p><h2 style="font-size:1.3rem">Prontuários do mês</h2><p class="muted small">Acompanhe se os atendimentos do mês foram finalizados, registrados em prontuário e assinados.</p></div><a class="btn btn-primary" href="#conferencia">Abrir conferência</a></div>
+  return `<div class="sec-h"><div><h2>Prontuários do mês</h2><p>Acompanhe se os atendimentos do mês foram finalizados, registrados em prontuário e assinados.</p></div><a class="btn btn-primary" href="#conferencia">Abrir conferência</a></div>
   <div class="grid2">
     <section class="card"><div class="card-h"><div><h2>Prontuários completos</h2><p class="small muted">Dos atendimentos já finalizados neste mês</p></div><span class="pill ${pct>=95?"p-ok":pct>=80?"p-warn":"p-bad"}">${pct>=95?"Em dia":"Com pendências"}</span></div>
       <div class="ringrow">${ring(pct,"COMPLETOS")}<p><b style="color:var(--ok)">${st.completos.length} de ${nF}</b> atendimentos finalizados têm prontuário preenchido e todas as assinaturas exigidas.</p></div>
       ${progRow("Prontuário preenchido",st.pre.length,nF)}${progRow("Assinado pelo profissional",st.assP.length,nF)}${st.exigePac?progRow("Assinado pelo paciente ou responsável",st.assPac.length,nF):progRow("Assinado pelo paciente ou responsável",0,0,'<a class="pill p-mute" href="#config-assinaturas">Não exigida</a>')}</section>
-    <section class="card"><div class="card-h"><div><h2>Agenda de ${mesLabel(mes)}</h2><p class="small muted">Atendimentos e plantões do mês, sem cancelados</p></div><div style="text-align:right"><b class="num" style="font-family:var(--f-display);font-size:1.9rem;font-weight:400">${tot}</b><div class="small muted">agendados</div></div></div>
+    <section class="card"><div class="card-h"><div><h2>Agenda de ${mesLabel(mes)}</h2><p class="small muted">Atendimentos e plantões do mês, sem cancelados</p></div><div style="text-align:right"><b class="num num-destaque">${tot}</b><div class="small muted">agendados</div></div></div>
       <div class="stack" role="img" aria-label="${fin} finalizados, ${nao} não finalizados, ${fut} ainda vão acontecer"><i style="width:${P(fin)}%;background:var(--ok)"></i><i style="width:${P(nao)}%;background:var(--bad)"></i></div>
       <div class="kpis" style="margin-top:12px">
         <div class="kpi"><small class="kl" style="color:var(--ok)">● Finalizados</small><b>${fin} <small class="muted">${P(fin)}%</small></b><span>Concluídos pelo profissional</span></div>
@@ -3158,7 +3193,7 @@ function painelMes(){
   <section class="card"><h2>O que precisa de atenção</h2>
     ${st.venc.length?`<a class="attn" href="#conferencia"><b>${st.venc.length}</b><span><strong>atendimento(s) com data vencida e não finalizados</strong><small>Confirme com o profissional se aconteceram e finalize pela agenda.</small></span></a>`:`<p class="empty" style="padding:8px">Nenhum atendimento vencido sem finalização.</p>`}
     <div class="card-h" style="margin:12px 0 0;border-top:1px solid var(--line);padding-top:12px"><span class="small"><b>Fechamento por paciente:</b> ${cfs} de ${npac} paciente(s) já conferidos pela administração.</span><a class="small" href="#conferencia">Conferir pacientes →</a></div></section>
-  <div><p class="eyebrow-line">Base operacional</p><h2 style="font-size:1.3rem">Cadastros que sustentam a rotina</h2></div>
+  <div class="sec-h"><div><h2>Cadastros que sustentam a rotina</h2></div></div>
   <div class="basegrid">${base.map(([t,n,s,b,c])=>`<section class="card base" style="border-top:3px solid ${c}"><span class="small muted">${t}</span><b>${n}</b><div class="actions">${b}<span class="small muted">${s}</span></div></section>`).join("")}</div>`;
 }
 
