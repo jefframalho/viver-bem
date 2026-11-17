@@ -1,447 +1,655 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Viver Bem | Atendimento Domiciliar e Área da Família</title>
-<meta name="claude:viewport-fit-sides" content="cover">
-<meta name="description" content="Viver Bem Atendimento Domiciliar: home care com enfermagem, fisioterapia, médicos e equipe multidisciplinar na casa do paciente. Plantões de 6h a 24h, internação domiciliar e atendimento para operadoras de saúde.">
+<meta name="description" content="Home care com enfermagem, fisioterapia, médicos e equipe multidisciplinar. Plantões de 6h a 24h, internação domiciliar e atendimento para operadoras.">
+<meta name="theme-color" content="#0A2A5E">
 <meta property="og:title" content="Viver Bem Atendimento Domiciliar">
 <meta property="og:description" content="Cuidado especializado no conforto do seu lar. Solicite uma avaliação ou trabalhe com a gente.">
 <meta property="og:type" content="website">
 <meta property="og:image" content="https://www.viverbemhomecare.com.br/logo-viverbem-nova.jpeg">
 <meta property="og:url" content="https://www.viverbemhomecare.com.br/">
 <link rel="canonical" href="https://www.viverbemhomecare.com.br/">
-<meta name="theme-color" content="#FFFFFF">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Jost:wght@400;500;600&display=swap">
-<style>
-/* Estilo editorial: fundo claro, títulos em serifa, filetes dourados, foto em arco, listas em linhas */
-:root{--ink:#0E2236;--navy:#0A3D6B;--blue:#1565A8;--gold:#8A6A25;--gold-l:#E0C27D;--sand:#EEF3F8;--soft:#F7F9FC;--taupe:#53657A;--line:#DCE5EE;--display:"Cormorant Garamond",Georgia,serif;--body:"Jost",system-ui,sans-serif}
-*{box-sizing:border-box;margin:0}
-html{scroll-behavior:smooth}
-body{font-family:var(--body);background:#fff;color:var(--ink);line-height:1.7;font-size:17px;overflow-x:hidden}
-img{max-width:100%;display:block}
-a{color:inherit}
-:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
-.wrap{width:min(1160px,92%);margin-inline:auto}
-h1,h2,h3{font-family:var(--display);font-weight:500;line-height:1.02;letter-spacing:-.01em}
-h2{font-size:clamp(2.4rem,5vw,3.8rem);margin-bottom:1rem}
-h2 em,h1 em{font-style:italic;color:var(--navy)}
-.eyebrow{display:block;font-size:.78rem;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:1rem}
-.sub{color:var(--taupe);max-width:54ch}
-section{padding:clamp(4rem,9vw,7.5rem) 0}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:.6rem;padding:1rem 1.9rem;border-radius:999px;background:var(--navy);color:#fff;text-decoration:none;border:1.5px solid var(--navy);transition:background .25s,color .25s,border-color .25s;cursor:pointer;font:600 1rem var(--body);min-height:52px}
-.btn:hover{background:var(--ink);border-color:var(--ink)}
-.btn.line{background:transparent;color:var(--ink);border-color:var(--gold)}
-.btn.line:hover{background:var(--sand);border-color:var(--ink)}
-.btn.gold{background:var(--gold);border-color:var(--gold)}
-.btn.gold:hover{background:var(--ink);border-color:var(--ink)}
-.btn.on-dark{background:var(--gold-l);border-color:var(--gold-l);color:var(--ink)}
-.btn.on-dark:hover{background:#fff;border-color:#fff}
-.btn.line-dark{background:transparent;color:#fff;border-color:rgba(255,255,255,.45)}
-.btn.line-dark:hover{background:rgba(255,255,255,.12);border-color:#fff}
-.btn svg{width:18px;height:18px}
-
-/* topo */
-header{position:fixed;inset:0 0 auto;z-index:50;transition:background .3s,box-shadow .3s}
-header.solid{background:rgba(255,255,255,.94);backdrop-filter:blur(12px);box-shadow:0 1px 0 var(--line)}
-.bar{display:flex;justify-content:space-between;align-items:center;padding:1.1rem 0;gap:1rem}
-.brand{display:flex;flex-direction:column;text-decoration:none;line-height:1}
-.brand b{font-family:var(--display);font-size:1.9rem;font-style:italic;font-weight:600;color:var(--navy)}
-.brand small{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-top:3px;font-weight:600}
-nav{display:flex;gap:1.8rem;align-items:center;font-size:.95rem}
-nav a{text-decoration:none;opacity:.88}
-nav a:hover{color:var(--navy);opacity:1}
-nav .btn{padding:.65rem 1.3rem;min-height:44px;opacity:1;color:#fff}
-@media (max-width:1080px){nav a:not(.btn){display:none}}
-nav a,.brand{white-space:nowrap}
-nav{gap:1.3rem!important}
-.entrar{gap:0!important}
-nav .btn.line{color:var(--ink)}
-nav .btn.line:hover{color:var(--ink)}
-@media (max-width:820px){nav .btn:not(.entrar){display:none}.entrar{padding:.5rem 1.1rem!important;min-height:42px!important;font-size:.9rem}.entrar .l{display:none}}
-
-/* herói */
-.hero{padding:0;background:radial-gradient(at 82% 34%,#E4EFFA,transparent 58%),linear-gradient(140deg,#fff,#FBFCFE)}
-.hero>.wrap{display:grid;grid-template-columns:1.05fr .95fr;gap:3rem;align-items:center;padding:8.5rem 0 5rem;min-height:92vh}
-.hero h1{font-size:clamp(3.4rem,7.6vw,6.4rem);margin-bottom:1.3rem}
-.hero .lead{max-width:46ch;font-size:1.14rem;color:var(--taupe);margin-bottom:2rem}
-.actions{display:flex;gap:.9rem;flex-wrap:wrap}
-.trust{display:grid;gap:.55rem;margin-top:2.4rem;padding-top:1.6rem;border-top:1px solid var(--line);font-size:.95rem;color:var(--taupe)}
-.trust span{padding-left:2rem;position:relative}
-.trust span::before{content:"";position:absolute;left:0;top:.8em;width:1.1rem;height:1px;background:var(--gold)}
-.arch{position:relative;max-width:440px;justify-self:center;width:100%}
-.arch .frame{aspect-ratio:4/5;border-radius:999px 999px 18px 18px;border:1px solid var(--gold);overflow:hidden;background:radial-gradient(120% 60% at 50% 48%,#FFFFFF 0,#EAF4FD 45%,transparent 75%),linear-gradient(180deg,#DCEEFC 0%,#C4E0F7 55%,#9FCBF0 100%);display:grid;place-items:center;position:relative;isolation:isolate}
-.arch .frame::before{content:"";position:absolute;left:-20%;right:-20%;bottom:-14%;height:46%;z-index:-1;border-radius:50%;border:2px solid rgba(224,194,125,.85);box-shadow:0 0 0 14px rgba(224,194,125,.18),0 0 0 15px rgba(224,194,125,.5)}
-.arch .frame::after{content:"";position:absolute;left:12%;right:12%;top:-8%;height:30%;z-index:-1;border-radius:50%;border:1.5px solid rgba(255,255,255,.9)}
-.arch .frame img{width:100%;height:auto;-webkit-mask-image:linear-gradient(180deg,transparent,#000 26%,#000 74%,transparent),linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent);-webkit-mask-composite:source-in;mask-image:linear-gradient(180deg,transparent,#000 26%,#000 74%,transparent),linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent);mask-composite:intersect}
-.arch::before{content:"";position:absolute;inset:-14px -14px 14px 14px;border:1px solid rgba(224,194,125,.7);border-radius:999px 999px 18px 18px}
-.badge{position:absolute;left:-1.2rem;bottom:2.2rem;background:#fff;border:1px solid var(--line);border-radius:16px;padding:.9rem 1.1rem;box-shadow:0 18px 40px -22px rgba(14,34,54,.45);font-size:.86rem;line-height:1.35;max-width:215px;z-index:2}
-.badge b{display:block;font-family:var(--display);font-size:1.25rem;color:var(--navy);font-weight:600}
-.hero-in>*{animation:rise .9s cubic-bezier(.2,.7,.2,1) both}
-.hero-in>:nth-child(2){animation-delay:.1s}.hero-in>:nth-child(3){animation-delay:.2s}.hero-in>:nth-child(4){animation-delay:.3s}.hero-in>:nth-child(5){animation-delay:.4s}
-@keyframes rise{from{opacity:0;transform:translateY(24px)}}
-@media (max-width:860px){.hero>.wrap{grid-template-columns:1fr;padding-top:7rem;min-height:0}.arch{max-width:340px;margin-top:1.5rem}.badge{left:-.4rem}}
-
-/* serviços em linhas */
-.sec-head{display:flex;justify-content:space-between;align-items:flex-end;gap:2rem;flex-wrap:wrap}
-.rows{margin-top:2.6rem;border-top:1px solid var(--line)}
-.row{display:grid;grid-template-columns:1fr 1.25fr;gap:2rem;padding:1.8rem 0;border-bottom:1px solid var(--line);transition:padding .3s}
-.row:hover{padding-left:1rem}
-.row h3{font-size:clamp(1.8rem,3vw,2.4rem)}
-.row p{color:var(--taupe);align-self:center}
-.chips{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.8rem}
-.chips span{font-size:.84rem;padding:.25rem .8rem;border:1px solid var(--line);border-radius:999px;color:var(--ink);background:var(--soft)}
-@media (max-width:700px){.row{grid-template-columns:1fr;gap:.4rem}}
-
-/* destaque enfermagem */
-.feature{background:var(--sand)}
-.feature .grid{display:grid;grid-template-columns:.85fr 1.15fr;gap:clamp(2rem,6vw,5rem);align-items:center}
-.plate{background:#fff;border:1px solid var(--line);border-radius:18px;padding:clamp(1.8rem,4vw,3rem);text-align:center}
-.plate .big{white-space:nowrap;font-family:var(--display);font-size:clamp(2.2rem,5.2vw,4rem);line-height:1;color:var(--navy);font-weight:500}
-.plate .big i{color:var(--gold);font-weight:500}
-.plate p{color:var(--taupe);margin-top:.8rem}
-.plate .eyebrow{margin-bottom:1.2rem}
-.benefits{list-style:none;padding:0;margin:1.8rem 0 2.2rem;display:grid;gap:.9rem}
-.benefits li{padding-left:2rem;position:relative}
-.benefits li::before{content:"";position:absolute;left:0;top:.8em;width:1.1rem;height:1px;background:var(--gold)}
-@media (max-width:820px){.feature .grid{grid-template-columns:1fr}}
-
-/* quem atendemos */
-.who{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:2.4rem;border-top:1px solid var(--line);border-left:1px solid var(--line)}
-.who div{padding:1.6rem 1.5rem;border-right:1px solid var(--line);border-bottom:1px solid var(--line);font-family:var(--display);font-size:1.5rem;line-height:1.2;transition:background .25s}
-.who div:hover{background:var(--soft)}
-.who small{display:block;font-family:var(--body);font-size:.72rem;letter-spacing:.14em;color:var(--gold);font-weight:600;margin-bottom:.5rem}
-@media (max-width:820px){.who{grid-template-columns:1fr 1fr}}
-@media (max-width:520px){.who{grid-template-columns:1fr}}
-
-/* tecnologia */
-.tech .grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(2rem,6vw,5rem);align-items:center}
-.feats{margin-top:2rem;border-top:1px solid var(--line)}
-.feat{display:grid;grid-template-columns:3rem 1fr;gap:1rem;padding:1.3rem 0;border-bottom:1px solid var(--line)}
-.feat i{font-family:var(--display);font-style:normal;font-size:2rem;color:var(--gold);line-height:1}
-.feat b{display:block;font-family:var(--display);font-size:1.5rem;font-weight:500;line-height:1.1;margin-bottom:.2rem}
-.feat span{color:var(--taupe);font-size:.97rem}
-.dash{background:#fff;border:1px solid var(--gold);border-radius:18px;padding:1.4rem;box-shadow:0 30px 60px -36px rgba(14,34,54,.45);position:relative}
-.dash::before{content:"";position:absolute;inset:-12px -12px 12px 12px;border:1px solid rgba(224,194,125,.6);border-radius:18px;z-index:-1}
-.dash-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;font-family:var(--display);font-size:1.4rem}
-.dash-h span{font-family:var(--body);font-size:.74rem;background:#E3F4EA;color:#1F7A4D;padding:.2rem .7rem;border-radius:999px;font-weight:600}
-.kp{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-bottom:.9rem}
-.kp div{background:var(--sand);border-radius:12px;padding:.7rem .8rem}
-.kp b{display:block;font-family:var(--display);font-size:1.9rem;line-height:1;color:var(--navy);font-weight:600}
-.kp small{color:var(--taupe);font-size:.76rem}
-.lines{display:grid;gap:.4rem}
-.lines div{display:grid;grid-template-columns:52px 1fr auto;gap:.7rem;align-items:center;padding:.65rem .2rem;border-bottom:1px solid var(--line);font-size:.86rem}
-.lines em{font-style:normal;font-size:.72rem;font-weight:600;padding:.15rem .6rem;border-radius:999px;background:#E3F4EA;color:#1F7A4D}
-.lines div.w em{background:#F8EBD3;color:#8A5A12}
-.dash .nota{font-size:.74rem;color:var(--taupe);margin-top:.8rem}
-@media (max-width:860px){.tech .grid{grid-template-columns:1fr}.dash::before{display:none}}
-
-/* passos */
-.steps{background:var(--sand)}
-.step-row{margin-top:2.4rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:2rem;counter-reset:s}
-.step{counter-increment:s;border-top:1px solid var(--gold);padding-top:1rem}
-.step::before{content:counter(s);font-family:var(--display);font-size:3rem;color:var(--gold);line-height:1}
-.step h3{font-size:1.6rem;margin:.4rem 0}
-.step p{color:var(--taupe);font-size:.97rem}
-
-/* operadoras */
-.op{background:var(--ink);color:#fff}
-.op .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:clamp(2rem,6vw,5rem);align-items:center}
-.op .eyebrow{color:var(--gold-l)}
-.op h2 em{color:var(--gold-l)}
-.op .sub{color:#B7C6D4;margin-bottom:2rem}
-.checks{list-style:none;padding:0;display:grid;border-top:1px solid rgba(255,255,255,.14)}
-.checks li{padding:1.1rem 0 1.1rem 2rem;position:relative;border-bottom:1px solid rgba(255,255,255,.14);color:#E3ECF3}
-.checks li::before{content:"";position:absolute;left:0;top:1.95rem;width:1.1rem;height:1px;background:var(--gold-l)}
-@media (max-width:820px){.op .grid{grid-template-columns:1fr}}
-
-/* trabalhe conosco */
-.join .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:clamp(2rem,6vw,5rem);align-items:start}
-.join p{margin-bottom:1rem;max-width:54ch;color:var(--taupe)}
-.join p a{color:var(--navy);font-weight:500}
-.docs{border-top:1px solid var(--line)}
-.docs h3{font-size:1.7rem;margin-bottom:1rem}
-.doc{display:grid;grid-template-columns:2.4rem 1fr;gap:.8rem;padding:1rem 0;border-bottom:1px solid var(--line)}
-.doc i{font-family:var(--display);font-style:normal;font-size:1.8rem;color:var(--gold);line-height:1}
-.doc b{display:block;font-weight:500}.doc span{font-size:.9rem;color:var(--taupe)}
-.docs-card{background:var(--soft);border:1px solid var(--line);border-radius:18px;padding:clamp(1.4rem,3vw,2.2rem)}
-@media (max-width:820px){.join .grid{grid-template-columns:1fr}}
-
-/* FAQ */
-.faq-list{max-width:780px;margin-top:2rem}
-details{border-bottom:1px solid var(--line);padding:1.2rem 0}
-summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:1rem;font-family:var(--display);font-size:1.6rem;line-height:1.15}
-summary::-webkit-details-marker{display:none}
-summary::after{content:"+";color:var(--gold);transition:transform .25s}
-details[open] summary::after{transform:rotate(45deg)}
-details p{margin-top:.6rem;color:var(--taupe);max-width:62ch}
-
-/* contato */
-.contact{background:var(--sand)}
-.contact .grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(2rem,6vw,5rem);align-items:start}
-.info{display:grid;gap:1.1rem;margin-top:2rem}
-.info a,.info span{display:flex;gap:.7rem;align-items:center;text-decoration:none;color:var(--ink)}
-.info svg{width:20px;height:20px;color:var(--gold);flex:none}
-form{background:#fff;border:1px solid var(--line);border-radius:18px;padding:2rem;display:grid;gap:1.1rem}
-label{display:grid;gap:.35rem;font-size:.92rem}
-input,select,textarea{font:inherit;padding:.85rem 1rem;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink);width:100%}
-textarea{resize:vertical;min-height:90px}
-form .note{font-size:.8rem;color:var(--taupe)}
-@media (max-width:820px){.contact .grid{grid-template-columns:1fr}}
-
-footer{background:var(--ink);color:#B7C6D4;padding:1.6rem 0;font-size:.9rem}
-footer .wrap{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:center}
-footer .links{display:flex;gap:1.2rem;flex-wrap:wrap}
-footer a{text-decoration:none;color:#fff}footer a:hover{text-decoration:underline}
-footer .credit{flex-basis:100%;border-top:1px solid rgba(255,255,255,.12);padding-top:1rem;margin-top:.3rem;font-size:.84rem;text-align:center;color:#8FA3B5}
-footer .credit a{color:var(--gold-l);font-weight:500}
-
-/* barra fixa no celular e WhatsApp */
-.mbar{display:none}
-.wa-float{position:fixed;right:20px;bottom:20px;z-index:40;display:flex;align-items:center;gap:.6rem;height:54px;padding:0 1.3rem 0 1.1rem;border-radius:999px;background:#1F9D5C;color:#fff;text-decoration:none;font-weight:600;box-shadow:0 14px 30px -12px rgba(31,157,92,.8)}
-.wa-float svg{width:24px;height:24px}
-@media (max-width:820px){
-  .wa-float{display:none!important}
-  .mbar{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;position:fixed;left:0;right:0;bottom:0;z-index:45;padding:.7rem .8rem calc(.7rem + env(safe-area-inset-bottom,0px));background:rgba(255,255,255,.96);backdrop-filter:blur(10px);box-shadow:0 -1px 0 var(--line)}
-  .mbar .btn{padding:.8rem .6rem;min-height:48px;font-size:.95rem}
-  .mbar .btn[hidden]{display:none}
-  .mbar:has(.btn[hidden]){grid-template-columns:1fr}
-  body{padding-bottom:76px}
-}
-
-/* cookies */
-.cookiebar{position:fixed;left:16px;right:16px;bottom:16px;z-index:80;max-width:560px;margin:0 auto;background:var(--ink);color:#fff;border-radius:14px;padding:14px 16px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;box-shadow:0 10px 30px rgba(0,0,0,.25)}
-.cookiebar p{margin:0;font-size:.88rem;color:#D8E6EE;line-height:1.5}
-.cookiebar a{color:#fff;text-decoration:underline}
-.cookiebar .btn{background:var(--gold-l);color:var(--ink);border:0;padding:.55rem 1.1rem;min-height:0;font-weight:600}
-@media (max-width:820px){.cookiebar{bottom:88px}}
-
-/* revelar ao rolar */
-html.js .rv{opacity:0;transform:translateY(22px);transition:opacity .8s cubic-bezier(.2,.7,.2,1),transform .8s cubic-bezier(.2,.7,.2,1)}
-html.js .rv.on{opacity:1;transform:none}
-@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.hero-in>*{animation:none}html.js .rv{opacity:1;transform:none;transition:none}}
-[hidden]{display:none!important}
-</style>
-
-<link rel="icon" type="image/png" href="data:image/png;base64,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">
 <link rel="apple-touch-icon" href="public/icon-192.png">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"MedicalBusiness","logo":"https://www.viverbemhomecare.com.br/logo-viverbem-nova.jpeg","name":"Viver Bem Atendimento Domiciliar","legalName":"Viverbem Atendimento Domiciliar de Enfermagem","description":"Home care com enfermagem, fisioterapia, médicos e equipe multidisciplinar na casa do paciente. Plantões de 6h a 24h, internação domiciliar e atendimento para operadoras de saúde.","url":"https://www.viverbemhomecare.com.br/","email":"viverbemhomecare@gmail.com","priceRange":"$$"}</script>
-<style>:root{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+<link rel="icon" href="img/logo-viverbem-mark.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0A2A5E; --navy-2:#0B3577; --royal:#1257B8; --sky:#3FA2F0;
+  --ice:#EEF6FD; --ice-2:#DCEBFA; --gold:#D7A63A; --gold-2:#F2CE6E;
+  --ink:#0E1B33; --muted:#5B6B85; --line:#E3EAF3; --white:#fff;
+  --r-xl:44px; --r-lg:26px; --r-md:18px;
+  --shadow:0 24px 60px -24px rgba(10,42,94,.35);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:Manrope,system-ui,sans-serif;color:var(--ink);background:#F7FAFE;line-height:1.6;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+img{max-width:100%;display:block}
+.wrap{width:min(1180px,92vw);margin:0 auto}
+.btn{display:inline-flex;align-items:center;gap:.55rem;padding:.9rem 1.5rem;border-radius:999px;font-weight:700;font-size:.95rem;border:0;cursor:pointer;transition:transform .25s,box-shadow .25s,background .25s,color .25s}
+.btn:hover{transform:translateY(-2px)}
+.btn-gold{background:linear-gradient(135deg,var(--gold-2),var(--gold));color:#2A1D00;box-shadow:0 12px 28px -10px rgba(215,166,58,.8)}
+.btn-white{background:#fff;color:var(--navy)}
+.btn-ghost{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.35);backdrop-filter:blur(6px)}
+.btn-navy{background:var(--navy);color:#fff}
+.btn-outline{background:transparent;color:var(--navy);border:1.5px solid var(--navy)}
+.eyebrow{display:inline-flex;align-items:center;gap:.5rem;font-size:.78rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--royal)}
+.eyebrow::before{content:"";width:22px;height:2px;background:var(--gold);border-radius:2px}
+h1,h2,h3{line-height:1.12;letter-spacing:-.02em}
+h2{font-size:clamp(1.9rem,3.6vw,2.9rem);font-weight:800;color:var(--navy);margin:.6rem 0 1rem}
+.lead{color:var(--muted);font-size:1.05rem;max-width:620px}
+section{padding:110px 0}
+/* progress */
+#progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--gold),var(--sky));z-index:200}
+/* NAV */
+header{position:fixed;top:14px;left:0;right:0;z-index:100;transition:top .3s}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:1rem;background:rgba(255,255,255,.96);border-radius:999px;padding:.45rem .55rem .45rem 1.1rem;box-shadow:0 10px 30px -12px rgba(10,42,94,.35);transition:box-shadow .3s}
+header.scrolled{top:8px}
+header.scrolled .nav{box-shadow:0 14px 40px -14px rgba(10,42,94,.5)}
+.brand img{height:54px;width:auto}
+.menu{display:flex;gap:.3rem;list-style:none}
+.menu a{padding:.55rem .85rem;border-radius:999px;font-weight:600;font-size:.9rem;color:var(--ink);transition:background .2s,color .2s}
+.menu a:hover,.menu a.active{background:var(--ice);color:var(--royal)}
+.nav-cta{display:flex;gap:.4rem;align-items:center}
+.nav-cta .link{font-weight:700;font-size:.88rem;color:var(--navy);padding:.55rem .8rem}
+.nav-cta .btn{padding:.7rem 1.15rem;font-size:.88rem}
+.burger{display:none;width:44px;height:44px;border-radius:50%;border:0;background:var(--navy);cursor:pointer;position:relative}
+.burger span{position:absolute;left:13px;right:13px;height:2px;background:#fff;border-radius:2px;transition:.3s}
+.burger span:nth-child(1){top:16px}.burger span:nth-child(2){top:21px}.burger span:nth-child(3){top:26px}
+.burger.open span:nth-child(1){top:21px;transform:rotate(45deg)}
+.burger.open span:nth-child(2){opacity:0}
+.burger.open span:nth-child(3){top:21px;transform:rotate(-45deg)}
+.mobile{display:none}
+/* HERO */
+.hero{position:relative;padding:150px 0 210px;background:radial-gradient(1200px 600px at 80% -10%,#2F7FE0 0%,transparent 60%),radial-gradient(900px 500px at 0% 100%,#0F4FA8 0%,transparent 60%),linear-gradient(160deg,#0B3577,#0A2A5E 60%,#071E45);border-radius:0 0 var(--r-xl) var(--r-xl);color:#fff;overflow:hidden;text-align:center}
+.hero::before{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.08) 1px,transparent 1px);background-size:26px 26px;mask-image:linear-gradient(#000,transparent 85%)}
+.swoosh{position:absolute;pointer-events:none;opacity:.9}
+.swoosh.s1{top:-120px;left:-180px;width:720px;transform:rotate(-8deg)}
+.swoosh.s2{bottom:-60px;right:-200px;width:780px;transform:rotate(172deg)}
+.hero .wrap{position:relative;z-index:2}
+.pill{display:inline-flex;align-items:center;gap:.55rem;padding:.45rem 1rem;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);font-size:.85rem;font-weight:600;backdrop-filter:blur(6px)}
+.pill i{width:8px;height:8px;border-radius:50%;background:#4ADE80;box-shadow:0 0 0 0 rgba(74,222,128,.7);animation:ping 2s infinite}
+@keyframes ping{0%{box-shadow:0 0 0 0 rgba(74,222,128,.6)}80%,100%{box-shadow:0 0 0 10px rgba(74,222,128,0)}}
+.hero h1{font-size:clamp(2.4rem,5.6vw,4.4rem);font-weight:800;margin:1.3rem auto 1.1rem;max-width:880px}
+.hero h1 .hl{background:linear-gradient(90deg,var(--gold-2),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p.sub{max-width:640px;margin:0 auto;color:rgba(255,255,255,.82);font-size:1.1rem}
+.hero .ctas{display:flex;gap:.8rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}
+.stage{position:relative;margin:4rem auto 0;width:min(560px,90%);perspective:1200px}
+.logo-card{background:#fff;border-radius:30px;padding:16px;box-shadow:0 40px 80px -30px rgba(0,0,0,.6);transform-style:preserve-3d;transition:transform .15s ease-out}
+.logo-card img{border-radius:20px;width:100%}
+.float{position:absolute;background:rgba(255,255,255,.97);color:var(--ink);border-radius:20px;padding:.9rem 1rem;box-shadow:0 24px 50px -18px rgba(0,0,0,.55);text-align:left;font-size:.82rem;transition:transform .2s ease-out;min-width:190px}
+.float b{display:block;font-size:.92rem;color:var(--navy)}
+.float small{color:var(--muted)}
+.f1{left:-130px;top:40px;animation:bob 6s ease-in-out infinite}
+.f2{right:-140px;top:120px;animation:bob 7s ease-in-out infinite reverse}
+.f3{left:-90px;bottom:-30px;animation:bob 8s ease-in-out infinite}
+@keyframes bob{0%,100%{translate:0 0}50%{translate:0 -12px}}
+.row{display:flex;align-items:center;gap:.7rem}
+.ico{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;flex:none}
+.ico.green{background:#E7F8EE;color:#16A34A}.ico.blue{background:var(--ice);color:var(--royal)}.ico.gold{background:#FBF2DC;color:#B7861C}
+.ico svg{width:20px;height:20px}
+.bar{height:6px;background:var(--ice-2);border-radius:6px;margin-top:.55rem;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--sky),var(--royal));border-radius:6px;transition:width 1.6s cubic-bezier(.2,.8,.2,1)}
+/* STAT STRIP */
+.strip{position:relative;z-index:5;margin-top:-90px}
+.strip .card{background:#fff;border-radius:var(--r-lg);box-shadow:var(--shadow);display:grid;grid-template-columns:repeat(3,1fr) auto;align-items:center;gap:1rem;padding:1.6rem 1.8rem}
+.stat{display:flex;gap:.9rem;align-items:center;padding-right:1rem;border-right:1px solid var(--line)}
+.stat:nth-child(3){border-right:0}
+.stat .num{font-size:1.65rem;font-weight:800;color:var(--navy);line-height:1}
+.stat p{font-size:.85rem;color:var(--muted);line-height:1.35;margin-top:.25rem}
+/* SERVICES (dark) */
+.svc{background:linear-gradient(160deg,#0A2A5E,#071E45);border-radius:var(--r-xl);margin:110px 2vw 0;color:#fff;position:relative;overflow:hidden}
+.svc::after{content:"";position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(63,162,240,.25),transparent 65%);top:-200px;right:-150px}
+.svc .wrap{position:relative;z-index:2}
+.svc h2{color:#fff}
+.svc .eyebrow{color:var(--gold-2)}
+.svc-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:3rem;margin-top:2.5rem;align-items:start}
+.svc-panel{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:var(--r-lg);padding:2.2rem;min-height:400px;position:relative;overflow:hidden}
+.svc-panel .big-ico{width:72px;height:72px;border-radius:22px;display:grid;place-items:center;background:linear-gradient(135deg,var(--gold-2),var(--gold));color:#2A1D00;margin-bottom:1.3rem}
+.svc-panel .big-ico svg{width:36px;height:36px}
+.svc-panel h3{font-size:1.7rem;margin-bottom:.7rem}
+.svc-panel p{color:rgba(255,255,255,.78)}
+.svc-panel ul{list-style:none;display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1.4rem}
+.svc-panel li{padding:.45rem .85rem;border-radius:999px;background:rgba(255,255,255,.1);font-size:.85rem;font-weight:600}
+.svc-panel .num-bg{position:absolute;right:1.2rem;bottom:-1.6rem;font-size:9rem;font-weight:800;color:rgba(255,255,255,.05);line-height:1}
+.fade-swap{animation:swap .5s ease}
+@keyframes swap{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.svc-list{list-style:none;display:flex;flex-direction:column;gap:.35rem}
+.svc-list button{width:100%;display:flex;align-items:center;justify-content:space-between;gap:1rem;background:transparent;border:0;border-bottom:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.7);font:inherit;font-weight:700;font-size:1.05rem;text-align:left;padding:1rem .4rem;cursor:pointer;transition:color .2s,padding .25s}
+.svc-list button .arr{width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.25);display:grid;place-items:center;transition:.25s;flex:none}
+.svc-list button:hover{color:#fff;padding-left:.8rem}
+.svc-list button.on{color:#fff;padding-left:.8rem}
+.svc-list button.on .arr{background:var(--gold);border-color:var(--gold);color:#2A1D00;transform:rotate(-45deg)}
+.svc-list .timer{height:2px;background:rgba(255,255,255,.1);margin-top:-1px}
+.svc-list .timer i{display:block;height:100%;width:0;background:var(--gold)}
+.svc-list button.on + .timer i{animation:fill 6s linear forwards}
+@keyframes fill{to{width:100%}}
+/* round buttons */
+.rounds{display:flex;justify-content:center;gap:2.2rem;flex-wrap:wrap;margin-top:4rem;padding-bottom:10px}
+.round{text-align:center;cursor:pointer;background:none;border:0;color:#fff;font:inherit}
+.round .c{width:82px;height:82px;border-radius:50%;display:grid;place-items:center;margin:0 auto .7rem;background:rgba(255,255,255,.07);border:1.5px solid rgba(215,166,58,.6);transition:.3s;position:relative}
+.round .c::after{content:"";position:absolute;inset:-7px;border-radius:50%;border:1px dashed rgba(255,255,255,.2);transition:.6s}
+.round:hover .c{background:var(--gold);color:#2A1D00;transform:translateY(-6px)}
+.round:hover .c::after{transform:rotate(180deg);border-color:var(--gold)}
+.round svg{width:30px;height:30px}
+.round span{font-size:.85rem;font-weight:700;color:rgba(255,255,255,.85)}
+/* who */
+.who{display:grid;grid-template-columns:.9fr 1.1fr;gap:3rem;align-items:center}
+.chips{display:flex;flex-wrap:wrap;gap:.7rem}
+.chip{display:flex;align-items:center;gap:.6rem;padding:.85rem 1.1rem;border-radius:16px;background:#fff;border:1px solid var(--line);font-weight:700;color:var(--navy);transition:.25s;cursor:default}
+.chip:hover{border-color:var(--royal);transform:translateY(-3px);box-shadow:0 14px 30px -18px rgba(18,87,184,.6)}
+.chip i{width:10px;height:10px;border-radius:50%;background:var(--gold)}
+.photo{position:relative;border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow);aspect-ratio:385/490}
+.photo img{width:100%;height:100%;object-fit:cover;display:block}
+.photo .badge{position:absolute;left:16px;right:16px;bottom:16px;background:rgba(255,255,255,.96);border-radius:16px;padding:.75rem .9rem;display:flex;gap:.7rem;align-items:center;font-size:.82rem}
+.photo .badge b{display:block;color:var(--navy);font-size:.9rem}.photo .badge small{color:var(--muted)}
+.band{width:100%;border-radius:var(--r-lg);margin-top:1.8rem;border:4px solid rgba(255,255,255,.12);aspect-ratio:426/142;object-fit:cover}
+.who{grid-template-columns:.8fr 1.2fr;row-gap:3.5rem}
+.logo-card img{aspect-ratio:504/343;object-fit:cover}
+.nurse{background:#fff;border-radius:var(--r-lg);padding:2rem;box-shadow:var(--shadow);border:1px solid var(--line)}
+.nurse h3{color:var(--navy);font-size:1.25rem;margin-bottom:1rem}
+.checks{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:.6rem 1rem}
+.checks li{display:flex;gap:.55rem;font-size:.92rem;color:var(--ink)}
+.checks li::before{content:"✓";flex:none;width:22px;height:22px;border-radius:50%;background:var(--ice);color:var(--royal);font-weight:800;display:grid;place-items:center;font-size:.75rem;margin-top:2px}
+/* TECH */
+.tech{background:var(--ice);border-radius:var(--r-xl);margin:0 2vw}
+.tech-grid{display:grid;grid-template-columns:1fr 1fr;gap:3.5rem;align-items:center}
+.steps{list-style:none;margin-top:1.8rem;display:flex;flex-direction:column;gap:.8rem;counter-reset:s}
+.steps li{display:flex;gap:1rem;background:#fff;border-radius:var(--r-md);padding:1.1rem 1.2rem;border:1px solid var(--line);cursor:pointer;transition:.25s}
+.steps li::before{counter-increment:s;content:counter(s,decimal-leading-zero);font-weight:800;color:var(--gold);font-size:1.05rem;min-width:28px}
+.steps li b{display:block;color:var(--navy)}
+.steps li span{font-size:.9rem;color:var(--muted)}
+.steps li.on,.steps li:hover{border-color:var(--royal);box-shadow:0 14px 30px -20px rgba(18,87,184,.6);transform:translateX(6px)}
+.dash{background:#fff;border-radius:28px;box-shadow:var(--shadow);padding:1.5rem;position:relative}
+.dash-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem}
+.dash-head b{color:var(--navy)}
+.live{font-size:.75rem;font-weight:800;color:#16A34A;background:#E7F8EE;padding:.3rem .65rem;border-radius:999px;display:flex;gap:.4rem;align-items:center}
+.live i{width:7px;height:7px;border-radius:50%;background:#16A34A;animation:ping 2s infinite}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;margin-bottom:1.1rem}
+.kpi{background:var(--ice);border-radius:16px;padding:.9rem}
+.kpi b{font-size:1.5rem;color:var(--navy);display:block;line-height:1.1}
+.kpi small{color:var(--muted);font-size:.75rem;font-weight:600}
+.feed{list-style:none;display:flex;flex-direction:column;gap:.55rem;height:262px;overflow:hidden}
+.feed li{display:flex;align-items:center;gap:.75rem;padding:.7rem .8rem;border:1px solid var(--line);border-radius:14px;font-size:.85rem;animation:slideIn .6s ease}
+.feed li .who-ini{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:.8rem;color:#fff;flex:none}
+.feed li .t{margin-left:auto;font-weight:700;font-size:.78rem;padding:.25rem .55rem;border-radius:8px}
+.t.in{background:#E7F8EE;color:#15803D}.t.out{background:#FBF2DC;color:#9A6B0C}.t.ev{background:var(--ice);color:var(--royal)}
+@keyframes slideIn{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:none}}
+/* particular */
+.how{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem;margin-top:2.5rem}
+.how .box{background:#fff;border-radius:var(--r-lg);padding:2rem;border:1px solid var(--line);position:relative;transition:.3s;overflow:hidden}
+.how .box:hover{transform:translateY(-6px);box-shadow:var(--shadow)}
+.how .box .n{width:48px;height:48px;border-radius:50%;background:var(--navy);color:#fff;font-weight:800;display:grid;place-items:center;margin-bottom:1.2rem}
+.how .box h3{color:var(--navy);font-size:1.2rem;margin-bottom:.5rem}
+.how .box p{color:var(--muted);font-size:.95rem}
+.how .box::after{content:"";position:absolute;left:0;bottom:0;height:4px;width:0;background:linear-gradient(90deg,var(--gold),var(--sky));transition:width .4s}
+.how .box:hover::after{width:100%}
+/* operadoras */
+.ops{background:linear-gradient(135deg,#0B3577,#1257B8);border-radius:var(--r-xl);color:#fff;padding:4rem;display:grid;grid-template-columns:1.1fr .9fr;gap:3rem;align-items:center;position:relative;overflow:hidden}
+.ops h2{color:#fff}.ops .eyebrow{color:var(--gold-2)}
+.ops p{color:rgba(255,255,255,.82)}
+.ops .grid4{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+.ops .g{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:18px;padding:1.1rem;transition:.25s}
+.ops .g:hover{background:rgba(255,255,255,.18);transform:translateY(-4px)}
+.ops .g b{display:block;margin-bottom:.2rem}
+.ops .g small{color:rgba(255,255,255,.75);font-size:.82rem}
+/* trabalhe */
+.work{display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:center}
+.docs{background:#fff;border-radius:var(--r-lg);padding:1.8rem;box-shadow:var(--shadow);border:1px solid var(--line)}
+.docs-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem}
+.docs-head b{color:var(--navy)}
+.docs-head span{font-weight:800;color:var(--royal)}
+.doc{display:flex;align-items:center;gap:.8rem;padding:.8rem;border-radius:14px;cursor:pointer;transition:background .2s;user-select:none}
+.doc:hover{background:var(--ice)}
+.doc .box{width:24px;height:24px;border-radius:8px;border:2px solid var(--ice-2);display:grid;place-items:center;transition:.2s;flex:none;color:transparent;font-weight:900;font-size:.8rem}
+.doc.done .box{background:var(--royal);border-color:var(--royal);color:#fff}
+.doc.done span{color:var(--muted);text-decoration:line-through}
+.councils{display:flex;gap:.45rem;flex-wrap:wrap;margin:1.2rem 0 1.6rem}
+.councils span{padding:.4rem .75rem;border-radius:10px;background:#fff;border:1px solid var(--line);font-weight:800;font-size:.8rem;color:var(--navy)}
+/* faq */
+.faq-grid{display:grid;grid-template-columns:.8fr 1.2fr;gap:3rem}
+.qa{border-bottom:1px solid var(--line)}
+.qa button{width:100%;display:flex;justify-content:space-between;align-items:center;gap:1rem;background:none;border:0;font:inherit;font-weight:700;font-size:1.05rem;color:var(--navy);padding:1.3rem 0;cursor:pointer;text-align:left}
+.qa .pm{width:34px;height:34px;border-radius:50%;background:var(--ice);display:grid;place-items:center;flex:none;transition:.3s;font-size:1.2rem;color:var(--royal)}
+.qa.open .pm{transform:rotate(45deg);background:var(--navy);color:#fff}
+.qa .ans{max-height:0;overflow:hidden;transition:max-height .4s ease;color:var(--muted)}
+.qa .ans p{padding:0 0 1.3rem}
+/* contato */
+.contact{background:linear-gradient(160deg,#0A2A5E,#071E45);border-radius:var(--r-xl);margin:0 2vw;color:#fff}
+.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:center}
+.contact h2{color:#fff}.contact .eyebrow{color:var(--gold-2)}
+.contact p{color:rgba(255,255,255,.8)}
+form{background:#fff;border-radius:var(--r-lg);padding:2rem;color:var(--ink);display:grid;gap:.9rem}
+label{font-size:.8rem;font-weight:700;color:var(--navy);display:grid;gap:.35rem}
+input,select,textarea{font:inherit;padding:.85rem 1rem;border-radius:14px;border:1.5px solid var(--line);background:#FAFCFF;transition:border .2s,box-shadow .2s;color:var(--ink)}
+input:focus,select:focus,textarea:focus{outline:0;border-color:var(--royal);box-shadow:0 0 0 4px rgba(18,87,184,.12)}
+textarea{resize:vertical;min-height:100px}
+.seg{display:flex;flex-wrap:wrap;gap:.4rem}
+.seg button{border:1.5px solid var(--line);background:#fff;padding:.5rem .85rem;border-radius:999px;font:inherit;font-size:.82rem;font-weight:700;color:var(--muted);cursor:pointer;transition:.2s}
+.seg button.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.formnote{font-size:.75rem;color:var(--muted)}
+.wa-link{display:none;font-size:.85rem;font-weight:700;color:var(--royal);word-break:break-all}
+/* footer */
+footer{padding:70px 0 40px}
+.foot{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:2rem;align-items:start}
+.foot img{height:70px;width:auto;margin-bottom:.8rem}
+.foot h4{color:var(--navy);margin-bottom:.8rem}
+.foot a{display:block;color:var(--muted);padding:.2rem 0;font-weight:600;font-size:.92rem;transition:color .2s}
+.foot a:hover{color:var(--royal)}
+.copy{border-top:1px solid var(--line);margin-top:2.5rem;padding-top:1.5rem;display:flex;justify-content:space-between;flex-wrap:wrap;gap:1rem;font-size:.85rem;color:var(--muted)}
+.copy a{color:var(--royal);font-weight:700}
+#top{position:fixed;right:22px;bottom:22px;width:50px;height:50px;border-radius:50%;border:0;background:var(--gold);color:#2A1D00;font-size:1.3rem;cursor:pointer;box-shadow:0 12px 26px -10px rgba(0,0,0,.4);opacity:0;transform:translateY(20px);transition:.3s;z-index:90}
+#top.show{opacity:1;transform:none}
+.wa-float{position:fixed;left:22px;bottom:22px;z-index:90;display:flex;align-items:center;gap:.5rem;background:#25D366;color:#fff;font-weight:800;padding:.8rem 1.1rem;border-radius:999px;box-shadow:0 12px 26px -10px rgba(0,0,0,.45);transition:transform .25s}
+.wa-float:hover{transform:translateY(-3px)}
+.wa-float[hidden]{display:none}
+.cookiebar{position:fixed;left:16px;right:16px;bottom:16px;z-index:150;max-width:560px;margin:0 auto;background:var(--navy);color:#fff;border-radius:18px;padding:14px 16px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;box-shadow:0 14px 34px rgba(0,0,0,.3)}
+.cookiebar[hidden]{display:none}
+.cookiebar p{font-size:.88rem;color:#D8E6EE;line-height:1.5}.cookiebar a{color:#fff;text-decoration:underline}
+.clist{display:flex;flex-direction:column;gap:.6rem;margin-top:1.4rem}
+.clist:empty{display:none}
+.clist a,.clist span{display:inline-flex;align-items:center;gap:.6rem;color:#fff;font-weight:600}
+.clist svg{width:20px;height:20px;color:var(--gold-2);flex:none}
+/* reveal */
+.rv{opacity:0;transform:translateY(34px);transition:opacity .8s ease,transform .8s cubic-bezier(.2,.8,.2,1)}
+.rv.in{opacity:1;transform:none}
+.d1{transition-delay:.1s}.d2{transition-delay:.2s}.d3{transition-delay:.3s}
+/* responsive */
+@media (max-width:1080px){
+  .menu,.nav-cta .link{display:none}
+  .burger{display:block}
+  .mobile{display:block;position:fixed;inset:80px 4vw auto;background:#fff;border-radius:24px;box-shadow:var(--shadow);padding:1rem;transform:translateY(-14px);opacity:0;pointer-events:none;transition:.3s;z-index:99}
+  .mobile.open{opacity:1;transform:none;pointer-events:auto}
+  .mobile a{display:block;padding:.85rem 1rem;border-radius:14px;font-weight:700;color:var(--navy)}
+  .mobile a:hover{background:var(--ice)}
+  .f1{left:-40px}.f2{right:-40px}.f3{left:-20px}
+}
+@media (max-width:900px){
+  section{padding:80px 0}
+  .strip .card{grid-template-columns:1fr;padding:1.4rem}
+  .stat{border-right:0;border-bottom:1px solid var(--line);padding:0 0 1rem}
+  .svc-grid,.who,.tech-grid,.ops,.work,.faq-grid,.contact-grid,.how,.foot{grid-template-columns:1fr}
+  .ops{padding:2.5rem 1.6rem}
+  .svc-list{order:-1}
+  .float{display:none}
+  .checks{grid-template-columns:1fr}
+}
+@media (max-width:560px){
+  .nav-cta .btn{display:none}
+  .brand img{height:38px}
+  .hero{padding:130px 0 170px}
+  .kpis{grid-template-columns:1fr 1fr 1fr}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.rv{opacity:1;transform:none}}
+</style>
 </head>
 <body>
-<header id="top"><div class="wrap bar">
-  <a class="brand" href="#inicio" aria-label="Viver Bem Atendimento Domiciliar"><b>Viver Bem</b><small>Atendimento Domiciliar</small></a>
-  <nav aria-label="Seções"><a href="#servicos">Serviços</a><a href="#tecnologia">Como cuidamos</a><a href="#operadoras">Operadoras</a><a href="#trabalhe">Trabalhe conosco</a><a href="#duvidas">Dúvidas</a><a class="btn line entrar" href="public/index.html">Entrar<span class="l">&nbsp;no sistema</span></a><a class="btn" data-sis="solicitar" href="#">Solicitar avaliação</a></nav>
-</div></header>
+<div id="progress"></div>
 
-<main id="inicio">
-<section class="hero"><div class="wrap">
-  <div class="hero-in">
-    <span class="eyebrow">Home care · Atendimento domiciliar</span>
-    <h1>Cuidado em casa, <em>com a família por perto.</em></h1>
-    <p class="lead">Assistência especializada com equipe multidisciplinar, cuidado individualizado e acompanhamento contínuo no conforto do lar.</p>
-    <div class="actions"><a class="btn" data-sis="solicitar" href="#">Solicitar avaliação</a><a class="btn line" href="#servicos">Ver serviços</a></div>
-    <div class="trust"><span>Profissionais com registro no conselho de classe</span><span>Plantões de 6h a 24h, particular e operadoras</span><span>Seguimos a RDC 11 da Anvisa</span></div>
-  </div>
-  <div class="arch">
-    <div class="frame"><img src="logo-viverbem-nova.jpeg" width="1402" height="1122" alt="Viver Bem Atendimento Domiciliar"></div>
-    <div class="badge"><b>Família informada</b>Chegada, saída e evolução de cada plantão registradas.</div>
-  </div>
-</div></section>
-
-<section id="servicos"><div class="wrap">
-  <div class="sec-head rv"><div><span class="eyebrow">Serviços</span><h2>Tudo o que o paciente precisa, <em>sem sair de casa.</em></h2><p class="sub">Cada atendimento começa com uma avaliação para entender a necessidade do paciente e montar o plano de cuidados.</p></div><a class="btn line" data-sis="solicitar" href="#">Pedir orçamento</a></div>
-  <div class="rows rv">
-    <div class="row"><h3>Enfermagem domiciliar</h3><p>Enfermeiros, técnicos e auxiliares em plantões ou visitas, com supervisão de enfermagem e registro de cada atendimento.</p></div>
-    <div class="row"><h3>Terapias e reabilitação</h3><p>Fisioterapia motora e respiratória, fonoaudiologia, nutrição, psicologia e terapia ocupacional, além de avaliação médica domiciliar.</p></div>
-    <div class="row"><h3>Cuidado no dia a dia</h3><p>Banho no leito, higiene, mudança de decúbito, alimentação e apoio emocional ao paciente e à família.</p></div>
-    <div class="row"><h3>Exames em casa</h3><div><div class="chips" style="margin-top:0"><span>Raio-X</span><span>Eletrocardiograma</span><span>Ecocardiograma</span><span>Holter 24h</span><span>MAPA</span><span>Ultrassonografia</span><span>Doppler</span><span>Coleta de sangue</span></div><p style="margin-top:.8rem">Imagem e laboratório na casa do paciente, com laudo, mediante pedido médico.</p></div></div>
-    <div class="row"><h3>Gerenciamento de crônicos</h3><p>Hipertensão, diabetes, coração e pulmão acompanhados de perto: medições registradas pelo aplicativo, alerta para a equipe quando sai do normal e relatório para o médico.</p></div>
-    <div class="row"><h3>Internação domiciliar</h3><p>Equipe técnica fixa, materiais e medicamentos conforme o pacote, para quem precisa sair do hospital com segurança.</p></div>
-  </div>
-</div></section>
-
-<section class="feature"><div class="wrap grid">
-  <div class="plate rv"><span class="eyebrow">Plantões flexíveis</span><div class="big">6h <i>·</i> 12h <i>·</i> 24h</div><p>Por hora, por plantão ou com revezamento, com reposição rápida em caso de falta.</p></div>
-  <div class="rv"><span class="eyebrow">Enfermagem domiciliar</span><h2>Cuidado técnico, <em>com calma e atenção.</em></h2>
-    <ul class="benefits"><li>Medicação e antibiótico endovenoso</li><li>Curativos e manejo de feridas</li><li>Sonda nasoenteral, vesical, traqueostomia e oxigênio</li><li>Controle de sinais vitais e glicemia</li><li>Acompanhamento pós-operatório</li><li>Assistência ao paciente acamado</li></ul>
-    <a class="btn" data-sis="solicitar" href="#">Solicitar avaliação</a></div>
-</div></section>
-
-<section><div class="wrap">
-  <div class="rv"><span class="eyebrow">Para quem é</span><h2>Quem <em>atendemos</em></h2></div>
-  <div class="who rv">
-    <div><small>01</small>Idosos, com ou sem limitações</div>
-    <div><small>02</small>Recuperação pós-cirúrgica</div>
-    <div><small>03</small>AVC, Alzheimer e Parkinson</div>
-    <div><small>04</small>Quem precisa evitar internação</div>
-    <div><small>05</small>Cuidados paliativos</div>
-    <div><small>06</small>Beneficiários de planos de saúde</div>
-  </div>
-</div></section>
-
-<section class="tech" id="tecnologia" style="padding-top:0"><div class="wrap grid">
-  <div class="rv"><span class="eyebrow">Como cuidamos</span><h2>Tecnologia para a família <em>ficar tranquila.</em></h2><p class="sub">Nosso sistema acompanha cada atendimento do início ao fim. Nada fica só no papel.</p>
-    <div class="feats">
-      <div class="feat"><i>01</i><div><b>Presença confirmada</b><span>O profissional registra chegada e saída pelo celular, com horário e localização.</span></div></div>
-      <div class="feat"><i>02</i><div><b>Evolução a cada plantão</b><span>Sinais vitais e relato do plantão salvos no prontuário do paciente.</span></div></div>
-      <div class="feat"><i>03</i><div><b>Contrato digital</b><span>Família e profissionais assinam pelo celular, com código de verificação.</span></div></div>
-      <div class="feat"><i>04</i><div><b>Escala organizada</b><span>Plantões planejados com antecedência e reposição rápida em caso de falta.</span></div></div>
+<!-- NAV -->
+<header id="hdr">
+  <div class="wrap nav">
+    <a href="#inicio" class="brand" aria-label="Viver Bem — início"><img src="img/logo-viverbem-mark.webp" alt="Viver Bem Atendimento Domiciliar"></a>
+    <ul class="menu">
+      <li><a href="#servicos">Serviços</a></li>
+      <li><a href="#tecnologia">Como cuidamos</a></li>
+      <li><a href="#operadoras">Operadoras</a></li>
+      <li><a href="#trabalhe">Trabalhe conosco</a></li>
+      <li><a href="#duvidas">Dúvidas</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a class="link" href="public/index.html">Área da Família</a>
+      <a class="btn btn-navy" href="public/index.html">Entrar no sistema</a>
+      <button class="burger" id="burger" aria-label="Abrir menu"><span></span><span></span><span></span></button>
     </div>
   </div>
-  <div class="dash rv" aria-hidden="true">
-    <div class="dash-h">Chegadas e saídas · hoje<span>6 em atendimento</span></div>
-    <div class="kp"><div><b>96%</b><small>no horário</small></div><div><b>14</b><small>plantões</small></div><div><b>14</b><small>evoluções</small></div></div>
-    <div class="lines">
-      <div><b>06:58</b><span>Técnica · Paciente A</span><em>No endereço</em></div>
-      <div><b>07:02</b><span>Enfermeira · Paciente B</span><em>No endereço</em></div>
-      <div class="w"><b>07:21</b><span>Técnico · Paciente C</span><em>Atraso 21 min</em></div>
-      <div><b>09:00</b><span>Fisioterapeuta · Paciente D</span><em>No endereço</em></div>
+  <nav class="mobile" id="mobile">
+    <a href="#servicos">Serviços</a><a href="#tecnologia">Como cuidamos</a><a href="#operadoras">Operadoras</a>
+    <a href="#trabalhe">Trabalhe conosco</a><a href="#duvidas">Dúvidas</a><a href="public/index.html">Área da Família</a>
+    <a href="public/index.html" class="btn btn-gold" style="justify-content:center;margin-top:.4rem">Entrar no sistema</a>
+  </nav>
+</header>
+
+<!-- HERO -->
+<section class="hero" id="inicio">
+  <svg class="swoosh s1" viewBox="0 0 700 300" fill="none"><path d="M0 260C180 80 420 20 700 40" stroke="url(#g1)" stroke-width="6" stroke-linecap="round"/><path d="M0 300C200 120 430 70 700 90" stroke="rgba(63,162,240,.35)" stroke-width="40" stroke-linecap="round"/><defs><linearGradient id="g1" x1="0" x2="700" y1="0" y2="0" gradientUnits="userSpaceOnUse"><stop stop-color="#F2CE6E" stop-opacity="0"/><stop offset=".5" stop-color="#F2CE6E"/><stop offset="1" stop-color="#D7A63A" stop-opacity=".2"/></linearGradient></defs></svg>
+  <svg class="swoosh s2" viewBox="0 0 700 300" fill="none"><path d="M0 260C180 80 420 20 700 40" stroke="url(#g1)" stroke-width="5" stroke-linecap="round"/><path d="M0 300C200 120 430 70 700 90" stroke="rgba(63,162,240,.3)" stroke-width="36" stroke-linecap="round"/></svg>
+  <div class="wrap">
+    <span class="pill rv"><i></i> Atendimento particular e para operadoras de saúde</span>
+    <h1 class="rv d1">Cuidado em casa, <span class="hl">com a família</span> por perto.</h1>
+    <p class="sub rv d2">Assistência especializada com equipe multidisciplinar, cuidado individualizado e acompanhamento contínuo no conforto do lar.</p>
+    <div class="ctas rv d3">
+      <a class="btn btn-gold" href="public/index.html#solicitar">Solicitar avaliação
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a class="btn btn-ghost" href="#servicos">Ver serviços</a>
     </div>
-    <p class="nota">Ilustração da tela do sistema</p>
+
+    <div class="stage rv d3" id="stage">
+      <div class="logo-card" id="logoCard"><img src="img/foto-equipe-casa.webp" alt="Profissional da Viver Bem conversando com paciente idosa em casa"></div>
+      <div class="float f1" data-depth="18">
+        <div class="row"><div class="ico green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+        <div><b>Chegada confirmada</b><small>Téc. de enfermagem · 07:00</small></div></div>
+      </div>
+      <div class="float f2" data-depth="-22">
+        <b>Família informada</b><small>Evolução de cada plantão</small>
+        <div class="bar"><i data-w="96%"></i></div>
+        <small style="display:block;margin-top:.35rem"><strong style="color:var(--royal)">96%</strong> dos plantões no horário</small>
+      </div>
+      <div class="float f3" data-depth="12">
+        <div class="row"><div class="ico gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6C19 16.5 12 21 12 21z"/></svg></div>
+        <div><b>Plantões 6h a 24h</b><small>Reposição rápida</small></div></div>
+      </div>
+    </div>
   </div>
-</div></section>
+</section>
 
-<section class="steps"><div class="wrap">
-  <div class="rv"><span class="eyebrow">Atendimento particular</span><h2>Como funciona o <em>atendimento</em></h2></div>
-  <div class="step-row rv">
-    <div class="step"><h3>Solicite uma avaliação</h3><p>Conte o que o paciente precisa e informe a cidade para confirmarmos a cobertura.</p></div>
-    <div class="step"><h3>Converse com a equipe</h3><p>A equipe avalia as necessidades e combina o plano de cuidados, os profissionais e os horários com você.</p></div>
-    <div class="step"><h3>Acompanhe o atendimento</h3><p>Na Área da Família, consulte a agenda e os registros de chegada e saída do plantão.</p></div>
+<!-- STAT STRIP -->
+<div class="wrap strip">
+  <div class="card rv">
+    <div class="stat"><div class="ico blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="m9 12 2 2 4-4"/></svg></div>
+      <div><div class="num"><span class="count" data-to="100">0</span>%</div><p>profissionais com registro no conselho</p></div></div>
+    <div class="stat"><div class="ico gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+      <div><div class="num"><span class="count" data-to="6">0</span>h–<span class="count" data-to="24">0</span>h</div><p>plantões particulares e por operadora</p></div></div>
+    <div class="stat"><div class="ico green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 12h6M9 16h6M8 3h8l4 4v14H4V3z"/></svg></div>
+      <div><div class="num">RDC <span class="count" data-to="11">0</span></div><p>em conformidade com a Anvisa</p></div></div>
+    <a class="btn btn-outline" href="public/index.html#solicitar">Pedir orçamento</a>
   </div>
-  <div class="actions rv" style="margin-top:2.6rem"><a class="btn" data-sis="solicitar" href="#">Solicitar avaliação</a><a class="btn line" href="public/index.html">Área da Família</a></div>
-</div></section>
+</div>
 
-<section class="op" id="operadoras"><div class="wrap grid">
-  <div class="rv"><span class="eyebrow">Operadoras de saúde</span><h2>Parceria para desospitalização <em>e atenção domiciliar.</em></h2><p class="sub">Recebemos beneficiários encaminhados por planos e convênios, com faturamento organizado e relatórios completos de cada atendimento.</p>
-    <a class="btn on-dark" data-sis="solicitar-operadora" href="#">Falar sobre credenciamento</a></div>
-  <ul class="checks rv">
-    <li>Plano de cuidados e evolução diária por paciente</li>
-    <li>Presença dos profissionais com horário e localização</li>
-    <li>Relatórios para auditoria e faturamento</li>
-    <li>Equipe selecionada com documentos conferidos</li>
-  </ul>
-</div></section>
-
-<section class="join" id="trabalhe"><div class="wrap grid">
-  <div class="rv"><span class="eyebrow">Trabalhe conosco</span><h2>É profissional de saúde? <em>Venha cuidar com a gente.</em></h2>
-    <p>Cadastro, processo seletivo e contrato de prestação de serviço, tudo pelo celular. Você escolhe os plantões conforme a sua disponibilidade e recebe a escala no aplicativo.</p>
-    <p>Já faz parte da equipe? <a href="public/index.html?portal=profissional">Acesse a área do profissional</a> com o e-mail cadastrado pela administração.</p>
-    <div class="actions" style="margin-top:1.6rem"><a class="btn" data-sis="trabalhe" href="#">Quero me cadastrar</a><a class="btn line" data-sis="acompanhar" href="#">Acompanhar candidatura</a></div></div>
-  <div class="docs-card rv"><h3 style="font-size:1.7rem;margin-bottom:.6rem">Tenha em mãos</h3>
-    <div class="docs">
-      <div class="doc"><i>1</i><div><b>Inscrição no conselho</b><span>COREN, CREFITO, CRM, CRFa, CRP, CRN</span></div></div>
-      <div class="doc"><i>2</i><div><b>Foto da carteira do conselho</b><span>Frente legível</span></div></div>
-      <div class="doc"><i>3</i><div><b>Documento com foto</b><span>RG ou CNH</span></div></div>
-      <div class="doc"><i>4</i><div><b>Comprovante de endereço</b><span>Dos últimos 3 meses</span></div></div>
-      <div class="doc"><i>5</i><div><b>Currículo e selfie</b><span>A selfie é tirada na hora pelo celular</span></div></div>
-    </div></div>
-</div></section>
-
-<section id="duvidas" style="padding-top:0"><div class="wrap">
-  <div class="rv"><span class="eyebrow">Dúvidas</span><h2>Perguntas <em>frequentes</em></h2></div>
-  <div class="faq-list rv">
-    <details open><summary>Quanto custa o atendimento domiciliar?</summary><p>O valor depende do quadro do paciente, dos profissionais necessários e da frequência. Por isso fazemos uma avaliação antes e enviamos uma proposta personalizada, sem compromisso.</p></details>
-    <details><summary>Vocês atendem pelo plano de saúde?</summary><p>Atendemos particular e também pacientes encaminhados por operadoras credenciadas. Se você tem plano, informe na solicitação que verificamos a cobertura.</p></details>
-    <details><summary>Quais profissionais vão até a casa?</summary><p>Médicos, enfermeiros, técnicos e auxiliares de enfermagem, fisioterapeutas, fonoaudiólogos, nutricionistas, psicólogos e terapeutas ocupacionais. Todos com registro ativo no conselho de classe.</p></details>
-    <details><summary>Como a família acompanha o atendimento?</summary><p>Cada plantão tem chegada, saída e evolução registradas no nosso sistema. A família tem contato direto com a equipe responsável e pode pedir o relatório do atendimento.</p></details>
-    <details><summary>E se o profissional faltar?</summary><p>A escala é acompanhada em tempo real. Quando um profissional não registra a chegada, a coordenação é avisada e providencia a reposição.</p></details>
-    <details><summary>Em quais cidades vocês atendem?</summary><p>Fale com a gente informando a cidade do paciente. Confirmamos a disponibilidade da equipe na sua região.</p></details>
+<!-- SERVICES -->
+<section class="svc" id="servicos">
+  <div class="wrap">
+    <span class="eyebrow rv">Nossos serviços</span>
+    <h2 class="rv d1">Veja como cuidamos de quem<br>você ama, dentro de casa</h2>
+    <div class="svc-grid">
+      <div class="svc-panel rv" id="svcPanel"></div>
+      <ul class="svc-list rv d1" id="svcList"></ul>
+    </div>
+    <div class="rounds">
+      <a class="round rv" href="public/index.html#solicitar"><div class="c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14H3V6a2 2 0 0 1 2-2z"/></svg></div><span>Agendar avaliação</span></a>
+      <a class="round rv d1" href="public/index.html"><div class="c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><span>Área da Família</span></a>
+      <a class="round rv d2" href="#contato"><div class="c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 21l2.1-5.4A8.4 8.4 0 1 1 21 11.5z"/></svg></div><span>Falar no WhatsApp</span></a>
+      <a class="round rv d3" href="#trabalhe"><div class="c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></div><span>Trabalhe conosco</span></a>
+    </div>
   </div>
-</div></section>
+</section>
 
-<section class="contact" id="contato"><div class="wrap grid">
-  <div class="rv"><span class="eyebrow">Fale com a Viver Bem</span><h2>Vamos cuidar de <em>quem você ama.</em></h2><p class="sub">Conte o que o paciente precisa. Retornamos para agendar a avaliação domiciliar.</p>
-    <div class="actions" style="margin-top:1.6rem"><a class="btn" data-sis="solicitar" href="#">Solicitar avaliação</a><a class="btn gold wa-link" href="#contato" hidden>Chamar no WhatsApp</a></div>
-    <div class="info" id="contato-lista"></div></div>
-  <form id="formContato" class="rv">
-    <label>Seu nome<input name="nome" required autocomplete="name"></label>
-    <label>Eu sou<select name="interesse"><option>Familiar de um paciente</option><option>Operadora de saúde</option><option>Profissional de saúde</option><option>Outro</option></select></label>
-    <label>Cidade do paciente<input name="cidade" autocomplete="address-level2"></label>
-    <label>Como podemos ajudar?<textarea name="msg" placeholder="Ex.: cuidado para idoso acamado, plantão noturno..."></textarea></label>
-    <button class="btn gold" type="submit">Enviar pelo WhatsApp</button>
-    <p class="note">Ao enviar, abrimos o WhatsApp com a sua mensagem pronta. Não guardamos esses dados no site.</p>
-  </form>
-</div></section>
-</main>
+<!-- PARA QUEM -->
+<section id="paraquem">
+  <div class="wrap who">
+    <div class="photo rv">
+      <img src="img/foto-cuidadora.webp" alt="Cuidadora da Viver Bem com paciente idosa sorrindo">
+      <div class="badge"><div class="ico gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6C19 16.5 12 21 12 21z"/></svg></div><div><b>Atenção humanizada</b><small>Segurança e bem-estar no lar</small></div></div>
+    </div>
+    <div>
+      <span class="eyebrow rv">Para quem é</span>
+      <h2 class="rv d1">Atenção certa para cada momento da vida</h2>
+      <p class="lead rv d2">Montamos o plano de cuidados de acordo com o quadro de cada paciente, com equipe fixa e supervisão constante.</p>
+      <div class="chips rv d3" style="margin-top:1.6rem">
+        <div class="chip"><i></i>Idosos</div><div class="chip"><i></i>Pós-cirúrgico</div>
+        <div class="chip"><i></i>AVC</div><div class="chip"><i></i>Alzheimer</div>
+        <div class="chip"><i></i>Parkinson</div><div class="chip"><i></i>Evitar internação</div>
+        <div class="chip"><i></i>Cuidados paliativos</div><div class="chip"><i></i>Planos de saúde</div>
+      </div>
+    </div>
+    <div class="nurse rv d2" style="grid-column:1/-1">
+      <h3>Enfermagem domiciliar completa</h3>
+      <ul class="checks">
+        <li>Medicação e antibiótico endovenoso</li><li>Curativos e manejo de feridas</li>
+        <li>Sondas e traqueostomia</li><li>Oxigenoterapia</li>
+        <li>Sinais vitais e glicemia</li><li>Pós-operatório</li>
+        <li>Paciente acamado</li><li>Supervisão e registro</li>
+      </ul>
+    </div>
+  </div>
+</section>
 
-<footer><div class="wrap">
-  <span>© <span id="ano"></span> Viver Bem Atendimento Domiciliar<span id="fCnpj"></span></span>
-  <span class="links"><a href="#servicos">Serviços</a><a href="#operadoras">Operadoras</a><a data-sis="trabalhe" href="#">Trabalhe conosco</a><a href="/privacidade.html">Privacidade</a><a href="public/index.html">Entrar no sistema</a></span>
-  <div class="credit">Site desenvolvido por <b>Jefferson Ramalho</b> · Quer um site assim? <a href="https://wa.me/5583921418988?text=Ol%C3%A1%2C%20Jefferson!%20Vi%20seu%20trabalho%20no%20site%20da%20Viver%20Bem%20e%20quero%20um%20site." target="_blank" rel="noopener">WhatsApp (83) 9 2141-8988</a></div>
-</div></footer>
+<!-- TECNOLOGIA -->
+<section class="tech" id="tecnologia">
+  <div class="wrap tech-grid">
+    <div>
+      <span class="eyebrow rv">Como cuidamos</span>
+      <h2 class="rv d1">Tecnologia que deixa a família tranquila</h2>
+      <p class="lead rv d2">Tudo o que acontece em cada plantão fica registrado e visível para a família e para a coordenação.</p>
+      <ol class="steps rv d3" id="steps">
+        <li class="on"><div><b>Presença confirmada pelo celular</b><span>Chegada e saída com horário e localização.</span></div></li>
+        <li><div><b>Evolução a cada plantão</b><span>Sinais vitais e relato no prontuário.</span></div></li>
+        <li><div><b>Contrato digital</b><span>Assinatura com código de verificação.</span></div></li>
+        <li><div><b>Escala organizada</b><span>Reposição rápida quando alguém falta.</span></div></li>
+      </ol>
+    </div>
+    <div class="dash rv d2">
+      <div class="dash-head"><b>Painel de plantões</b><span class="live"><i></i>Ao vivo</span></div>
+      <div class="kpis">
+        <div class="kpi"><b><span class="count" data-to="96">0</span>%</b><small>no horário</small></div>
+        <div class="kpi"><b class="count" data-to="14">0</b><small>plantões</small></div>
+        <div class="kpi"><b class="count" data-to="14">0</b><small>evoluções</small></div>
+      </div>
+      <ul class="feed" id="feed"></ul>
+    </div>
+  </div>
+</section>
 
-<div class="mbar"><a class="btn" data-sis="solicitar" href="#">Solicitar avaliação</a><a class="btn gold wa-link" href="#contato" hidden>WhatsApp</a></div>
+<!-- PARTICULAR -->
+<section id="particular">
+  <div class="wrap">
+    <span class="eyebrow rv">Atendimento particular</span>
+    <h2 class="rv d1">Começar é simples</h2>
+    <div class="how">
+      <div class="box rv"><div class="n">1</div><h3>Solicite a avaliação</h3><p>Conte sobre o paciente e a cidade. Fazemos uma avaliação prévia, sem compromisso.</p></div>
+      <div class="box rv d1"><div class="n">2</div><h3>Plano de cuidados</h3><p>Conversamos com a família e definimos equipe, frequência e o melhor formato de plantão.</p></div>
+      <div class="box rv d2"><div class="n">3</div><h3>Acompanhe de perto</h3><p>Pela Área da Família você vê chegadas, saídas e a evolução de cada plantão.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- OPERADORAS -->
+<div class="wrap" id="operadoras">
+  <div class="ops rv">
+    <div>
+      <span class="eyebrow">Operadoras de saúde</span>
+      <h2>Parceria para desospitalização e atenção domiciliar</h2>
+      <p>Assumimos o cuidado em casa com processos organizados, do plano diário ao faturamento.</p>
+      <a class="btn btn-gold" style="margin-top:1.6rem" href="public/index.html#solicitar-operadora">Falar sobre credenciamento</a>
+    </div>
+    <div class="grid4">
+      <div class="g"><b>Faturamento organizado</b><small>Contas claras por paciente</small></div>
+      <div class="g"><b>Relatórios para auditoria</b><small>Registros prontos para conferência</small></div>
+      <div class="g"><b>Plano de cuidados diário</b><small>Atualizado a cada plantão</small></div>
+      <div class="g"><b>Documentos conferidos</b><small>Equipe com registro validado</small></div>
+    </div>
+  </div>
+</div>
+
+<!-- TRABALHE -->
+<section id="trabalhe">
+  <div class="wrap work">
+    <div>
+      <span class="eyebrow rv">Trabalhe conosco</span>
+      <h2 class="rv d1">Faça parte da equipe Viver Bem</h2>
+      <p class="lead rv d2">Cadastro, processo seletivo e contrato pelo celular, com escolha de plantões.</p>
+      <div class="councils rv d2"><span>COREN</span><span>CREFITO</span><span>CRM</span><span>CRFa</span><span>CRP</span><span>CRN</span></div>
+      <div class="rv d3" style="display:flex;gap:.7rem;flex-wrap:wrap">
+        <a class="btn btn-navy" href="public/index.html#trabalhe">Quero me cadastrar</a>
+        <a class="btn btn-outline" href="public/index.html#acompanhar">Acompanhar candidatura</a>
+      </div>
+    </div>
+    <div class="docs rv d2">
+      <div class="docs-head"><b>Separe seus documentos</b><span id="docCount">0/6</span></div>
+      <div class="bar" style="margin-bottom:.8rem"><i id="docBar" style="width:0"></i></div>
+      <div id="docList"></div>
+      <p class="formnote" style="margin-top:.6rem">Toque em cada item para marcar o que você já tem.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="duvidas" style="padding-top:20px">
+  <div class="wrap faq-grid">
+    <div>
+      <span class="eyebrow rv">Dúvidas frequentes</span>
+      <h2 class="rv d1">Perguntas que as famílias mais fazem</h2>
+      <p class="lead rv d2">Não achou sua resposta? Fale com a nossa equipe.</p>
+      <a class="btn btn-gold rv d3" style="margin-top:1.4rem" href="#contato">Falar com a equipe</a>
+    </div>
+    <div id="faq"></div>
+  </div>
+</section>
+
+<!-- CONTATO -->
+<section class="contact" id="contato">
+  <div class="wrap contact-grid">
+    <div>
+      <span class="eyebrow rv">Contato</span>
+      <h2 class="rv d1">Vamos conversar sobre o cuidado ideal</h2>
+      <p class="rv d2">Preencha ao lado: a mensagem abre pronta no WhatsApp. Não armazenamos esses dados.</p>
+      <div class="clist rv d2" id="contato-lista"></div>
+      <img class="band rv d3" src="img/foto-paciente.webp" alt="Profissional da Viver Bem e paciente sorrindo">
+    </div>
+    <form id="form" class="rv d2" novalidate>
+      <label>Seu nome<input id="fNome" required placeholder="Como podemos te chamar?"></label>
+      <label>Você é<div class="seg" id="perfil">
+        <button type="button" class="on">Familiar</button><button type="button">Operadora</button><button type="button">Profissional de saúde</button><button type="button">Outro</button></div></label>
+      <label>Cidade do paciente<input id="fCidade" placeholder="Ex.: Mauriti – CE"></label>
+      <label>Mensagem<textarea id="fMsg" placeholder="Conte um pouco sobre a necessidade"></textarea></label>
+      <button class="btn btn-gold" type="submit" style="justify-content:center">Enviar pelo WhatsApp</button>
+      <a class="wa-link" id="waLink" href="#">Abrir no WhatsApp</a>
+    </form>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <div><img src="img/logo-viverbem-mark.webp" alt="Viver Bem"><p style="color:var(--muted);max-width:340px">Home care com enfermagem, terapias e equipe multidisciplinar no conforto do lar.</p></div>
+      <div><h4>Navegue</h4><a href="#servicos">Serviços</a><a href="#operadoras">Operadoras</a><a href="#trabalhe">Trabalhe conosco</a><a href="#duvidas">Dúvidas</a></div>
+      <div><h4>Acesso</h4><a href="public/index.html">Entrar no sistema</a><a href="public/index.html">Área da Família</a><a href="public/index.html?portal=profissional">Área do profissional</a><a href="/privacidade.html">Política de Privacidade</a></div>
+    </div>
+    <div class="copy"><span>© <span id="yr"></span> Viver Bem Atendimento Domiciliar<span id="fCnpj"></span></span><span>Desenvolvido por <a href="https://wa.me/5583921418988">Jefferson Ramalho</a></span></div>
+  </div>
+</footer>
+<button id="top" aria-label="Voltar ao topo">↑</button>
+<a class="wa-float" id="waFloat" href="#contato" aria-label="Falar no WhatsApp" hidden><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 21l2.1-5.4A8.4 8.4 0 1 1 21 11.5z"/></svg><span>WhatsApp</span></a>
 <div id="cookieBanner" class="cookiebar" hidden>
   <p>Usamos cookies essenciais para o site funcionar bem. Veja nossa <a href="/privacidade.html">Política de Privacidade</a>.</p>
-  <button class="btn btn-sm" id="cookieOk">Entendi</button>
+  <button class="btn btn-gold" id="cookieOk" type="button" style="padding:.6rem 1.1rem">Entendi</button>
 </div>
-<a class="wa-float wa-link" href="#contato" aria-label="Falar no WhatsApp" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1.3-3.9A8 8 0 1 1 8 19z"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5l1-1.5-2-1-1 1c-1-.5-2-1.5-2.5-2.5l1-1-1-2z"/></svg><span>WhatsApp</span></a>
 
 <script>
-document.documentElement.classList.add("js");
-/* Endereço do sistema e do banco (o site lê WhatsApp, Instagram e endereço cadastrados em Configurações) */
-const SISTEMA = "public/index.html";
-const FIRESTORE = "https://firestore.googleapis.com/v1/projects/viver-bem-d23bd/databases/(default)/documents/config/empresa?key=AIzaSyDc8hSSCYQpBTFBABat_klqiRZ9_a7BKAc";
-let WA_NUM = "";
-
-document.querySelectorAll("[data-sis]").forEach(a=>{ a.href = SISTEMA + (a.dataset.sis ? "#"+a.dataset.sis : ""); });
-document.getElementById("ano").textContent = new Date().getFullYear();
-const topbar = document.getElementById("top");
-const onScroll = () => topbar.classList.toggle("solid", window.scrollY > 30);
-window.addEventListener("scroll", onScroll, {passive:true}); onScroll();
-
-/* revelar blocos ao rolar */
-const rv = document.querySelectorAll(".rv");
-if("IntersectionObserver" in window){
-  const io = new IntersectionObserver(es=>es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add("on"); io.unobserve(e.target); } }), {threshold:.12, rootMargin:"0px 0px -40px 0px"});
-  rv.forEach(el=>io.observe(el));
-}else rv.forEach(el=>el.classList.add("on"));
-
-/* cookies */
-try{
-  if(!localStorage.getItem("vb-cookies-ok")){
-    const b=document.getElementById("cookieBanner"); b.hidden=false;
-    document.getElementById("cookieOk").onclick=()=>{ try{localStorage.setItem("vb-cookies-ok","1");}catch(e){} b.hidden=true; };
-  }
-}catch(e){}
-
-/* formulário: abre o WhatsApp com a mensagem pronta (ou o pedido de avaliação do sistema se o número ainda não carregou) */
-document.getElementById("formContato").addEventListener("submit", e=>{
-  e.preventDefault();
-  const d = new FormData(e.target);
-  const txt = `Olá, Viver Bem! Meu nome é ${d.get("nome")}. Sou: ${d.get("interesse")}.` + (d.get("cidade") ? ` Cidade do paciente: ${d.get("cidade")}.` : "") + (d.get("msg") ? ` ${d.get("msg")}` : "");
-  if(WA_NUM) window.open(`https://wa.me/${WA_NUM}?text=${encodeURIComponent(txt)}`, "_blank", "noopener");
-  else location.href = SISTEMA + "#solicitar";
-});
-
-const ICON = {
-  wa:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20l1.3-3.9A8 8 0 1 1 8 19z"/></svg>',
-  ig:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/></svg>',
-  pin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="10" r="3"/><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/></svg>',
-  mail:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>'
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const ic={
+ nurse:'<path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6C19 16.5 12 21 12 21z"/><path d="M12 10v5M9.5 12.5h5"/>',
+ rehab:'<circle cx="12" cy="4.5" r="2"/><path d="M12 7v6l-3 7M12 13l3 7M7 10h10"/>',
+ day:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>',
+ exam:'<path d="M3 12h4l3-7 4 14 3-7h4"/>',
+ chronic:'<path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 6-6"/>',
+ bed:'<path d="M2 18V6M2 14h20v4M22 14v-3a3 3 0 0 0-3-3h-8v6"/><circle cx="6.5" cy="11" r="2"/>',
+ clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'
 };
-(async()=>{
-  try{
-    const r = await fetch(FIRESTORE); if(!r.ok) return;
-    const f = (await r.json()).fields || {}; const v = k => f[k]?.stringValue || "";
-    const zap = v("whatsapp").replace(/\D/g,""), ig = v("instagram").replace(/^@/,"").trim();
-    const lista = document.getElementById("contato-lista");
-    const add = (html) => lista.insertAdjacentHTML("beforeend", html);
-    const esc = s => s.replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-    if(zap){ const n = zap.startsWith("55") ? zap : "55"+zap; WA_NUM = n;
-      const url = `https://wa.me/${n}?text=${encodeURIComponent("Olá, Viver Bem! Vim pelo site e gostaria de informações sobre atendimento domiciliar.")}`;
-      document.querySelectorAll(".wa-link").forEach(a=>{ a.href=url; a.target="_blank"; a.rel="noopener"; a.hidden=false; });
-      add(`<a href="${url}" target="_blank" rel="noopener">${ICON.wa}${esc(v("whatsapp"))}</a>`); }
-    if(ig) add(`<a href="https://instagram.com/${encodeURIComponent(ig)}" target="_blank" rel="noopener">${ICON.ig}@${esc(ig)}</a>`);
-    if(v("email")) add(`<span>${ICON.mail}${esc(v("email"))}</span>`);
-    if(v("endereco")||v("cidade")) add(`<span>${ICON.pin}${esc([v("endereco"),v("cidade")].filter(Boolean).join(", "))}</span>`);
-    if(v("cnpj")) document.getElementById("fCnpj").textContent=" · CNPJ "+v("cnpj");
-  }catch(e){ /* sem conexão com o banco: os botões do sistema continuam funcionando */ }
-})();
-</script>
+const svcs=[
+ ['Enfermagem domiciliar','nurse','Enfermeiros, técnicos e auxiliares com supervisão e registro de cada atendimento.',['Enfermeiros','Técnicos','Auxiliares','Supervisão']],
+ ['Terapias e reabilitação','rehab','Equipe multidisciplinar para recuperar movimentos, fala e qualidade de vida.',['Fisioterapia motora','Fisio respiratória','Fonoaudiologia','Nutrição','Psicologia','Terapia ocupacional','Avaliação médica']],
+ ['Cuidado no dia a dia','day','Rotina cuidada com carinho e respeito, do banho à alimentação.',['Banho no leito','Higiene','Mudança de decúbito','Alimentação','Apoio emocional']],
+ ['Exames em casa','exam','Exames realizados no domicílio, mediante pedido médico.',['Raio-X','Eletrocardiograma','Ecocardiograma','Holter 24h','MAPA','Ultrassonografia','Doppler','Coleta de sangue']],
+ ['Gerenciamento de crônicos','chronic','Acompanhamento contínuo com alertas e relatórios enviados ao médico.',['Hipertensão','Diabetes','Doenças cardíacas','Doenças pulmonares']],
+ ['Internação domiciliar','bed','Estrutura de cuidado hospitalar em casa, com equipe fixa.',['Equipe fixa','Materiais','Medicamentos conforme pacote']],
+ ['Plantões flexíveis','clock','Do jeito que a família precisa, com reposição rápida.',['Por hora','Por plantão','Revezamento','6h a 24h']]
+];
+const svg=(p,w=24)=>`<svg viewBox="0 0 24 24" width="${w}" height="${w}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const list=$('#svcList'), panel=$('#svcPanel'); let cur=0, timer;
+svcs.forEach((s,i)=>{const li=document.createElement('li');
+ li.innerHTML=`<button type="button">${s[0]}<span class="arr">${svg('<path d="M5 12h14M13 6l6 6-6 6"/>',16)}</span></button><div class="timer"><i></i></div>`;
+ li.querySelector('button').onclick=()=>{show(i);};list.appendChild(li);});
+function show(i){cur=i;const s=svcs[i];
+ panel.innerHTML=`<div class="fade-swap"><div class="big-ico">${svg(ic[s[1]],36)}</div><h3>${s[0]}</h3><p>${s[2]}</p><ul>${s[3].map(x=>`<li>${x}</li>`).join('')}</ul></div><div class="num-bg">0${i+1}</div>`;
+ $$('#svcList button').forEach((b,j)=>{b.classList.toggle('on',j===i);const t=b.nextElementSibling.firstChild;t.style.animation='none';t.offsetWidth;t.style.animation='';});
+ clearTimeout(timer);timer=setTimeout(()=>show((cur+1)%svcs.length),6000);}
+show(0);
 
+/* FAQ */
+const faqs=[['Quanto custa?','Depende do quadro e da frequência do atendimento. Fazemos uma avaliação prévia e enviamos a proposta, sem compromisso.'],
+['Atende plano de saúde?','Sim. Atendemos particular e operadoras credenciadas.'],
+['Quais profissionais vão à casa?','Médicos, enfermeiros, técnicos e auxiliares de enfermagem, fisioterapeutas, fonoaudiólogos, nutricionistas, psicólogos e terapeutas ocupacionais.'],
+['Como a família acompanha?','Pelo registro de cada plantão na Área da Família e pelo contato direto com a equipe.'],
+['E se o profissional faltar?','A coordenação é avisada na hora e providencia a reposição.'],
+['Em quais cidades atendem?','Informe a cidade do paciente no contato e confirmamos a disponibilidade.']];
+$('#faq').innerHTML=faqs.map((f,i)=>`<div class="qa rv ${i?'':'open'}"><button type="button">${f[0]}<span class="pm">+</span></button><div class="ans"><p>${f[1]}</p></div></div>`).join('');
+$$('.qa').forEach(q=>{const a=q.querySelector('.ans');if(q.classList.contains('open'))a.style.maxHeight=a.scrollHeight+'px';
+ q.querySelector('button').onclick=()=>{const o=q.classList.contains('open');$$('.qa').forEach(x=>{x.classList.remove('open');x.querySelector('.ans').style.maxHeight=0});if(!o){q.classList.add('open');a.style.maxHeight=a.scrollHeight+'px';}};});
+
+/* Docs checklist */
+const docs=['Inscrição no conselho de classe','Foto da carteira do conselho','Documento com foto','Comprovante de endereço (últimos 3 meses)','Currículo','Selfie'];
+$('#docList').innerHTML=docs.map(d=>`<div class="doc"><div class="box">✓</div><span>${d}</span></div>`).join('');
+$$('.doc').forEach(d=>d.onclick=()=>{d.classList.toggle('done');const n=$$('.doc.done').length;$('#docCount').textContent=n+'/'+docs.length;$('#docBar').style.width=(n/docs.length*100)+'%';$('#docCount').style.color=n===docs.length?'#16A34A':'';});
+
+/* Steps auto */
+const st=$$('#steps li');let si=0;st.forEach((l,i)=>l.onclick=()=>{si=i;st.forEach(x=>x.classList.remove('on'));l.classList.add('on')});
+setInterval(()=>{si=(si+1)%st.length;st.forEach(x=>x.classList.remove('on'));st[si].classList.add('on')},4000);
+
+/* Live feed */
+const people=[['AS','Ana S.','Téc. enfermagem','#1257B8'],['RM','Rafael M.','Fisioterapeuta','#0A2A5E'],['JL','Júlia L.','Enfermeira','#D7A63A'],['PC','Paulo C.','Fonoaudiólogo','#3FA2F0'],['MF','Marta F.','Nutricionista','#16A34A']];
+const evs=[['in','Chegada'],['ev','Evolução'],['out','Saída']];
+const feed=$('#feed');let fi=0;
+function addFeed(){const p=people[fi%people.length],e=evs[fi%3];fi++;const d=new Date();
+ const li=document.createElement('li');li.innerHTML=`<div class="who-ini" style="background:${p[3]}">${p[0]}</div><div><b style="color:var(--navy)">${p[1]}</b><br><small style="color:var(--muted)">${p[2]} · ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}</small></div><span class="t ${e[0]}">${e[1]}</span>`;
+ feed.prepend(li);if(feed.children.length>4)feed.lastChild.remove();}
+for(let k=0;k<4;k++)addFeed();setInterval(addFeed,2600);
+
+/* Counters + reveal */
+function count(el){const to=+el.dataset.to;let t0=null;const step=ts=>{t0??=ts;const p=Math.min((ts-t0)/1400,1);el.textContent=Math.round(to*(1-Math.pow(1-p,3)));if(p<1)requestAnimationFrame(step)};requestAnimationFrame(step);}
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting)return;const t=e.target;t.classList.add('in');
+ t.querySelectorAll('.count').forEach(c=>{if(!c.dataset.done){c.dataset.done=1;count(c)}});
+ t.querySelectorAll('.bar i[data-w]').forEach(b=>b.style.width=b.dataset.w);io.unobserve(t);}),{threshold:.15});
+$$('.rv').forEach(el=>io.observe(el));
+$$('.count').forEach(c=>{if(!c.closest('.rv'))io.observe(c.parentElement)});
+
+/* Parallax hero */
+const stage=$('#stage'),card=$('#logoCard');
+document.querySelector('.hero').addEventListener('mousemove',e=>{const r=stage.getBoundingClientRect();const x=(e.clientX-(r.left+r.width/2))/r.width,y=(e.clientY-(r.top+r.height/2))/r.height;
+ card.style.transform=`rotateY(${x*12}deg) rotateX(${-y*10}deg)`;$$('.float').forEach(f=>{const d=+f.dataset.depth;f.style.transform=`translate(${x*d}px,${y*d}px)`});});
+document.querySelector('.hero').addEventListener('mouseleave',()=>{card.style.transform='';$$('.float').forEach(f=>f.style.transform='')});
+
+/* Nav, progress, top, active link */
+const hdr=$('#hdr'),topBtn=$('#top'),secs=['servicos','tecnologia','operadoras','trabalhe','duvidas'].map(id=>document.getElementById(id));
+addEventListener('scroll',()=>{const y=scrollY,h=document.documentElement.scrollHeight-innerHeight;$('#progress').style.width=(y/h*100)+'%';
+ hdr.classList.toggle('scrolled',y>40);topBtn.classList.toggle('show',y>700);
+ let a=null;secs.forEach(s=>{if(s.getBoundingClientRect().top<160)a=s.id});$$('.menu a').forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+a));},{passive:true});
+topBtn.onclick=()=>scrollTo({top:0,behavior:'smooth'});
+const bg=$('#burger'),mb=$('#mobile');bg.onclick=()=>{bg.classList.toggle('open');mb.classList.toggle('open')};
+$$('#mobile a').forEach(a=>a.onclick=()=>{bg.classList.remove('open');mb.classList.remove('open')});
+
+/* Form -> WhatsApp */
+let perfil='Familiar';$$('#perfil button').forEach(b=>b.onclick=()=>{$$('#perfil button').forEach(x=>x.classList.remove('on'));b.classList.add('on');perfil=b.textContent});
+let WHATS=''; // carregado das Configurações do sistema (Firestore)
+const SISTEMA='public/index.html';
+const FIRESTORE='https://firestore.googleapis.com/v1/projects/viver-bem-d23bd/databases/(default)/documents/config/empresa?key=AIzaSyDc8hSSCYQpBTFBABat_klqiRZ9_a7BKAc';
+$('#form').addEventListener('submit',e=>{e.preventDefault();const n=$('#fNome');if(!n.value.trim()){n.focus();n.style.borderColor='#DC2626';return}n.style.borderColor='';
+ const txt=`Olá, Viver Bem! Sou ${n.value.trim()} (${perfil}).`+($('#fCidade').value?` Cidade do paciente: ${$('#fCidade').value}.`:'')+($('#fMsg').value?`\n${$('#fMsg').value}`:'');
+ if(!WHATS){location.href=SISTEMA+'#solicitar';return}
+ const url=`https://wa.me/${WHATS}?text=${encodeURIComponent(txt)}`;const l=$('#waLink');l.href=url;l.style.display='block';l.textContent='Abrir conversa no WhatsApp →';
+ try{const w=window.open(url,'_blank','noopener');if(!w)throw 0}catch(_){} });
+/* cookies */
+try{if(!localStorage.getItem('vb-cookies-ok')){const b=$('#cookieBanner');b.hidden=false;$('#cookieOk').onclick=()=>{try{localStorage.setItem('vb-cookies-ok','1')}catch(e){}b.hidden=true}}}catch(e){}
+/* contatos cadastrados no sistema */
+(async()=>{try{
+ const r=await fetch(FIRESTORE);if(!r.ok)return;const f=(await r.json()).fields||{};const v=k=>f[k]?.stringValue||'';
+ const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+ const L=$('#contato-lista'),add=h=>L.insertAdjacentHTML('beforeend',h);
+ const zap=v('whatsapp').replace(/\D/g,''),ig=v('instagram').replace(/^@/,'').trim();
+ if(zap){WHATS=zap.startsWith('55')?zap:'55'+zap;const u=`https://wa.me/${WHATS}?text=${encodeURIComponent('Olá, Viver Bem! Vim pelo site e gostaria de informações sobre atendimento domiciliar.')}`;
+  const wf=$('#waFloat');wf.href=u;wf.target='_blank';wf.rel='noopener';wf.hidden=false;
+  add(`<a href="${u}" target="_blank" rel="noopener">${svg('<path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 21l2.1-5.4A8.4 8.4 0 1 1 21 11.5z"/>',20)}${esc(v('whatsapp'))}</a>`);}
+ if(ig)add(`<a href="https://instagram.com/${encodeURIComponent(ig)}" target="_blank" rel="noopener">${svg('<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/>',20)}@${esc(ig)}</a>`);
+ if(v('email'))add(`<span>${svg('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',20)}${esc(v('email'))}</span>`);
+ if(v('endereco')||v('cidade'))add(`<span>${svg('<circle cx="12" cy="10" r="3"/><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/>',20)}${esc([v('endereco'),v('cidade')].filter(Boolean).join(', '))}</span>`);
+ if(v('cnpj'))$('#fCnpj').textContent=' · CNPJ '+v('cnpj');
+}catch(e){}})();
+$('#yr').textContent=new Date().getFullYear();
+</script>
 </body>
 </html>
