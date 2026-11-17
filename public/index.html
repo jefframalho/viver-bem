@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Sistema Viver Bem</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="theme-color" content="#0F3550">
+<meta name="theme-color" content="#0A2A5E">
 <script>
 const portalProfissional = new URLSearchParams(location.search).get("portal") === "profissional";
 document.write('<link rel="manifest" href="' + (portalProfissional ? 'profissional.webmanifest' : 'manifest.webmanifest') + '">');
@@ -17,30 +17,30 @@ document.write('<link rel="manifest" href="' + (portalProfissional ? 'profission
 <meta name="apple-mobile-web-app-title" content="Viver Bem">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
 <style>
 /* Layout: sistema de gestão com barra lateral fixa (desktop) que vira gaveta no celular; telas públicas centralizadas sem barra */
 :root{
   /* Marca Viver Bem: azul-marinho como âncora, azul para ações, cobre só como destaque */
-  --blue:#1F648D; --blue-deep:#0F3550; --copper:#B46E43; --copper-soft:#F5E4D8;
+  --blue:#1257B8; --blue-deep:#0A2A5E; --copper:#9A6B0C; --copper-soft:#FBF2DC; --gold:#D7A63A; --gold-2:#F2CE6E;
   /* Superfícies e texto */
-  --bg:#F1F5F8; --surface:#FFFFFF; --surface-2:#F7FAFC; --ink:#13293A; --muted:#52697D; --line:#D8E3EB;
+  --bg:#F3F7FC; --surface:#FFFFFF; --surface-2:#F7FAFE; --ink:#0E1B33; --muted:#5B6B85; --line:#E1E9F3;
   /* Situações */
-  --ok:#2C7A52; --ok-bg:#E0F2E7; --warn:#835A0B; --warn-bg:#FBF0D3; --bad:#A63D3D; --bad-bg:#F8E1E1; --info-bg:#E1EDF5;
+  --ok:#2C7A52; --ok-bg:#E0F2E7; --warn:#835A0B; --warn-bg:#FBF0D3; --bad:#A63D3D; --bad-bg:#F8E1E1; --info-bg:#E6F0FC;
   /* Menu lateral e áreas escuras (iguais no modo claro e escuro) */
-  --blue-hover:#195578; --blue-press:#144763; --line-strong:#C3D1DC; --focus:#1F648D; --field-border:#8193A3;
+  --blue-hover:#0F4FA8; --blue-press:#0B3F88; --line-strong:#C7D5E6; --focus:#1257B8; --field-border:#8A9BB4;
   /* Selos de situação: texto (ink) e fundo; o ponto usa a cor do texto */
-  --st-ok-ink:#21603F; --st-warn-ink:#75500A; --st-bad-ink:#962F2F; --st-info-ink:#195577; --st-prog-ink:#87491F; --st-mute-ink:#4F6477; --st-mute-bg:#EDF1F5;
-  --on-blue:#FFFFFF; --side:#0F3550; --side-ink:#C9DCE8; --side-active:rgba(255,255,255,.12);
-  --side-muted:#7FA0B6; --side-accent:#E9B48F; --side-accent-ink:#3A2210;
+  --st-ok-ink:#21603F; --st-warn-ink:#75500A; --st-bad-ink:#962F2F; --st-info-ink:#0F4FA8; --st-prog-ink:#8A6512; --st-mute-ink:#4F6477; --st-mute-bg:#EDF1F5;
+  --on-blue:#FFFFFF; --side:#0A2A5E; --side-ink:#C9D8EE; --side-active:rgba(255,255,255,.12);
+  --side-muted:#8FA6C8; --side-accent:#F2CE6E; --side-accent-ink:#2A1D00;
   --on-dark:#FFFFFF; --on-dark-muted:rgba(255,255,255,.8); --on-dark-soft:rgba(255,255,255,.12);
   --on-dark-hover:rgba(255,255,255,.2); --on-dark-line:rgba(255,255,255,.32);
   /* Camadas sobrepostas */
-  --scrim:rgba(5,15,22,.5); --shadow-pop:0 4px 12px rgba(15,53,80,.16); --shadow-overlay:0 16px 40px rgba(0,0,0,.22);
+  --scrim:rgba(5,15,22,.5); --shadow-pop:0 4px 12px rgba(10,42,94,.16); --shadow-overlay:0 16px 40px rgba(0,0,0,.22);
 
-  /* Tipografia: Inter em todo o sistema */
-  --f-display:"Inter","Segoe UI",system-ui,-apple-system,sans-serif;
-  --f-body:"Inter","Segoe UI",system-ui,-apple-system,sans-serif;
+  /* Tipografia: Manrope em todo o sistema (igual ao site) */
+  --f-display:"Manrope","Segoe UI",system-ui,-apple-system,sans-serif;
+  --f-body:"Manrope","Segoe UI",system-ui,-apple-system,sans-serif;
   --fs-2xs:.6875rem; /* 11px — rótulos em caixa alta */
   --fs-xs:.75rem;    /* 12px — legendas e selos */
   --fs-sm:.8125rem;  /* 13px — texto secundário */
@@ -59,19 +59,19 @@ document.write('<link rel="manifest" href="' + (portalProfissional ? 'profission
   --r:var(--r-lg);
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --blue:#62A8D8; --blue-deep:#0A2230; --copper:#E3A57C; --copper-soft:#3B2A1F;
-  --bg:#0B161D; --surface:#12212B; --surface-2:#0F1C25; --ink:#E3EDF3; --muted:#93AABB; --line:#23384A;
-  --ok:#7DCC9F; --ok-bg:#153226; --warn:#E5C06B; --warn-bg:#382D13; --bad:#EF9B9B; --bad-bg:#3C1C1C; --info-bg:#163246;
-  --blue-hover:#7DB8E2; --blue-press:#97C7E8; --line-strong:#34506A; --focus:#7DB8E2; --field-border:#5F7A8F;
-  --st-ok-ink:var(--ok); --st-warn-ink:var(--warn); --st-bad-ink:var(--bad); --st-info-ink:var(--blue); --st-prog-ink:var(--copper); --st-mute-ink:var(--muted); --st-mute-bg:#1A2C39;
-  --on-blue:#0B161D; --side:#081A25; --side-ink:#A9C2D3; --side-active:rgba(255,255,255,.08); color-scheme:dark}}
+  --blue:#5FA8F5; --blue-deep:#061631; --copper:#E9C46A; --copper-soft:#3A2E12;
+  --bg:#071327; --surface:#0E1E38; --surface-2:#0B1930; --ink:#E6EEF9; --muted:#95A9C6; --line:#1E3356;
+  --ok:#7DCC9F; --ok-bg:#153226; --warn:#E5C06B; --warn-bg:#382D13; --bad:#EF9B9B; --bad-bg:#3C1C1C; --info-bg:#12305A;
+  --blue-hover:#7DB9F7; --blue-press:#9CCAF9; --line-strong:#2E4A75; --focus:#7DB9F7; --field-border:#5F7A8F;
+  --st-ok-ink:var(--ok); --st-warn-ink:var(--warn); --st-bad-ink:var(--bad); --st-info-ink:var(--blue); --st-prog-ink:var(--copper); --st-mute-ink:var(--muted); --st-mute-bg:#15284A;
+  --on-blue:#071327; --side:#050F24; --side-ink:#AFC3E0; --side-active:rgba(255,255,255,.08); color-scheme:dark}}
 :root[data-theme="dark"]{
-  --blue:#62A8D8; --blue-deep:#0A2230; --copper:#E3A57C; --copper-soft:#3B2A1F;
-  --bg:#0B161D; --surface:#12212B; --surface-2:#0F1C25; --ink:#E3EDF3; --muted:#93AABB; --line:#23384A;
-  --ok:#7DCC9F; --ok-bg:#153226; --warn:#E5C06B; --warn-bg:#382D13; --bad:#EF9B9B; --bad-bg:#3C1C1C; --info-bg:#163246;
-  --blue-hover:#7DB8E2; --blue-press:#97C7E8; --line-strong:#34506A; --focus:#7DB8E2; --field-border:#5F7A8F;
-  --st-ok-ink:var(--ok); --st-warn-ink:var(--warn); --st-bad-ink:var(--bad); --st-info-ink:var(--blue); --st-prog-ink:var(--copper); --st-mute-ink:var(--muted); --st-mute-bg:#1A2C39;
-  --on-blue:#0B161D; --side:#081A25; --side-ink:#A9C2D3; --side-active:rgba(255,255,255,.08); color-scheme:dark}
+  --blue:#5FA8F5; --blue-deep:#061631; --copper:#E9C46A; --copper-soft:#3A2E12;
+  --bg:#071327; --surface:#0E1E38; --surface-2:#0B1930; --ink:#E6EEF9; --muted:#95A9C6; --line:#1E3356;
+  --ok:#7DCC9F; --ok-bg:#153226; --warn:#E5C06B; --warn-bg:#382D13; --bad:#EF9B9B; --bad-bg:#3C1C1C; --info-bg:#12305A;
+  --blue-hover:#7DB9F7; --blue-press:#9CCAF9; --line-strong:#2E4A75; --focus:#7DB9F7; --field-border:#5F7A8F;
+  --st-ok-ink:var(--ok); --st-warn-ink:var(--warn); --st-bad-ink:var(--bad); --st-info-ink:var(--blue); --st-prog-ink:var(--copper); --st-mute-ink:var(--muted); --st-mute-bg:#15284A;
+  --on-blue:#071327; --side:#050F24; --side-ink:#AFC3E0; --side-active:rgba(255,255,255,.08); color-scheme:dark}
 
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:var(--fs-md);line-height:1.5;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;font-feature-settings:"cv11" 1}
@@ -171,7 +171,7 @@ a{color:var(--blue)}
 .btn-block{width:100%}
 .btn[disabled],.btn:disabled{opacity:.5;cursor:not-allowed;pointer-events:none}
 /* Ações de campo do profissional (chegada e saída): azul com destaque e área de toque ampla */
-.btn[data-act="checkin"],.btn[data-act="checkout"],.agora .btn-copper{min-height:48px;padding:0 var(--sp-5);font-size:var(--fs-base);box-shadow:0 1px 2px rgba(15,53,80,.18)}
+.btn[data-act="checkin"],.btn[data-act="checkout"],.agora .btn-copper{min-height:48px;padding:0 var(--sp-5);font-size:var(--fs-base);box-shadow:0 1px 2px rgba(10,42,94,.18)}
 .btn[data-act="checkin"] svg,.btn[data-act="checkout"] svg,.agora .btn-copper svg{width:20px;height:20px}
 /* Toque no celular: mínimo de 44px nos botões comuns */
 @media (max-width:899px),(pointer:coarse){
@@ -385,7 +385,7 @@ span.data-dia,b.data-dia{display:inline-block}
 @media (max-width:720px){
   .modal-b{padding:var(--sp-3) var(--sp-4) var(--sp-4)}
   /* Ações de campo (chegada/saída) fixas no rodapé enquanto se rola o formulário */
-  .modal-b>.actions:has([data-act="checkin"],[data-act="checkout"]){position:sticky;bottom:0;z-index:2;background:var(--surface);margin:0 calc(var(--sp-4) * -1);padding:var(--sp-3) var(--sp-4) calc(var(--sp-3) + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);box-shadow:0 -6px 12px -10px rgba(15,53,80,.35)}
+  .modal-b>.actions:has([data-act="checkin"],[data-act="checkout"]){position:sticky;bottom:0;z-index:2;background:var(--surface);margin:0 calc(var(--sp-4) * -1);padding:var(--sp-3) var(--sp-4) calc(var(--sp-3) + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);box-shadow:0 -6px 12px -10px rgba(10,42,94,.35)}
   .modal-b>.actions:has([data-act="checkin"],[data-act="checkout"])>.btn{flex:1 1 auto}
 }
 .x{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;background:none;border:0;font-size:var(--fs-2xl);line-height:1;color:var(--muted);cursor:pointer;padding:0;border-radius:var(--r-md)}
@@ -758,6 +758,81 @@ a.kpi:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
   .pagehead,.welcome{border:0;padding:0}
   table.t-matriz{min-width:0}
 }
+
+/* ===== Entrada do sistema: cena escura com a marca animada (azul e dourado) ===== */
+.login.vb2{position:relative;min-height:100vh;min-height:100dvh;background:#040B1C;color:#fff;overflow:hidden;grid-template-columns:1.05fr .95fr;isolation:isolate}
+.vb2 .vb-bg{position:absolute;inset:0;z-index:-1;pointer-events:none}
+.vb2 .vb-bg i{position:absolute;border-radius:50%;filter:blur(70px)}
+.vb2 .vb-bg .g1{width:620px;height:620px;left:-140px;top:12%;background:radial-gradient(circle,rgba(18,87,184,.55),transparent 65%);animation:vbFloat 14s ease-in-out infinite}
+.vb2 .vb-bg .g2{width:520px;height:520px;right:-120px;bottom:-160px;background:radial-gradient(circle,rgba(215,166,58,.28),transparent 65%);animation:vbFloat 18s ease-in-out infinite reverse}
+.vb2 .vb-bg .grid{inset:0;border-radius:0;filter:none;background-image:radial-gradient(rgba(255,255,255,.07) 1px,transparent 1px);background-size:28px 28px;mask-image:radial-gradient(ellipse at 30% 50%,#000 20%,transparent 75%);-webkit-mask-image:radial-gradient(ellipse at 30% 50%,#000 20%,transparent 75%)}
+.vb2 .vb-bg .floor{left:8%;right:8%;bottom:-2px;height:2px;border-radius:2px;filter:none;background:linear-gradient(90deg,transparent,rgba(242,206,110,.9),rgba(63,162,240,.9),transparent);box-shadow:0 0 30px 6px rgba(63,162,240,.35)}
+@keyframes vbFloat{0%,100%{transform:translate(0,0)}50%{transform:translate(40px,-30px)}}
+.vb2 .login-art{background:transparent;padding:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:40px;text-align:center;animation:vbArtIn 1.4s cubic-bezier(.7,0,.2,1) both}
+@keyframes vbArtIn{0%{transform:translateX(48%) scale(1.12);opacity:0}25%{opacity:1;transform:translateX(48%) scale(1.12)}100%{transform:none;opacity:1}}
+.vb2 .orb{position:relative;width:min(340px,70vw);aspect-ratio:1;display:grid;place-items:center}
+.vb2 .ring{position:absolute;inset:0;border-radius:50%;border:1px solid rgba(255,255,255,.1)}
+.vb2 .ring.r1{inset:0;border-color:rgba(242,206,110,.35);border-style:dashed;animation:vbSpin 40s linear infinite}
+.vb2 .ring.r2{inset:11%;border-color:rgba(63,162,240,.35);animation:vbSpin 26s linear infinite reverse}
+.vb2 .ring.r3{inset:22%;background:radial-gradient(circle,rgba(18,87,184,.35),transparent 70%);border-color:rgba(255,255,255,.08)}
+.vb2 .spin{position:absolute;inset:0;animation:vbSpin 9s linear infinite}
+.vb2 .spin .dot{position:absolute;width:22px;height:22px;border-radius:50%;left:calc(50% - 11px);top:-11px;background:radial-gradient(circle at 35% 30%,#fff,#F2CE6E 40%,#D7A63A);box-shadow:0 0 22px 4px rgba(242,206,110,.55)}
+.vb2 .spin.s2{animation-duration:13s;animation-direction:reverse;inset:11%}
+.vb2 .spin.s2 .dot{width:16px;height:16px;left:calc(50% - 8px);top:-8px;background:radial-gradient(circle at 35% 30%,#fff,#7CC2FF 45%,#1257B8);box-shadow:0 0 20px 4px rgba(63,162,240,.6)}
+.vb2 .spin.s3{animation-duration:17s;inset:0;transform:rotate(140deg)}
+.vb2 .spin.s3 .dot{width:12px;height:12px;left:calc(50% - 6px);top:-6px;background:#fff;box-shadow:0 0 16px 3px rgba(255,255,255,.6)}
+@keyframes vbSpin{to{transform:rotate(360deg)}}
+.vb2 .disc{position:relative;width:64%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 40% 30%,#fff,#EAF3FD 70%);display:grid;place-items:center;box-shadow:0 0 0 6px rgba(255,255,255,.06),0 0 60px 10px rgba(63,162,240,.35),0 30px 60px -20px rgba(0,0,0,.6);animation:vbPulse 4s ease-in-out infinite}
+.vb2 .disc img{width:82%;height:auto}
+@keyframes vbPulse{0%,100%{box-shadow:0 0 0 6px rgba(255,255,255,.06),0 0 50px 8px rgba(63,162,240,.3),0 30px 60px -20px rgba(0,0,0,.6)}50%{box-shadow:0 0 0 10px rgba(255,255,255,.08),0 0 80px 16px rgba(63,162,240,.45),0 30px 60px -20px rgba(0,0,0,.6)}}
+.vb2 .login-art h1{color:#fff;font-weight:800;font-size:clamp(1.6rem,2.6vw,2.2rem);max-width:20ch;margin:0 auto;letter-spacing:-.02em;line-height:1.15}
+.vb2 .login-art h1 em{font-style:normal;background:linear-gradient(90deg,#F2CE6E,#D7A63A);-webkit-background-clip:text;background-clip:text;color:transparent}
+.vb2 .login-art p{color:rgba(201,216,238,.85);max-width:44ch;margin:12px auto 0}
+.vb2 .login-form{position:relative;animation:vbFormIn .8s ease 1.05s both}
+@keyframes vbFormIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:none}}
+.vb2 .login-form form{max-width:400px;gap:14px;background:linear-gradient(160deg,rgba(255,255,255,.08),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.12);border-radius:24px;padding:32px 28px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 30px 80px -30px rgba(0,0,0,.8)}
+.vb2 .login-form .kicker{display:inline-flex;align-items:center;gap:8px;font-size:var(--fs-2xs);font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#F2CE6E}
+.vb2 .login-form .kicker::before{content:"";width:18px;height:2px;border-radius:2px;background:#D7A63A}
+.vb2 .login-form h2{color:#fff;font-size:1.75rem;font-weight:800;letter-spacing:-.02em;margin:0}
+.vb2 .login-form .small,.vb2 .login-form .muted{color:rgba(201,216,238,.8)}
+.vb2 .login-form a{color:#F2CE6E;font-weight:600}
+.vb2 .f{color:rgba(225,234,247,.9);font-size:var(--fs-sm);font-weight:600}
+.vb2 .f input{background:rgba(4,11,28,.55);border:1px solid rgba(255,255,255,.16);color:#fff;border-radius:14px;min-height:50px;padding:0 16px;font-size:var(--fs-base);transition:border-color .2s,box-shadow .2s}
+.vb2 .f input::placeholder{color:rgba(201,216,238,.45)}
+.vb2 .f input:focus{outline:0;border-color:#3FA2F0;box-shadow:0 0 0 4px rgba(63,162,240,.22)}
+.vb2 .pw{position:relative;width:100%}
+.vb2 .pw input{width:100%;padding-right:52px}
+.vb2 .pw .eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:40px;height:40px;border:0;border-radius:10px;background:transparent;color:rgba(201,216,238,.75);cursor:pointer;display:grid;place-items:center}
+.vb2 .pw .eye:hover{background:rgba(255,255,255,.08);color:#fff}
+.vb2 .pw .eye svg{width:20px;height:20px}
+.vb2 .btn-primary{min-height:52px;border:0;border-radius:14px;font-weight:800;font-size:var(--fs-base);color:#2A1D00;background:linear-gradient(135deg,#F2CE6E,#D7A63A);box-shadow:0 0 0 1px rgba(242,206,110,.4),0 12px 32px -10px rgba(215,166,58,.75);transition:transform .2s,box-shadow .2s}
+.vb2 .btn-primary:hover{background:linear-gradient(135deg,#F6D883,#DDAE45);transform:translateY(-1px);box-shadow:0 0 0 1px rgba(242,206,110,.6),0 16px 40px -10px rgba(215,166,58,.9)}
+.vb2 .btn-primary:disabled{opacity:.7;transform:none}
+.vb2 .btn-line{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.18);color:#E6EEF9}
+.vb2 .btn-line:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.3);color:#fff}
+.vb2 .login-form .btn[data-act="instalarApp"]{color:#9CCAF9}
+.vb2 .login-form .btn[data-act="instalarApp"]:hover{background:rgba(255,255,255,.06)}
+.vb2 .demo-strip{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.2);color:rgba(225,234,247,.9)}
+.vb2 .demo-strip b{color:#fff}
+.vb2 .vb-foot{position:absolute;left:0;right:0;bottom:18px;text-align:center;font-size:var(--fs-xs);color:rgba(201,216,238,.5);pointer-events:none}
+.vb-loader{position:fixed;inset:0;z-index:9999;background:radial-gradient(circle at 50% 45%,#0A2A5E,#040B1C 70%);display:grid;place-items:center;align-content:center;gap:22px;color:#C9D8EE;font-weight:700;letter-spacing:.04em;animation:vbFade .3s ease both}
+.vb-loader[hidden]{display:none!important}
+.vb-loader .ld{position:relative;width:150px;aspect-ratio:1;display:grid;place-items:center}
+.vb-loader .ld::before{content:"";position:absolute;inset:0;border-radius:50%;border:3px solid rgba(255,255,255,.08);border-top-color:#F2CE6E;border-right-color:#3FA2F0;animation:vbSpin 1s linear infinite}
+.vb-loader .ld span{width:74%;aspect-ratio:1;border-radius:50%;background:#fff;display:grid;place-items:center;box-shadow:0 0 50px 10px rgba(63,162,240,.35);animation:vbBeat 1.2s ease-in-out infinite}
+.vb-loader .ld img{width:84%}
+@keyframes vbBeat{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+@keyframes vbFade{from{opacity:0}to{opacity:1}}
+@media (max-width:760px){
+  .login.vb2{grid-template-columns:1fr;align-content:start}
+  .vb2 .login-art{padding:28px 20px 8px;gap:16px;animation:vbFade .6s ease both}
+  .vb2 .orb{width:150px}
+  .vb2 .login-art h1{font-size:var(--fs-xl)}
+  .vb2 .login-art p{display:none}
+  .vb2 .login-form{align-items:flex-start;padding-top:12px;padding-bottom:56px;animation-delay:.2s}
+  .vb2 .login-form form{padding:24px 18px;border-radius:20px}
+}
+@media (prefers-reduced-motion:reduce){.vb2 *,.vb-loader *{animation:none!important}.vb2 .login-art,.vb2 .login-form{animation:none!important}}
 </style>
 
 <style>:root{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
@@ -781,6 +856,7 @@ const FIREBASE_CONFIG = {
 /* ================================================================== */
 
 const LOGO = "../logo-viverbem-nova.jpeg";
+const LOGO_MARK = "../img/logo-viverbem-mark.webp"; // marca sem fundo, usada na entrada do sistema
 const LOGO_MENU = "../logo-viverbem-horizontal.jpg"; // versão horizontal otimizada (640px, 47 KB; original logo-viverbem.png mantido)
 const $ = (s, el=document) => el.querySelector(s);
 const $$ = (s, el=document) => [...el.querySelectorAll(s)];
@@ -1096,7 +1172,7 @@ function seed(){
   const EXTRA=seedExtra(D,ts,pl,pac,pro,cfg);
   return {
     ...EXTRA,
-    documentos: cand.flatMap(c=>DOCS.map(([k,l],i)=>({id:`${c.id}_${k}`,cand:c.id,tipo:k,nome:k+".jpg",exemplo:true,criado:c.criado,data:fakeDoc(l+" · "+first(c.nome),["#1F648D","#2C7A52","#B46E43","#5A7287","#0F3550"][i])}))),
+    documentos: cand.flatMap(c=>DOCS.map(([k,l],i)=>({id:`${c.id}_${k}`,cand:c.id,tipo:k,nome:k+".jpg",exemplo:true,criado:c.criado,data:fakeDoc(l+" · "+first(c.nome),["#1257B8","#2C7A52","#9A6B0C","#5A7287","#0A2A5E"][i])}))),
     config:[cfg], pacientes:pac, profissionais:pro, candidatos:cand, plantoes:pl, contratos:ct, usuarios:[],
     produtos:[["Luva de procedimento M","caixa c/ 100",10,32],["Gaze estéril 7,5 x 7,5","pacote c/ 10",30,2.9],["Soro fisiológico 0,9% 500 ml","frasco",20,6.5],["Seringa descartável 10 ml","unidade",50,0.85],["Equipo macrogotas","unidade",15,3.2],["Sonda nasoenteral 12 Fr","unidade",4,28],["Fralda geriátrica G","pacote c/ 8",6,39.9],["Álcool 70% 1 L","frasco",5,12.5]]
       .map(([nome,unidade,minimo,custo],i)=>({id:"prd"+i,exemplo:true,nome,unidade,minimo,custo,categoria:i===6?"Higiene":i===2||i===4||i===5?"Material de enfermagem":i===1?"Curativo":"Material de enfermagem",criado:ts(-60)})),
@@ -1447,15 +1523,21 @@ function botaoInstalar(classes){
 /* =================== LOGIN =================== */
 function pgLogin(){
   const demo = Store.mode==="demo";
-  return `<div class="login">
-    <section class="login-art"><span class="brand" style="padding:0"><img class="logo-wide" src="${LOGO_MENU}" width="900" height="457" alt="Viver Bem Atendimento Domiciliar"></span>
-      <div><h1>Gestão do cuidado domiciliar em um só lugar.</h1><p>Administração, profissionais de saúde, pacientes e famílias entram pelo mesmo endereço. Cada um vê só o que é seu.</p></div><span></span>${LINES}</section>
+  return `<div class="login vb2">
+    <div class="vb-bg" aria-hidden="true"><i class="g1"></i><i class="g2"></i><i class="grid"></i><i class="floor"></i></div>
+    <section class="login-art">
+      <div class="orb" aria-hidden="true"><div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div>
+        <div class="spin"><span class="dot"></span></div><div class="spin s2"><span class="dot"></span></div><div class="spin s3"><span class="dot"></span></div>
+        <div class="disc"><img src="${LOGO_MARK}" alt=""></div></div>
+      <div><h1>Gestão do cuidado domiciliar <em>em um só lugar.</em></h1><p>Administração, profissionais de saúde, pacientes e famílias entram pelo mesmo endereço. Cada um vê só o que é seu.</p></div>
+    </section>
     <section class="login-form">
       <form id="fLogin" novalidate>
-        <h2>${portalProfissional?"Portal do profissional":"Entrar no sistema"}</h2>
-        ${portalProfissional?'<p class="small muted">Entre com seu e-mail e a senha fornecida pela Viver Bem para acessar sua agenda, pacientes e plantões.</p>':""}
-        <label class="f">E-mail<input id="lg_email" type="email" autocomplete="username" inputmode="email"></label>
-        <label class="f">Senha<input id="lg_pass" type="password" autocomplete="current-password"></label>
+        <span class="kicker">${portalProfissional?"Portal do profissional":"Área restrita"}</span>
+        <h2>${portalProfissional?"Bem-vindo, profissional":"Bem-vindo à Viver Bem"}</h2>
+        <p class="small muted" style="margin:-4px 0 4px">${portalProfissional?"Entre com seu e-mail e a senha fornecida pela Viver Bem para acessar sua agenda, pacientes e plantões.":"Entre com seu e-mail e senha para continuar."}</p>
+        <label class="f">E-mail<input id="lg_email" type="email" autocomplete="username" inputmode="email" placeholder="seu@email.com"></label>
+        <label class="f">Senha<span class="pw"><input id="lg_pass" type="password" autocomplete="current-password" placeholder="••••••••"><button type="button" class="eye" id="lg_eye" aria-label="Mostrar senha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button></span></label>
         <p class="err" hidden></p>
         <button class="btn btn-primary btn-block">Entrar</button>
         ${botaoInstalar("btn-line btn-block")}
@@ -1464,10 +1546,14 @@ function pgLogin(){
         :`<button type="button" class="btn btn-line btn-block" data-act="reset">Esqueci minha senha</button>`}
         ${portalProfissional?"":`<p class="small muted">Quer trabalhar com a gente? <a href="#trabalhe">Trabalhe conosco</a> · <a href="#acompanhar">Acompanhar candidatura</a></p>`}
       </form>
-    </section></div>`;
+    </section>
+    <div class="vb-foot">Viver Bem Atendimento Domiciliar · acesso protegido</div>
+    <div class="vb-loader" id="vbLoader" hidden><div class="ld"><span><img src="${LOGO_MARK}" alt=""></span></div><div>Entrando…</div></div></div>`;
 }
+function vbLoad(on){ const l=document.getElementById("vbLoader"); if(l) l.hidden=!on; }
 function bindLogin(){
   const f=$("#fLogin"); if(!f) return;
+  const eye=$("#lg_eye"); if(eye) eye.onclick=()=>{ const i=$("#lg_pass"); const show=i.type==="password"; i.type=show?"text":"password"; eye.setAttribute("aria-label",show?"Esconder senha":"Mostrar senha"); };
   f.onsubmit=async e=>{ e.preventDefault(); const email=$("#lg_email").value.trim().toLowerCase(), senha=$("#lg_pass").value;
     if(!email||!senha) return showErr(f,"Digite e-mail e senha.");
     if(Store.mode==="demo"){
@@ -1477,11 +1563,11 @@ function bindLogin(){
       else if(Store.all("funcionarios").some(x=>(x.acesso||"").toLowerCase()===email)){ const fu=Store.all("funcionarios").find(x=>(x.acesso||"").toLowerCase()===email); if((fu.senhaDemo||"123456")!==senha) return showErr(f,"E-mail ou senha incorretos."); if(fu.status==="desligado") return showErr(f,"Seu acesso está desativado. Fale com a administração."); S={role:"func",funId:fu.id,nome:fu.nome,acessoFin:!!fu.acessoFin,chat:!!fu.chat}; }
       else { const p=Store.all("profissionais").find(x=>(x.acesso||"").toLowerCase()===email); if(!p||(p.senhaDemo||"123456")!==senha) return showErr(f,"E-mail ou senha incorretos."); if(p.status!=="ativo") return showErr(f,"Seu acesso está desativado. Fale com a administração."); S={role:"prof",profId:p.id,nome:p.nome}; }
       if(portalProfissional && S.role!=="prof"){ S=null; return showErr(f,"Use uma conta de profissional de saúde."); }
-      saveSession(); location.hash={admin:"painel",func:"painel",prof:"meus",paciente:"inicio"}[S.role]; return render();
+      saveSession(); vbLoad(true); return setTimeout(()=>{ location.hash={admin:"painel",func:"painel",prof:"meus",paciente:"inicio"}[S.role]; render(); },700);
     }
-    const b=$("button.btn-primary",f); b.disabled=true;
+    const b=$("button.btn-primary",f); b.disabled=true; vbLoad(true);
     try{ await login(email, senha); saveSession(); location.hash={admin:"painel",prof:"meus",paciente:"inicio"}[S.role]||""; render(); }
-    catch(err){ showErr(f, /password|credential|user/i.test(err.code||"")?"E-mail ou senha incorretos.":err.message); b.disabled=false; } };
+    catch(err){ vbLoad(false); showErr(f, /password|credential|user/i.test(err.code||"")?"E-mail ou senha incorretos.":err.message); b.disabled=false; } };
 }
 /* =================== PAINEL =================== */
 function statusDia(p){ if(p.status==="realizado") return "concluido"; if(p.status==="andamento") return "andamento"; if(p.status==="falta") return "falta";
