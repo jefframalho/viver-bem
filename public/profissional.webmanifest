@@ -5,8 +5,8 @@
   "start_url": "./index.html?portal=profissional",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#0F3550",
-  "theme_color": "#0F3550",
+  "background_color": "#0A2A5E",
+  "theme_color": "#0A2A5E",
   "orientation": "portrait-primary",
   "lang": "pt-BR",
   "icons": [
