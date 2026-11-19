@@ -2816,7 +2816,6 @@ const ACT = {
   finMes(id){ const [y,m]=finMes.split("-").map(Number); const d=new Date(y,m-1+(+id),1); finMes=`${d.getFullYear()}-${pad(d.getMonth()+1)}`; render(); },
   novoPaciente(){ formPaciente(); }, editPaciente(id){ formPaciente(id); },
   async savePaciente(id){ const b=$(".modal-b"), spec=PAC_SPEC(), v=readFields(spec,b), m=missing(spec,v); if(m) return showErr(b,m);
-    if(v.tipo==="operadora"&&!v.operadoraId) return showErr(b,"Escolha a operadora do paciente.");
     if(v.cpf&&!validDoc(v.cpf)) return showErr(b,"CPF ou CNPJ do paciente inválido."); if(v.cpfResp&&!validDoc(v.cpfResp)) return showErr(b,"CPF ou CNPJ do responsável inválido.");
     v.cpf=digits(v.cpf); v.cpfResp=digits(v.cpfResp); v.endereco=montaEnd(v);
     if(v.geo&&!geoOf(v)) return showErr(b,"Localização inválida. Use o formato latitude, longitude (ex.: -7.3892, -38.7745) ou deixe em branco.");
